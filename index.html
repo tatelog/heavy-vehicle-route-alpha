@@ -458,7 +458,7 @@ let state = {
   localTrack:[], passedRoads:new Map(), tripStart:null, arrived:false, roundTrips:0, manualOnly:true,
   routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], pendingDestination:null, pendingDestinationQuery:'',
   confirmedDestination:null, confirmedDestinationQuery:'', destinationPreviewMarker:null,
-  routeCandidates:[], selectedRoute:0, routeConfirmed:false, routeSteps:[], currentStep:0,
+  routeCandidates:[], selectedRoute:-1, routeConfirmed:false, routeSteps:[], currentStep:0,
   voice:false, guiding:false, guideWatchId:null, lastSpokenStep:-1,
   viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
 };
@@ -1452,7 +1452,7 @@ async function showRouteToDestination(){
     const routes=await fetchRoutes(origin,dest);
     const ranked=rankRouteCandidates(routes,dest);
     state.routeCandidates=ranked.filter(c=>c.passable);
-    state.selectedRoute=0;
+    state.selectedRoute=-1;
     state.routeConfirmed=false;
     renderRouteCandidates();
     const selected=state.routeCandidates[0];
@@ -1463,8 +1463,8 @@ async function showRouteToDestination(){
       setRouteHint(`この車両で通行可能と判定できる候補がありません。赤区間を含む候補 ${blocked.length}件は除外しました。車両区分か行き先を見直してください。`,'ng');
       return;
     }
-    previewRouteCandidate(0,{scroll:true});
-    setRouteHint('推奨ルートを地図に表示しました。内容を確認してからルートを確定してください。', routeAuditType(selected.audit));
+    scrollRoutePanelTo(routeCandidates);
+    setRouteHint('ルート候補を表示しました。候補を選ぶと地図でルートを確認できます。', routeAuditType(selected.audit));
   }catch(e){
     setRouteHint(`ルート表示に失敗しました: ${e?.message || '原因不明'}`,'ng');
   }finally{
@@ -1680,7 +1680,7 @@ function clearRouteCandidatesOnly(){
   state.routeActive=false;
   state.destination=null;
   state.routeCandidates=[];
-  state.selectedRoute=0;
+  state.selectedRoute=-1;
   state.routeConfirmed=false;
   state.routeSteps=[];
   state.currentStep=0;
@@ -1797,7 +1797,7 @@ function clearRoute(updateHint=true){
   removeRouteLayer();
   state.routeActive=false;
   state.destination=null; state.pendingDestination=null; state.pendingDestinationQuery=''; state.confirmedDestination=null; state.confirmedDestinationQuery='';
-  state.routeCandidates=[]; state.selectedRoute=0; state.routeConfirmed=false; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
+  state.routeCandidates=[]; state.selectedRoute=-1; state.routeConfirmed=false; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
   clearDestinationCandidates();
   clearDestinationConfirmation();
   clearRouteConfirmation();
