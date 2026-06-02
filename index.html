@@ -106,7 +106,6 @@
   .custom-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12.5px;margin-bottom:10px;cursor:pointer}
   .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
   .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
-  .stats{display:flex;gap:8px;margin-bottom:4px}.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px}.stat .n{font-family:"Oswald",sans-serif;font-size:26px;font-weight:700;line-height:1}.stat .l{font-size:10.5px;color:var(--muted);margin-top:5px}.stat.ok .n{color:var(--pass)}.stat.ng .n{color:var(--fail)}
   .leg{display:flex;flex-direction:column;gap:7px}.leg-item,.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
   .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:22px;height:0;border-top:3px solid;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch{background:var(--hiviz)}.tog.on .switch::after{left:19px}
   .share-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:9px;cursor:pointer}.share-toggle.on{border-color:var(--hiviz)}
@@ -351,10 +350,6 @@
     </div>
     <div class="alpha-note">交通情報API、チーム位置同期、共有マーカーは今後追加予定です。α版ではGPS・ルート候補・音声案内・通行可否の参考表示を優先します。</div>
 
-    <div class="stats" hidden>
-      <div class="stat ok"><div class="n" id="nOk">97</div><div class="l">通行可 区間</div></div>
-      <div class="stat ng"><div class="n" id="nNg">83</div><div class="l">通行不可 区間</div></div>
-    </div>
     <div class="veh-class" id="vehClass">車両区分: <b>特殊</b> / 区分ボタンで選択（代表値: 幅3m・高4.1m・重36t）</div>
 
     <div class="sect-label">表示レイヤ</div>
@@ -2250,10 +2245,8 @@ function updateReadout(){
 }
 function refresh(){
   roadLayer.setStyle(styleFor);
-  const v=activeVeh(); let ok=0,ng=0;
-  const visible=visibleRoadFeatures();
-  visible.forEach(feat=>{if(state.hidden.has(feat.properties.cls)||!v)return; (verdict(feat.properties,v).ok?ok++:ng++)});
-  nOk.textContent=v?ok:'-'; nNg.textContent=v?ng:'-'; updateReadout();
+  const v=activeVeh();
+  updateReadout();
   const vc=vehicleClass(v);
   vehClass.innerHTML=v?`車両区分: <b>${vc.label}</b> / ${vc.note}（代表値: 幅${v.w}m・高${v.h}m・重${v.t}t）`:'車両区分: -';
   if(!state.loadingRoads) areaLabel.textContent='表示範囲・通行可否更新済み';
