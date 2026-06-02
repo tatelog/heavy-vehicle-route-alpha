@@ -174,6 +174,9 @@
   .spinner{width:16px;height:16px;border-radius:50%;border:3px solid rgba(255,212,0,.22);border-top-color:var(--hiviz);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .label-icon,.site-pin-icon{background:transparent;border:0}.label-chip{white-space:nowrap;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 8px;box-shadow:var(--shadow);font-size:12px;font-weight:800;transform:translate(-50%,-100%)}.label-chip.me{border-color:var(--hiviz);color:var(--hiviz)}.label-chip.meet{border-color:var(--pass);color:var(--pass)}.label-chip.alert{border-color:var(--fail);color:var(--fail)}
+  .vehicle-icon{background:transparent;border:0}
+  .vehicle-dot{width:30px;height:30px;border-radius:50%;background:#1677ff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 5px rgba(22,119,255,.18);display:grid;place-items:center;color:#fff;font-size:15px;line-height:1}
+  .vehicle-dot::before{content:"🚚";transform:translateY(-1px)}
   .site-pin{width:28px;height:28px;background:var(--hiviz);border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 3px 12px rgba(0,0,0,.36),0 0 0 1px rgba(14,21,28,.28);position:relative;transform:rotate(-45deg)}
   .site-pin::before{content:"";position:absolute;inset:7px;border-radius:50%;background:#17212b;box-shadow:inset 0 0 0 2px rgba(255,255,255,.28)}
   .site-pin::after{content:"";position:absolute;left:50%;top:50%;width:38px;height:14px;border-radius:50%;background:rgba(14,21,28,.22);transform:translate(-24%,-5%) rotate(45deg);filter:blur(3px);z-index:-1}
@@ -210,21 +213,8 @@
   </header>
   <div class="scroll">
     <section class="view active" data-view="route">
-    <div class="sect-label">行き先</div>
-    <div class="route-box">
-      <div class="room-row"><input id="destInput" placeholder="行き先 例: 〇〇建設 現場 / 住所"></div>
-      <div class="site-fields">
-        <div class="label">出発地点</div>
-        <div class="room-row"><input id="siteInput" placeholder="出発地点の住所・名称を入力"><button class="btn subtle" id="siteSearchBtn" type="button">出発地設定</button></div>
-        <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
-        <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
-      </div>
-      <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">LINE共有</button><button class="btn subtle" id="clearRouteBtn">解除</button></div>
-      <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
-      <div class="candidate-list" id="routeCandidates" style="display: none;"></div>
-    </div>
-
-    <div class="sect-label">車両区分を選択</div>
+    <div class="sect-label">あなたの車両</div>
+    <div class="hint" id="vehiclePrompt">車両区分を選択すると、GPS確認と道路データ読み込みに進みます。</div>
     <div class="class-grid" id="classGrid"></div>
 
     <details class="fold" id="vehicleFold">
@@ -238,6 +228,20 @@
         <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
       </div>
     </details>
+
+    <div class="sect-label">行き先</div>
+    <div class="route-box">
+      <div class="room-row"><input id="destInput" placeholder="行き先 例: 〇〇建設 現場 / 住所"></div>
+      <div class="site-fields">
+        <div class="label">出発地点</div>
+        <div class="room-row"><input id="siteInput" placeholder="出発地点の住所・名称を入力"><button class="btn subtle" id="siteSearchBtn" type="button">出発地設定</button></div>
+        <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
+        <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
+      </div>
+      <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">LINE共有</button><button class="btn subtle" id="clearRouteBtn">解除</button></div>
+      <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
+      <div class="candidate-list" id="routeCandidates" style="display: none;"></div>
+    </div>
     </section>
 
     <section class="view" data-view="drive">
@@ -401,6 +405,7 @@ let state = {
   viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
 };
 const ROAD_CACHE_KEY='routeRoadFeatureCache.v1';
+const VEHICLE_PREF_KEY='routeVehiclePreference.v1';
 const ROAD_CACHE_MAX=650;
 let roadFeatureCache=new Map();
 const ALPHA_MODE=true;
@@ -595,6 +600,8 @@ function selectVehClass(c,syncRoom){
   custom.classList.remove('on');
   refresh();
   maybeRecalculateRoute();
+  saveVehiclePreference();
+  afterVehicleSelected();
   if(syncRoom) saveRoomVehicle();
 }
 function inferredClassForVehicle(v){
@@ -621,7 +628,42 @@ function selectVeh(v,syncRoom){
   custom.classList.remove('on');
   refresh();
   maybeRecalculateRoute();
+  saveVehiclePreference();
+  afterVehicleSelected();
   if(syncRoom) saveRoomVehicle();
+}
+function saveVehiclePreference(){
+  try{
+    const pref=state.vehClass ? {type:'class',id:state.vehClass.id} : state.veh ? {type:'vehicle',id:state.veh.id} : state.custom ? {type:'custom',w:cw.value,h:ch.value,t:ct.value} : null;
+    if(pref) localStorage.setItem(VEHICLE_PREF_KEY,JSON.stringify(pref));
+  }catch(e){}
+}
+function restoreVehiclePreference(){
+  try{
+    const pref=JSON.parse(localStorage.getItem(VEHICLE_PREF_KEY)||'null');
+    if(pref?.type==='class'){
+      const c=VEHICLE_CLASSES.find(x=>x.id===pref.id);
+      if(c){selectVehClass(c,false); return true}
+    }
+    if(pref?.type==='vehicle'){
+      const v=VEHICLES.find(x=>x.id===pref.id);
+      if(v){selectVeh(v,false); return true}
+    }
+    if(pref?.type==='custom'){
+      cw.value=pref.w||cw.value; ch.value=pref.h||ch.value; ct.value=pref.t||ct.value;
+      state.custom=true; state.veh=null; state.vehClass=null;
+      document.querySelectorAll('.veh,.class-btn,.class-note').forEach(e=>e.classList.remove('on'));
+      custom.classList.add('on');
+      refresh();
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function afterVehicleSelected(){
+  vehiclePrompt.textContent=state.pin?'車両選択済み。行き先を入力できます。':'車両選択済み。GPSで現在地を確認します。';
+  vehiclePrompt.className='hint ok';
+  if(!state.pin) autoLoadGpsSite();
 }
 customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
 ['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
@@ -951,7 +993,7 @@ function setSitePin(latlng,focus){
 }
 function setCurrentLocation(latlng,follow=false){
   if(state.currentMarker) state.currentMarker.setLatLng(latlng);
-  else state.currentMarker=L.marker(latlng,{icon:pinIcon('現在地','me'),title:'現在地'}).addTo(map);
+  else state.currentMarker=L.marker(latlng,{icon:currentVehicleIcon(),title:'現在地'}).addTo(map);
   if(follow) map.panTo(latlng,{animate:true,duration:.35});
   updateFollowCurrentButton();
   updateGuidance(latlng);
@@ -1157,7 +1199,7 @@ function restoreRoadCache(){
 }
 function roadsFromOverpass(data){
   const ways=data.elements.filter(e=>e.type==='way' && e.geometry?.length>1).sort((a,b)=>(a.id||0)-(b.id||0));
-  const features=ways.slice(0,650).map((way,i)=>{
+  const features=ways.map((way,i)=>{
     const cls=classForHighway(way.tags?.highway);
     const lim=limitsForClass(cls);
     const name=way.tags?.name || (way.tags?.ref ? `路線 ${way.tags.ref}` : `周辺道路 ${i+1}`);
@@ -1245,6 +1287,10 @@ shareLineBtn.onclick=shareLineLink;
 destInput.addEventListener('keydown',e=>{if(e.key==='Enter') showRouteToDestination()});
 async function showRouteToDestination(){
   const q=destInput.value.trim();
+  if(!activeVeh()){
+    setRouteHint('先にあなたの車両区分を選択してください。選択後にGPS現在地を確認します。','ng');
+    return;
+  }
   if(!state.pin){
     setRouteHint('先に右下の現在地ボタン、または地図タップで出発地点を置いてください。','ng');
     return;
@@ -1712,6 +1758,9 @@ function sitePinIcon(kind='site'){
   const cls=kind==='dest'?'site-pin dest':'site-pin';
   return L.divIcon({className:'site-pin-icon',html:`<div class="${cls}"></div>`,iconSize:[28,28],iconAnchor:[14,28]});
 }
+function currentVehicleIcon(){
+  return L.divIcon({className:'vehicle-icon',html:'<div class="vehicle-dot"></div>',iconSize:[30,30],iconAnchor:[15,15]});
+}
 function pinIcon(label,cls){return L.divIcon({className:'label-icon',html:`<div class="label-chip ${cls}">${label}</div>`,iconSize:[0,0]})}
 function renderMeet(room){
   if(state.meetMarker){map.removeLayer(state.meetMarker); state.meetMarker=null}
@@ -1837,11 +1886,15 @@ window.addEventListener('beforeunload',()=>{if(state.share) navigator.sendBeacon
 
 initPB();
 initAlphaPreview();
-selectVeh(VEHICLES.find(v=>v.id==='trailer'),false);
+const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
 scheduleViewportRoadRefresh();
-autoLoadGpsSite();
+if(activeVeh() && !state.pin && state.locationWatchId===null && !gpsSiteBtn.disabled) autoLoadGpsSite();
+else{
+  vehiclePrompt.textContent='まず車両区分を選択してください。選択後にGPS現在地を確認します。';
+  vehiclePrompt.className='hint warn';
+}
 </script>
 
 
