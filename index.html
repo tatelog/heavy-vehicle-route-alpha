@@ -257,11 +257,11 @@
       <div class="primary">ルート未選択</div>
       <div class="secondary">ルート選定で行き先を指定すると、案内と現在地追従をここに表示します。</div>
     </div>
-    <div class="alpha-note">音声ガイダンスは必須機能として検証中です。案内開始時に読み上げも有効化します。</div>
+    <div class="alpha-note">案内開始後は現在地に追従します。音声案内のON/OFFは管理画面で切り替えます。</div>
     <div class="guide-box" id="guideBox" style="display: none;">
       <div class="guide-controls">
         <button class="btn subtle" id="guideBtn" type="button">案内開始</button>
-        <button class="btn subtle" id="voiceBtn" type="button">音声OFF</button>
+        <button class="btn subtle" id="rerouteBtn" type="button">ルート再検索</button>
       </div>
       <div class="guide-list" id="guideList"></div>
     </div>
@@ -296,6 +296,10 @@
       <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
       <button type="button" data-theme-mode="light" aria-pressed="false">ライト</button>
       <button type="button" data-theme-mode="dark" aria-pressed="false">ダーク</button>
+    </div>
+    <div class="share-toggle" id="voiceSettingToggle">
+      <div><div class="title">音声案内 ON</div><div class="desc">案内開始時に読み上げを有効化します</div></div>
+      <span class="switch"></span>
     </div>
 
     <details class="fold" id="roomFold" data-alpha-disabled="チーム共有ルームは準備中">
@@ -444,6 +448,7 @@ let state = {
 };
 const ROAD_CACHE_KEY='routeRoadFeatureCache.v1';
 const VEHICLE_PREF_KEY='routeVehiclePreference.v1';
+const VOICE_PREF_KEY='routeVoicePreference.v1';
 const ROAD_CACHE_MAX=650;
 let roadFeatureCache=new Map();
 const ALPHA_MODE=true;
@@ -1849,9 +1854,7 @@ function renderGuideList(){
     guideList.appendChild(row);
   });
   guideBtn.textContent=state.guiding?'案内停止':'案内開始';
-  const speakable=canSpeakGuide();
-  voiceBtn.disabled=!speakable;
-  voiceBtn.textContent=speakable?(state.voice?'音声ON':'音声OFF'):'音声不可';
+  rerouteBtn.disabled=!state.destination;
   updateDriveSummary();
 }
 function updateDriveSummary(){
@@ -1869,21 +1872,56 @@ function updateDriveSummary(){
   secondary.textContent=`${dest} までの案内${state.guiding?'を実行中':'を待機中'}。必要な共有は下のボタンから登録できます。`;
 }
 guideBtn.onclick=()=> state.guiding ? stopGuidance(true) : startGuidance();
-voiceBtn.onclick=()=>{
-  if(!canSpeakGuide()) return setRouteHint('このブラウザでは音声読み上げを利用できません。ChromeなどWeb Speech API対応ブラウザで利用できます。','warn');
-  state.voice=!state.voice; renderGuideList(); if(state.voice) speakGuide('音声案内を開始します。')
-};
+rerouteBtn.onclick=()=>recalculateActiveRoute();
+voiceSettingToggle.onclick=()=>setVoicePreference(!state.voice,true);
+function setVoicePreference(on,save=false){
+  state.voice=!!on;
+  voiceSettingToggle.classList.toggle('on',state.voice);
+  voiceSettingToggle.querySelector('.title').textContent=`音声案内 ${state.voice?'ON':'OFF'}`;
+  voiceSettingToggle.querySelector('.desc').textContent=state.voice?'案内開始時に読み上げを有効化します':'画面案内のみ表示します';
+  if(save) localStorage.setItem(VOICE_PREF_KEY,state.voice?'1':'0');
+  renderGuideList();
+}
+async function recalculateActiveRoute(){
+  const origin=getRouteOrigin();
+  const dest=state.destination || state.confirmedDestination;
+  if(!origin || !dest) return setRouteHint('再検索するには現在地と行き先が必要です。','ng');
+  rerouteBtn.disabled=true;
+  rerouteBtn.textContent='再検索中';
+  setRouteHint('現在地と行き先からルートを再検索しています...','warn');
+  try{
+    const routes=await fetchRoutes(origin,dest);
+    const ranked=rankRouteCandidates(routes,dest);
+    state.routeCandidates=ranked.filter(c=>c.passable);
+    state.selectedRoute=0;
+    renderRouteCandidates();
+    const selected=state.routeCandidates[0];
+    if(!selected){
+      const blocked=ranked.filter(c=>!c.passable);
+      setRouteHint(`この車両で通行可能と判定できる再検索候補がありません。赤区間を含む候補 ${blocked.length}件は除外しました。`,'ng');
+      return;
+    }
+    state.destination=dest;
+    drawRouteCandidate(0);
+    setRouteHint(routeCandidateMessage(dest,selected),routeAuditType(selected.audit));
+    switchView('drive');
+  }catch(e){
+    setRouteHint(`ルート再検索に失敗しました: ${e?.message || '原因不明'}`,'ng');
+  }finally{
+    rerouteBtn.disabled=false;
+    rerouteBtn.textContent='ルート再検索';
+  }
+}
 function startGuidance(){
   if(!state.routeSteps.length) return setRouteHint('先にルート表示してください。','ng');
   if(!navigator.geolocation) return setRouteHint('このブラウザではGPS案内を利用できません。地図タップで現在地を動かすと案内確認できます。','ng');
   if(!window.isSecureContext) return setRouteHint('GPS案内はHTTPSまたはlocalhost系URLで利用できます。','ng');
   if(!canSpeakGuide()) setRouteHint('このブラウザでは音声読み上げを利用できません。画面案内のみ表示します。','warn');
-  else state.voice=true;
   state.guiding=true;
   updateFollowCurrentButton();
   switchView('drive');
   renderGuideList();
-  if(state.voice) speakGuide('音声案内を開始します。');
+  if(state.voice && canSpeakGuide()) speakGuide('音声案内を開始します。');
   state.guideWatchId=navigator.geolocation.watchPosition(pos=>{
     const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
     handlePosition(latlng,true);
@@ -2166,6 +2204,7 @@ window.addEventListener('beforeunload',()=>{if(state.share) navigator.sendBeacon
 
 initPB();
 initAlphaPreview();
+setVoicePreference(localStorage.getItem(VOICE_PREF_KEY)!=='0',false);
 const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
