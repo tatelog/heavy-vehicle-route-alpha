@@ -95,10 +95,6 @@
   .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
   .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 4px;text-align:center;font-weight:900;min-width:0}
   .class-btn.on{border-color:var(--hiviz);background:rgba(255,212,0,.08);color:var(--hiviz)}
-  .class-note-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
-  .class-note{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:11px;color:var(--muted);line-height:1.4}
-  .class-note b{display:block;color:var(--text);font-size:12px;margin-bottom:2px}
-  .class-note.on{border-color:var(--hiviz);background:rgba(255,212,0,.07)}
   .veh{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 11px;cursor:pointer;transition:.13s;position:relative;overflow:hidden}
   .veh:hover{border-color:var(--faint);background:var(--surface2)}
   .veh.on{border-color:var(--hiviz);background:rgba(255,212,0,.07)}
@@ -295,7 +291,6 @@
     <div class="sect-label">あなたの車両</div>
     <div class="hint" id="vehiclePrompt">車両区分を選択してください。</div>
     <div class="class-grid" id="classGrid"></div>
-    <div class="class-note-grid" id="classNotes" hidden></div>
     <details class="fold" id="vehicleFold">
       <summary>詳細な車両条件で調整</summary>
       <div class="veh-grid" id="vehGrid"></div>
@@ -634,7 +629,6 @@ function popupHTML(feat){
 }
 
 const classGrid=document.getElementById('classGrid');
-const classNotes=document.getElementById('classNotes');
 const vehicleModal=document.getElementById('vehicleModal');
 const vehicleModalChoices=document.getElementById('vehicleModalChoices');
 VEHICLE_CLASSES.forEach(c=>{
@@ -645,11 +639,6 @@ VEHICLE_CLASSES.forEach(c=>{
   el.textContent=c.label;
   el.onclick=()=>selectVehClass(c,true);
   classGrid.appendChild(el);
-  const note=document.createElement('div');
-  note.className='class-note';
-  note.dataset.id=c.id;
-  note.innerHTML=`<b>${c.label}</b>${c.note}`;
-  classNotes.appendChild(note);
 });
 renderVehicleModalChoices();
 function renderVehicleModalChoices(){
@@ -676,7 +665,6 @@ function selectVehClass(c,syncRoom){
   state.veh=null;
   state.custom=false;
   document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
-  document.querySelectorAll('.class-note').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
   document.querySelectorAll('.vehicle-choice').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
   document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on'));
   custom.classList.remove('on');
@@ -706,7 +694,6 @@ function selectVeh(v,syncRoom){
   document.querySelectorAll('.veh').forEach(e=>e.classList.toggle('on',e.dataset.id===v.id));
   const c=inferredClassForVehicle(v);
   document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c?.id));
-  document.querySelectorAll('.class-note').forEach(e=>e.classList.toggle('on',e.dataset.id===c?.id));
   custom.classList.remove('on');
   refresh();
   maybeRecalculateRoute();
@@ -734,7 +721,7 @@ function restoreVehiclePreference(){
     if(pref?.type==='custom'){
       cw.value=pref.w||cw.value; ch.value=pref.h||ch.value; ct.value=pref.t||ct.value;
       state.custom=true; state.veh=null; state.vehClass=null;
-      document.querySelectorAll('.veh,.class-btn,.class-note').forEach(e=>e.classList.remove('on'));
+      document.querySelectorAll('.veh,.class-btn').forEach(e=>e.classList.remove('on'));
       custom.classList.add('on');
       refresh();
       return true;
@@ -748,7 +735,7 @@ function afterVehicleSelected(){
   closeVehicleModal();
   if(!state.pin) autoLoadGpsSite();
 }
-customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
+customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
 ['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
 document.querySelectorAll('.tog').forEach(t=>{t.onclick=()=>{const c=t.dataset.class;if(state.hidden.has(c)){state.hidden.delete(c);t.classList.add('on')}else{state.hidden.add(c);t.classList.remove('on')}refresh()}});
 
@@ -823,7 +810,7 @@ function applyRoomVehicle(room){
     if(c) selectVehClass(c,false);
   }else if(room.custom_w || room.custom_h || room.custom_t){
     state.custom=true; state.veh=null; cw.value=room.custom_w||2.5; ch.value=room.custom_h||3.8; ct.value=room.custom_t||36;
-    state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on');
+    state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on');
   }else if(room.vehicle_id){
     const v=VEHICLES.find(x=>x.id===room.vehicle_id); if(v) selectVeh(v,false);
   }
@@ -2105,7 +2092,7 @@ function applyUrlParams(){
   if(params.has('cw')||params.has('ch')||params.has('ct')){
     cw.value=params.get('cw')||cw.value; ch.value=params.get('ch')||ch.value; ct.value=params.get('ct')||ct.value;
     state.custom=true; state.veh=null; state.vehClass=null;
-    document.querySelectorAll('.veh,.class-btn,.class-note').forEach(e=>e.classList.remove('on'));
+    document.querySelectorAll('.veh,.class-btn').forEach(e=>e.classList.remove('on'));
     custom.classList.add('on');
     refresh();
   }
