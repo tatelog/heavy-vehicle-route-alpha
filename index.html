@@ -1384,6 +1384,7 @@ changeDestinationBtn.onclick=()=>{
   clearDestinationConfirmation();
   clearRouteCandidatesOnly();
   if(state.destinationCandidates.length) renderDestinationCandidates(destInput.value.trim(),getRouteOrigin(false));
+  requestAnimationFrame(()=>scrollRoutePanelTo(destinationCandidates));
   setRouteHint('行き先候補から選び直してください。','warn');
 };
 async function showRouteToDestination(){
@@ -1415,7 +1416,12 @@ async function showRouteToDestination(){
       const choices=await geocodeDestinations(q);
       state.destinationCandidates=choices;
       renderDestinationCandidates(q,origin);
-      setRouteHint('行き先候補を選ぶと地図に表示します。場所を確認してから確定してください。','warn');
+      if(choices[0]){
+        const meta=destinationCandidateMeta(choices[0],origin);
+        previewDestinationCandidate(choices[0],q,origin,meta,{scroll:true});
+        renderDestinationCandidates(q,origin);
+      }
+      setRouteHint('推奨候補を地図に表示しました。場所を確認してから確定してください。','warn');
       return;
     }
     const dest=state.confirmedDestination;
@@ -1587,21 +1593,24 @@ function renderDestinationCandidates(query,origin){
     const btn=document.createElement('button');
     btn.type='button';
     btn.className='route-candidate';
-    const raw=c.raw||{};
-    const dist=origin ? `出発地点から約${fmtDist(haversine(origin,c))}` : '';
-    const kind=destinationKindLabel(raw);
-    const meta=[kind,dist].filter(Boolean).join(' / ');
+    const meta=destinationCandidateMeta(c,origin);
     const on=state.pendingDestination===c;
     btn.classList.toggle('on',on);
     btn.innerHTML=`<div class="main"><span>候補${i+1} ${escapeHtml(c.label)}</span>${on?'<span class="tag">確認中</span>':i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${escapeHtml(meta || '候補を確認してください')}</div>`;
     btn.onclick=()=>{
-      previewDestinationCandidate(c,query,origin,meta);
+      previewDestinationCandidate(c,query,origin,meta,{scroll:true});
       renderDestinationCandidates(query,origin);
     };
     destinationCandidates.appendChild(btn);
   });
 }
-function previewDestinationCandidate(dest,query,origin,meta=''){
+function destinationCandidateMeta(dest,origin){
+  const raw=dest.raw||{};
+  const dist=origin ? `出発地点から約${fmtDist(haversine(origin,dest))}` : '';
+  const kind=destinationKindLabel(raw);
+  return [kind,dist].filter(Boolean).join(' / ');
+}
+function previewDestinationCandidate(dest,query,origin,meta='',options={}){
   state.pendingDestination=dest;
   state.pendingDestinationQuery=query;
   state.confirmedDestination=null;
@@ -1615,6 +1624,7 @@ function previewDestinationCandidate(dest,query,origin,meta=''){
   setRouteHint('地図上の行き先ピンを確認してください。問題なければ「確定してルート候補へ」を押してください。','warn');
   if(origin) map.fitBounds(L.latLngBounds([[origin.lat,origin.lng],[dest.lat,dest.lng]]).pad(0.22));
   else map.setView([dest.lat,dest.lng],15);
+  if(options.scroll) scrollRoutePanelTo(destinationConfirm);
 }
 function clearDestinationCandidates(){
   state.destinationCandidates=[];
@@ -1635,6 +1645,14 @@ function removeDestinationPreview(){
     map.removeLayer(state.destinationPreviewMarker);
     state.destinationPreviewMarker=null;
   }
+}
+function scrollRoutePanelTo(el){
+  const scroller=document.querySelector('#panel .scroll');
+  if(!scroller || !el) return;
+  requestAnimationFrame(()=>{
+    const top=el.offsetTop - scroller.offsetTop - 12;
+    scroller.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  });
 }
 function clearRouteCandidatesOnly(){
   removeRouteLayer();
