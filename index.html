@@ -1440,12 +1440,8 @@ async function showRouteToDestination(){
       const choices=await geocodeDestinations(q);
       state.destinationCandidates=choices;
       renderDestinationCandidates(q,origin);
-      if(choices[0]){
-        const meta=destinationCandidateMeta(choices[0],origin);
-        previewDestinationCandidate(choices[0],q,origin,meta,{scroll:true});
-        renderDestinationCandidates(q,origin);
-      }
-      setRouteHint('推奨候補を地図に表示しました。場所を確認してから確定してください。','warn');
+      scrollRoutePanelTo(destinationCandidates);
+      setRouteHint('行き先候補を表示しました。候補を選ぶと地図で場所を確認できます。','warn');
       return;
     }
     const dest=state.confirmedDestination;
