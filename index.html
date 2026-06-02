@@ -398,7 +398,7 @@ const PUBLIC_TRAFFIC_META={
 };
 let pb = null;
 let state = {
-  veh:null, vehClass:null, custom:false, hidden:new Set(), pin:null, pinMarker:null, currentMarker:null, room:null, displayName:'',
+  veh:null, vehClass:null, custom:false, hidden:new Set(), pin:null, pinSource:null, pinMarker:null, currentMarker:null, room:null, displayName:'',
   presenceId:null, share:false, watchId:null, locationWatchId:null, lastSent:null, lastGps:null, pendingMode:'idle',
   presences:new Map(), presenceMarkers:new Map(), markers:new Map(), markerLayers:new Map(), meetMarker:null,
   localTrack:[], passedRoads:new Map(), tripStart:null, arrived:false, roundTrips:0, manualOnly:true,
@@ -881,7 +881,7 @@ async function setSiteFromInput(){
   siteSearchBtn.textContent='検索中';
   try{
     const site=await geocodeDestination(q);
-    setSitePin({lat:site.lat,lng:site.lng},true);
+    setSitePin({lat:site.lat,lng:site.lng},true,'manual');
     areaLabel.textContent='出発地点周辺を読み込み中';
     await loadRoadsAround({lat:site.lat,lng:site.lng});
     maybeRecalculateRoute();
@@ -900,7 +900,7 @@ function updateTapMode(){
 function setSitePinFromGps(opts={}){
   const auto=!!opts.auto;
   setGpsStatus(auto?'現在地を確認しています...':'GPS現在地を取得しています...', 'warn', false);
-  modeNotice.innerHTML=auto?'GPS現在地を優先して出発地点に設定します。':'GPS現在地を取得しています。ブラウザの位置情報許可が必要です。';
+  modeNotice.innerHTML=auto?'GPS現在地を確認します。出発地点は書き換えません。':'GPS現在地を取得しています。ブラウザの位置情報許可が必要です。';
   if(!navigator.geolocation){
     const msg='このブラウザではGPSを利用できません。現在地ボタンは使えません。出発地点はURLまたは初回GPS取得で設定してください。';
     setGpsStatus(msg, 'ng', false);
@@ -918,12 +918,16 @@ function setSitePinFromGps(opts={}){
   setGpsButtonLoading(true);
   navigator.geolocation.getCurrentPosition(async pos=>{
     const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
-    setSitePin(latlng,true);
-    setCurrentLocation(latlng,false);
+    state.lastGps=latlng;
+    setCurrentLocation(latlng,true);
     startLiveLocationWatch();
     areaLabel.textContent='現在地周辺を読み込み中';
     setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}。周辺道路を読み込んでいます...`, 'ok', false);
-    modeNotice.innerHTML='GPS現在地に出発地点を設定しました。周辺道路を読み込んでいます。';
+    modeNotice.innerHTML='GPS現在地を確認しました。周辺道路を読み込んでいます。';
+    if(state.pinSource!=='manual'){
+      siteHint.textContent='GPS現在地から検索します。出発地点を固定する場合は地図で選択してください。';
+      siteHint.className='hint ok';
+    }
     await loadRoadsAround(latlng);
     maybeRecalculateRoute();
     setGpsButtonLoading(false);
@@ -983,8 +987,9 @@ function gpsErrorMessage(err){
   if(code===3) return 'GPS取得失敗: 取得がタイムアウトしました。もう一度押してください。';
   return `GPS取得失敗: ${err?.message || '原因不明です。もう一度押してください。'}`;
 }
-function setSitePin(latlng,focus){
+function setSitePin(latlng,focus,source='manual'){
   state.pin=latlng;
+  state.pinSource=source;
   if(state.pinMarker) state.pinMarker.setLatLng(latlng);
   else state.pinMarker=L.marker(latlng,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
   if(focus) map.setView(latlng,16);
@@ -1009,13 +1014,8 @@ function latestCurrentLatLng(){
 }
 function getRouteOrigin(syncPin=false){
   const current=latestCurrentLatLng();
-  const origin=current || state.pin;
+  const origin=state.pinSource==='manual' && state.pin ? state.pin : (current || state.pin);
   if(!origin) return null;
-  if(syncPin && (!state.pin || haversine(state.pin,origin)>8)){
-    setSitePin(origin,false);
-    siteHint.textContent=`出発地点: 最新GPS ${origin.lat.toFixed(6)}, ${origin.lng.toFixed(6)}`;
-    siteHint.className='hint ok';
-  }
   return origin;
 }
 function updateFollowCurrentButton(){
@@ -1311,7 +1311,7 @@ async function showRouteToDestination(){
     setRouteHint('先にあなたの車両区分を選択してください。選択後にGPS現在地を確認します。','ng');
     return;
   }
-  const origin=getRouteOrigin(true);
+  const origin=getRouteOrigin();
   if(!origin){
     setRouteHint('先に右下の現在地ボタン、または地図タップで出発地点を置いてください。','ng');
     return;
@@ -1744,14 +1744,14 @@ function applyUrlParams(){
   }
   const lat=+params.get('lat'), lng=+params.get('lng');
   if(Number.isFinite(lat)&&Number.isFinite(lng)){
-    setSitePin({lat,lng},true);
+    setSitePin({lat,lng},true,'url');
   }
   const room=params.get('room');
   if(room) roomId.value=room;
 }
 map.on('click',async e=>{
   if(state.pendingMode==='sitePick'){
-    setSitePin(e.latlng,true);
+    setSitePin(e.latlng,true,'manual');
     state.pendingMode='idle'; updateTapMode();
     await loadRoadsAround(e.latlng);
     maybeRecalculateRoute();
