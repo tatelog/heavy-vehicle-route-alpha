@@ -138,6 +138,13 @@
   .route-candidate .tag{font-size:10px;color:#fff;background:var(--blue);border-radius:999px;padding:2px 7px;flex-shrink:0}
   .route-candidate .meta{color:var(--muted);font-size:11px;line-height:1.45;margin-top:4px}
   .route-candidate .risk{color:var(--tight)}.route-candidate.bad .risk{color:var(--fail)}
+  .destination-confirm{display:none;margin-top:10px;background:var(--bg);border:1px solid var(--blue);border-radius:10px;padding:10px}
+  .destination-confirm.on{display:block}
+  .destination-confirm .title{font-size:11px;color:var(--blue);font-weight:900;margin-bottom:4px}
+  .destination-confirm .name{font-size:13px;color:var(--text);font-weight:900;line-height:1.45}
+  .destination-confirm .meta{font-size:11px;color:var(--muted);line-height:1.45;margin-top:3px}
+  .destination-confirm .actions{display:flex;gap:8px;margin-top:10px}
+  .destination-confirm .actions .btn{flex:1}
   .guide-box{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
   .guide-controls{display:flex;gap:8px}.guide-controls .btn{flex:1}
   .guide-list{display:flex;flex-direction:column;gap:6px;margin-top:9px;max-height:156px;overflow:auto}
@@ -231,6 +238,15 @@
       <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">LINE共有</button><button class="btn subtle" id="clearRouteBtn">解除</button></div>
       <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
       <div class="candidate-list" id="destinationCandidates" style="display: none;"></div>
+      <div class="destination-confirm" id="destinationConfirm">
+        <div class="title">この行き先でいいですか？</div>
+        <div class="name" id="destinationConfirmName"></div>
+        <div class="meta" id="destinationConfirmMeta"></div>
+        <div class="actions">
+          <button class="btn" id="confirmDestinationBtn" type="button">確定してルート候補へ</button>
+          <button class="btn subtle" id="changeDestinationBtn" type="button">候補を選び直す</button>
+        </div>
+      </div>
       <div class="candidate-list" id="routeCandidates" style="display: none;"></div>
     </div>
     </section>
@@ -420,7 +436,8 @@ let state = {
   presenceId:null, share:false, watchId:null, locationWatchId:null, lastSent:null, lastGps:null, pendingMode:'idle',
   presences:new Map(), presenceMarkers:new Map(), markers:new Map(), markerLayers:new Map(), meetMarker:null,
   localTrack:[], passedRoads:new Map(), tripStart:null, arrived:false, roundTrips:0, manualOnly:true,
-  routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], confirmedDestination:null, confirmedDestinationQuery:'',
+  routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], pendingDestination:null, pendingDestinationQuery:'',
+  confirmedDestination:null, confirmedDestinationQuery:'', destinationPreviewMarker:null,
   routeCandidates:[], selectedRoute:0, routeSteps:[], currentStep:0,
   voice:false, guiding:false, guideWatchId:null, lastSpokenStep:-1,
   viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
@@ -1349,11 +1366,21 @@ clearRouteBtn.onclick=clearRoute;
 shareLineBtn.onclick=shareLineLink;
 destInput.addEventListener('keydown',e=>{if(e.key==='Enter') showRouteToDestination()});
 destInput.addEventListener('input',()=>{
+  state.pendingDestination=null;
+  state.pendingDestinationQuery='';
   state.confirmedDestination=null;
   state.confirmedDestinationQuery='';
   clearDestinationCandidates();
+  clearDestinationConfirmation();
   clearRouteCandidatesOnly();
 });
+confirmDestinationBtn.onclick=()=>confirmDestinationAndRoute();
+changeDestinationBtn.onclick=()=>{
+  clearDestinationConfirmation();
+  clearRouteCandidatesOnly();
+  if(state.destinationCandidates.length) renderDestinationCandidates(destInput.value.trim(),getRouteOrigin(false));
+  setRouteHint('行き先候補から選び直してください。','warn');
+};
 async function showRouteToDestination(){
   const q=destInput.value.trim();
   if(!activeVeh()){
@@ -1370,6 +1397,10 @@ async function showRouteToDestination(){
     setRouteHint('行き先を入力してください。','ng');
     return;
   }
+  if(state.pendingDestination && state.pendingDestinationQuery===q && (!state.confirmedDestination || state.confirmedDestinationQuery!==q)){
+    await confirmDestinationAndRoute();
+    return;
+  }
   routeBtn.disabled=true;
   routeBtn.textContent='検索中';
   try{
@@ -1379,12 +1410,13 @@ async function showRouteToDestination(){
       const choices=await geocodeDestinations(q);
       state.destinationCandidates=choices;
       renderDestinationCandidates(q,origin);
-      setRouteHint('行き先候補を確認してください。合っている候補を選ぶとルート候補を出します。','warn');
+      setRouteHint('行き先候補を選ぶと地図に表示します。場所を確認してから確定してください。','warn');
       return;
     }
     const dest=state.confirmedDestination;
     state.destination=dest;
     clearDestinationCandidates();
+    clearDestinationConfirmation();
     setRouteHint('ルートを取得しています...','warn');
     const routes=await fetchRoutes(origin,dest);
     const ranked=rankRouteCandidates(routes,dest);
@@ -1405,8 +1437,18 @@ async function showRouteToDestination(){
     setRouteHint(`ルート表示に失敗しました: ${e?.message || '原因不明'}`,'ng');
   }finally{
     routeBtn.disabled=false;
-    routeBtn.textContent='ルート表示';
+    routeBtn.textContent=state.pendingDestination && !state.confirmedDestination ? '行き先確定' : 'ルート表示';
   }
+}
+async function confirmDestinationAndRoute(){
+  const q=destInput.value.trim();
+  if(!state.pendingDestination || state.pendingDestinationQuery!==q){
+    setRouteHint('先に行き先候補を選んでください。','warn');
+    return;
+  }
+  state.confirmedDestination=state.pendingDestination;
+  state.confirmedDestinationQuery=q;
+  await showRouteToDestination();
 }
 async function geocodeDestination(q){
   return (await geocodeDestinations(q))[0];
@@ -1544,21 +1586,50 @@ function renderDestinationCandidates(query,origin){
     const dist=origin ? `出発地点から約${fmtDist(haversine(origin,c))}` : '';
     const kind=destinationKindLabel(raw);
     const meta=[kind,dist].filter(Boolean).join(' / ');
-    btn.innerHTML=`<div class="main"><span>候補${i+1} ${escapeHtml(c.label)}</span>${i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${escapeHtml(meta || '候補を確認してください')}</div>`;
+    const on=state.pendingDestination===c;
+    btn.classList.toggle('on',on);
+    btn.innerHTML=`<div class="main"><span>候補${i+1} ${escapeHtml(c.label)}</span>${on?'<span class="tag">確認中</span>':i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${escapeHtml(meta || '候補を確認してください')}</div>`;
     btn.onclick=()=>{
-      state.confirmedDestination=c;
-      state.confirmedDestinationQuery=query;
-      state.destinationCandidates=[];
-      clearDestinationCandidates();
-      showRouteToDestination();
+      previewDestinationCandidate(c,query,origin,meta);
+      renderDestinationCandidates(query,origin);
     };
     destinationCandidates.appendChild(btn);
   });
+}
+function previewDestinationCandidate(dest,query,origin,meta=''){
+  state.pendingDestination=dest;
+  state.pendingDestinationQuery=query;
+  state.confirmedDestination=null;
+  state.confirmedDestinationQuery='';
+  removeDestinationPreview();
+  state.destinationPreviewMarker=L.marker([dest.lat,dest.lng],{icon:sitePinIcon('dest'),title:'行き先候補'}).addTo(map);
+  destinationConfirmName.textContent=dest.label;
+  destinationConfirmMeta.textContent=[meta,`${dest.lat.toFixed(6)}, ${dest.lng.toFixed(6)}`].filter(Boolean).join(' / ');
+  destinationConfirm.classList.add('on');
+  routeBtn.textContent='行き先確定';
+  setRouteHint('地図上の行き先ピンを確認してください。問題なければ「確定してルート候補へ」を押してください。','warn');
+  if(origin) map.fitBounds(L.latLngBounds([[origin.lat,origin.lng],[dest.lat,dest.lng]]).pad(0.22));
+  else map.setView([dest.lat,dest.lng],15);
 }
 function clearDestinationCandidates(){
   state.destinationCandidates=[];
   destinationCandidates.style.display='none';
   destinationCandidates.innerHTML='';
+}
+function clearDestinationConfirmation(){
+  state.pendingDestination=null;
+  state.pendingDestinationQuery='';
+  destinationConfirm.classList.remove('on');
+  destinationConfirmName.textContent='';
+  destinationConfirmMeta.textContent='';
+  routeBtn.textContent='ルート表示';
+  removeDestinationPreview();
+}
+function removeDestinationPreview(){
+  if(state.destinationPreviewMarker){
+    map.removeLayer(state.destinationPreviewMarker);
+    state.destinationPreviewMarker=null;
+  }
 }
 function clearRouteCandidatesOnly(){
   removeRouteLayer();
@@ -1644,9 +1715,10 @@ function removeRouteLayer(){
 function clearRoute(updateHint=true){
   removeRouteLayer();
   state.routeActive=false;
-  state.destination=null; state.confirmedDestination=null; state.confirmedDestinationQuery='';
+  state.destination=null; state.pendingDestination=null; state.pendingDestinationQuery=''; state.confirmedDestination=null; state.confirmedDestinationQuery='';
   state.routeCandidates=[]; state.selectedRoute=0; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
   clearDestinationCandidates();
+  clearDestinationConfirmation();
   renderRouteCandidates();
   renderGuideList();
   updateDriveSummary();
