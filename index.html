@@ -92,7 +92,7 @@
   .fold summary::-webkit-details-marker{display:none}
   .fold summary::after{content:"›";font-size:14px;letter-spacing:0;color:var(--hiviz);transition:.15s}
   .fold[open] summary::after{transform:rotate(90deg)}
-  .class-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+  .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
   .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 4px;text-align:center;font-weight:900;min-width:0}
   .class-btn.on{border-color:var(--hiviz);background:rgba(255,212,0,.08);color:var(--hiviz)}
   .class-note-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
@@ -155,6 +155,16 @@
   .alpha-disabled{opacity:.46;filter:grayscale(.65)}
   .alpha-disabled button,.alpha-disabled input,.alpha-disabled .share-toggle{cursor:not-allowed}
   .alpha-disabled .share-toggle{pointer-events:none}
+  .vehicle-modal{position:fixed;inset:0;z-index:3000;display:none;align-items:flex-end;justify-content:center;background:rgba(4,8,12,.58);backdrop-filter:blur(8px);padding:18px}
+  .vehicle-modal.open{display:flex}
+  .vehicle-dialog{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.42);padding:18px}
+  .vehicle-dialog h2{font-size:18px;line-height:1.35;margin-bottom:6px}
+  .vehicle-dialog p{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:14px}
+  .vehicle-choice-grid{display:grid;grid-template-columns:1fr;gap:8px}
+  .vehicle-choice{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:13px 14px;text-align:left}
+  .vehicle-choice b{font-size:15px}
+  .vehicle-choice span{font-size:11px;color:var(--muted)}
+  .vehicle-choice.on,.vehicle-choice:hover{border-color:var(--hiviz);background:rgba(255,212,0,.08)}
   .pin-hint{position:absolute;bottom:0;left:0;right:0;padding:11px 16px;background:linear-gradient(transparent,var(--panel) 30%);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;pointer-events:none}.pin-hint b{color:var(--hiviz)}
   .map-action{position:absolute;right:14px;bottom:18px;z-index:1000;background:var(--hiviz);color:#171717;border:1px solid rgba(0,0,0,.25);border-radius:10px;box-shadow:var(--shadow);font-weight:900;font-size:12.5px;padding:10px 13px;min-height:42px;display:flex;align-items:center;gap:7px}
   .map-action.secondary{bottom:66px;background:var(--panel);color:var(--text);border-color:var(--line);display:none}
@@ -184,6 +194,7 @@
   #handle{display:none}
   @media(max-width:760px){
     body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}
+    .vehicle-modal{align-items:flex-end;padding:12px}.vehicle-dialog{border-radius:16px 16px 10px 10px}
   }
 </style>
 </head>
@@ -208,22 +219,6 @@
   </header>
   <div class="scroll">
     <section class="view active" data-view="route">
-    <div class="sect-label">あなたの車両</div>
-    <div class="hint" id="vehiclePrompt">車両区分を選択すると、GPS確認と道路データ読み込みに進みます。</div>
-    <div class="class-grid" id="classGrid"></div>
-
-    <details class="fold" id="vehicleFold">
-      <summary>車種が分からない場合は使用車両から選択</summary>
-      <div class="class-note-grid" id="classNotes"></div>
-      <div class="veh-grid" id="vehGrid"></div>
-      <div class="custom" id="custom">
-        <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
-        <div class="crow"><label>全幅</label><input id="cw" type="number" step="0.1" value="2.5"><span class="unit">m</span></div>
-        <div class="crow"><label>全高</label><input id="ch" type="number" step="0.1" value="3.8"><span class="unit">m</span></div>
-        <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
-      </div>
-    </details>
-
     <div class="sect-label">行き先</div>
     <div class="route-box">
       <div class="room-row"><input id="destInput" placeholder="行き先 例: 〇〇建設 現場 / 住所"></div>
@@ -265,6 +260,21 @@
     </section>
 
     <section class="view" data-view="admin">
+    <div class="sect-label">あなたの車両</div>
+    <div class="hint" id="vehiclePrompt">車両区分を選択してください。</div>
+    <div class="class-grid" id="classGrid"></div>
+    <div class="class-note-grid" id="classNotes" hidden></div>
+    <details class="fold" id="vehicleFold">
+      <summary>詳細な車両条件で調整</summary>
+      <div class="veh-grid" id="vehGrid"></div>
+      <div class="custom" id="custom">
+        <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
+        <div class="crow"><label>全幅</label><input id="cw" type="number" step="0.1" value="2.5"><span class="unit">m</span></div>
+        <div class="crow"><label>全高</label><input id="ch" type="number" step="0.1" value="3.8"><span class="unit">m</span></div>
+        <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
+      </div>
+    </details>
+
     <div class="sect-label">表示設定</div>
     <div class="theme-switch" aria-label="テーマ切替">
       <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
@@ -338,6 +348,14 @@
   <button class="map-action icon-only" id="gpsSite" type="button" title="GPS現在地へ移動して周辺道路を読み込み" aria-label="現在地を取得"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
 </div>
 
+<div class="vehicle-modal" id="vehicleModal" role="dialog" aria-modal="true" aria-labelledby="vehicleModalTitle">
+  <div class="vehicle-dialog">
+    <h2 id="vehicleModalTitle">あなたの車両を選択</h2>
+    <p>通行可否とルート候補の判定に使います。あとで変更する場合は管理画面から選び直せます。</p>
+    <div class="vehicle-choice-grid" id="vehicleModalChoices"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://unpkg.com/pocketbase@0.26.2/dist/pocketbase.umd.js"></script>
 <script>
@@ -384,7 +402,6 @@ const VEHICLES = [
   {id:'lowbed', name:'重機運搬(低床)',    w:3.2, h:3.5, t:40}
 ];
 const VEHICLE_CLASSES = [
-  {id:'normal', label:'普通', name:'普通車両', w:1.8, h:2.1, t:2, note:'軽・普通車目安'},
   {id:'medium', label:'中型', name:'中型車両', w:2.3, h:3.0, t:8, note:'4t級まで目安'},
   {id:'large', label:'大型', name:'大型車両', w:2.5, h:3.8, t:25, note:'大型トラック目安'},
   {id:'special', label:'特殊', name:'特殊車両', w:3.0, h:4.1, t:36, note:'特車確認前提'}
@@ -559,7 +576,7 @@ function vehicleClass(v){
   if(v.w>3.0 || v.h>3.8 || v.t>30) return {label:'特車級', note:'通行可否確認を前提に扱う車両'};
   if(v.w>2.5 || v.h>3.5 || v.t>20) return {label:'大型', note:'大型車向け道路を優先'};
   if(v.t>8) return {label:'中型', note:'重量制限に注意'};
-  return {label:'普通/小型', note:'一般的な道路条件で通行しやすい'};
+  return {label:'中型', note:'中型基準で扱う車両'};
 }
 function roadSuitabilityLabel(p,v){
   if(!v) return '';
@@ -580,6 +597,8 @@ function popupHTML(feat){
 
 const classGrid=document.getElementById('classGrid');
 const classNotes=document.getElementById('classNotes');
+const vehicleModal=document.getElementById('vehicleModal');
+const vehicleModalChoices=document.getElementById('vehicleModalChoices');
 VEHICLE_CLASSES.forEach(c=>{
   const el=document.createElement('button');
   el.type='button';
@@ -594,12 +613,33 @@ VEHICLE_CLASSES.forEach(c=>{
   note.innerHTML=`<b>${c.label}</b>${c.note}`;
   classNotes.appendChild(note);
 });
+renderVehicleModalChoices();
+function renderVehicleModalChoices(){
+  vehicleModalChoices.innerHTML='';
+  VEHICLE_CLASSES.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='vehicle-choice'+(state.vehClass?.id===c.id?' on':'');
+    btn.dataset.id=c.id;
+    btn.innerHTML=`<b>${c.label}</b><span>${c.note}</span>`;
+    btn.onclick=()=>selectVehClass(c,true);
+    vehicleModalChoices.appendChild(btn);
+  });
+}
+function showVehicleModal(){
+  renderVehicleModalChoices();
+  vehicleModal.classList.add('open');
+}
+function closeVehicleModal(){
+  vehicleModal.classList.remove('open');
+}
 function selectVehClass(c,syncRoom){
   state.vehClass={...c};
   state.veh=null;
   state.custom=false;
   document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
   document.querySelectorAll('.class-note').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
+  document.querySelectorAll('.vehicle-choice').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
   document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on'));
   custom.classList.remove('on');
   refresh();
@@ -613,7 +653,7 @@ function inferredClassForVehicle(v){
   if(v.w>3.0 || v.h>3.8 || v.t>30) return VEHICLE_CLASSES.find(c=>c.id==='special');
   if(v.w>2.5 || v.h>3.5 || v.t>20) return VEHICLE_CLASSES.find(c=>c.id==='large');
   if(v.t>8) return VEHICLE_CLASSES.find(c=>c.id==='medium');
-  return VEHICLE_CLASSES.find(c=>c.id==='normal');
+  return VEHICLE_CLASSES.find(c=>c.id==='medium');
 }
 const grid=document.getElementById('vehGrid');
 VEHICLES.forEach(v=>{
@@ -667,6 +707,7 @@ function restoreVehiclePreference(){
 function afterVehicleSelected(){
   vehiclePrompt.textContent=state.pin?'車両選択済み。行き先を入力できます。':'車両選択済み。GPSで現在地を確認します。';
   vehiclePrompt.className='hint ok';
+  closeVehicleModal();
   if(!state.pin) autoLoadGpsSite();
 }
 customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
@@ -1317,6 +1358,7 @@ async function showRouteToDestination(){
   const q=destInput.value.trim();
   if(!activeVeh()){
     setRouteHint('先にあなたの車両区分を選択してください。選択後にGPS現在地を確認します。','ng');
+    showVehicleModal();
     return;
   }
   const origin=getRouteOrigin();
@@ -2056,10 +2098,14 @@ const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
 scheduleViewportRoadRefresh();
-if(activeVeh() && !state.pin && state.locationWatchId===null && !gpsSiteBtn.disabled) autoLoadGpsSite();
-else{
-  vehiclePrompt.textContent='まず車両区分を選択してください。選択後にGPS現在地を確認します。';
+if(activeVeh()){
+  vehiclePrompt.textContent=state.pin?'車両選択済み。行き先を入力できます。':'車両選択済み。GPSで現在地を確認します。';
+  vehiclePrompt.className='hint ok';
+  if(!state.pin && state.locationWatchId===null && !gpsSiteBtn.disabled) autoLoadGpsSite();
+}else{
+  vehiclePrompt.textContent='管理画面で車両区分を選択してください。';
   vehiclePrompt.className='hint warn';
+  showVehicleModal();
 }
 </script>
 
