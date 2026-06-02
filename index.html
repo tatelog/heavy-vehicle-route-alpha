@@ -145,6 +145,13 @@
   .destination-confirm .meta{font-size:11px;color:var(--muted);line-height:1.45;margin-top:3px}
   .destination-confirm .actions{display:flex;gap:8px;margin-top:10px}
   .destination-confirm .actions .btn{flex:1}
+  .route-confirm{display:none;margin-top:10px;background:var(--bg);border:1px solid var(--hiviz);border-radius:10px;padding:10px}
+  .route-confirm.on{display:block}
+  .route-confirm .title{font-size:11px;color:var(--hiviz);font-weight:900;margin-bottom:4px}
+  .route-confirm .name{font-size:13px;color:var(--text);font-weight:900;line-height:1.45}
+  .route-confirm .meta{font-size:11px;color:var(--muted);line-height:1.45;margin-top:3px}
+  .route-confirm .actions{display:flex;gap:8px;margin-top:10px}
+  .route-confirm .actions .btn{flex:1}
   .guide-box{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
   .guide-controls{display:flex;gap:8px}.guide-controls .btn{flex:1}
   .guide-list{display:flex;flex-direction:column;gap:6px;margin-top:9px;max-height:156px;overflow:auto}
@@ -248,6 +255,15 @@
         </div>
       </div>
       <div class="candidate-list" id="routeCandidates" style="display: none;"></div>
+      <div class="route-confirm" id="routeConfirm">
+        <div class="title">このルートでいいですか？</div>
+        <div class="name" id="routeConfirmName"></div>
+        <div class="meta" id="routeConfirmMeta"></div>
+        <div class="actions">
+          <button class="btn" id="confirmRouteBtn" type="button">確定して運転時へ</button>
+          <button class="btn subtle" id="changeRouteBtn" type="button">ルートを選び直す</button>
+        </div>
+      </div>
     </div>
     </section>
 
@@ -442,7 +458,7 @@ let state = {
   localTrack:[], passedRoads:new Map(), tripStart:null, arrived:false, roundTrips:0, manualOnly:true,
   routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], pendingDestination:null, pendingDestinationQuery:'',
   confirmedDestination:null, confirmedDestinationQuery:'', destinationPreviewMarker:null,
-  routeCandidates:[], selectedRoute:0, routeSteps:[], currentStep:0,
+  routeCandidates:[], selectedRoute:0, routeConfirmed:false, routeSteps:[], currentStep:0,
   voice:false, guiding:false, guideWatchId:null, lastSpokenStep:-1,
   viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
 };
@@ -1387,6 +1403,14 @@ changeDestinationBtn.onclick=()=>{
   requestAnimationFrame(()=>scrollRoutePanelTo(destinationCandidates));
   setRouteHint('行き先候補から選び直してください。','warn');
 };
+confirmRouteBtn.onclick=()=>confirmSelectedRoute();
+changeRouteBtn.onclick=()=>{
+  state.routeConfirmed=false;
+  clearRouteConfirmation();
+  renderRouteCandidates();
+  requestAnimationFrame(()=>scrollRoutePanelTo(routeCandidates));
+  setRouteHint('ルート候補から選び直してください。','warn');
+};
 async function showRouteToDestination(){
   const q=destInput.value.trim();
   if(!activeVeh()){
@@ -1433,6 +1457,7 @@ async function showRouteToDestination(){
     const ranked=rankRouteCandidates(routes,dest);
     state.routeCandidates=ranked.filter(c=>c.passable);
     state.selectedRoute=0;
+    state.routeConfirmed=false;
     renderRouteCandidates();
     const selected=state.routeCandidates[0];
     if(!selected){
@@ -1442,8 +1467,8 @@ async function showRouteToDestination(){
       setRouteHint(`この車両で通行可能と判定できる候補がありません。赤区間を含む候補 ${blocked.length}件は除外しました。車両区分か行き先を見直してください。`,'ng');
       return;
     }
-    drawRouteCandidate(0);
-    setRouteHint(routeCandidateMessage(dest,selected), routeAuditType(selected.audit));
+    previewRouteCandidate(0,{scroll:true});
+    setRouteHint('推奨ルートを地図に表示しました。内容を確認してからルートを確定してください。', routeAuditType(selected.audit));
   }catch(e){
     setRouteHint(`ルート表示に失敗しました: ${e?.message || '原因不明'}`,'ng');
   }finally{
@@ -1660,9 +1685,11 @@ function clearRouteCandidatesOnly(){
   state.destination=null;
   state.routeCandidates=[];
   state.selectedRoute=0;
+  state.routeConfirmed=false;
   state.routeSteps=[];
   state.currentStep=0;
   state.lastSpokenStep=-1;
+  clearRouteConfirmation();
   renderRouteCandidates();
   renderGuideList();
   updateDriveSummary();
@@ -1688,16 +1715,44 @@ function renderRouteCandidates(){
     btn.className='route-candidate'+(i===state.selectedRoute?' on':'');
     const timeText=c.traffic.delayMin?`遅延込み 約${Math.round(c.min+c.traffic.delayMin)}分（+${Math.round(c.traffic.delayMin)}分）`:`通常 約${Math.round(c.min)}分`;
     const risk=c.audit.unknown?`未照合 ${Math.round(c.audit.unknownRate*100)}%`:'整合';
-    btn.innerHTML=`<div class="main"><span>候補${i+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分</span>${i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${timeText} / <span class="risk">${risk}</span></div>`;
+    const tag=i===state.selectedRoute ? (state.routeConfirmed?'確定':'確認中') : i===0 ? '推奨' : '';
+    btn.innerHTML=`<div class="main"><span>候補${i+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分</span>${tag?`<span class="tag">${tag}</span>`:''}</div><div class="meta">${timeText} / <span class="risk">${risk}</span></div>`;
     btn.onclick=()=>{
-      state.selectedRoute=i;
-      drawRouteCandidate(i);
+      previewRouteCandidate(i,{scroll:true});
       renderRouteCandidates();
-      setRouteHint(routeCandidateMessage(c.dest,c),routeAuditType(c.audit));
-      switchView('drive');
     };
     routeCandidates.appendChild(btn);
   });
+}
+function previewRouteCandidate(index,options={}){
+  const c=state.routeCandidates[index];
+  if(!c) return;
+  state.selectedRoute=index;
+  state.routeConfirmed=false;
+  drawRouteCandidate(index);
+  routeConfirmName.textContent=`候補${index+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分`;
+  const timeText=c.traffic.delayMin?`遅延込み 約${Math.round(c.min+c.traffic.delayMin)}分（+${Math.round(c.traffic.delayMin)}分）`:`通常 約${Math.round(c.min)}分`;
+  const risk=c.audit.unknown?`未照合 ${Math.round(c.audit.unknownRate*100)}%`:'通行可能道路データと概ね整合';
+  routeConfirmMeta.textContent=`${timeText} / ${risk}`;
+  routeConfirm.classList.add('on');
+  setRouteHint('地図上のルートを確認してください。問題なければ「確定して運転時へ」を押してください。',routeAuditType(c.audit));
+  if(options.scroll) scrollRoutePanelTo(routeConfirm);
+}
+function clearRouteConfirmation(){
+  routeConfirm.classList.remove('on');
+  routeConfirmName.textContent='';
+  routeConfirmMeta.textContent='';
+}
+function confirmSelectedRoute(){
+  const c=state.routeCandidates[state.selectedRoute];
+  if(!c) return setRouteHint('先にルート候補を選択してください。','warn');
+  state.routeConfirmed=true;
+  stopGuidance(false);
+  drawRouteCandidate(state.selectedRoute);
+  clearRouteConfirmation();
+  renderRouteCandidates();
+  setRouteHint('ルートを確定しました。運転時画面で「案内開始」を押すとGPS案内を開始します。','ok');
+  switchView('drive');
 }
 function drawRouteCandidate(index){
   const c=state.routeCandidates[index];
@@ -1739,9 +1794,10 @@ function clearRoute(updateHint=true){
   removeRouteLayer();
   state.routeActive=false;
   state.destination=null; state.pendingDestination=null; state.pendingDestinationQuery=''; state.confirmedDestination=null; state.confirmedDestinationQuery='';
-  state.routeCandidates=[]; state.selectedRoute=0; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
+  state.routeCandidates=[]; state.selectedRoute=0; state.routeConfirmed=false; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
   clearDestinationCandidates();
   clearDestinationConfirmation();
+  clearRouteConfirmation();
   renderRouteCandidates();
   renderGuideList();
   updateDriveSummary();
@@ -1920,7 +1976,9 @@ async function recalculateActiveRoute(){
       return;
     }
     state.destination=dest;
+    state.routeConfirmed=true;
     drawRouteCandidate(0);
+    clearRouteConfirmation();
     setRouteHint(routeCandidateMessage(dest,selected),routeAuditType(selected.audit));
     switchView('drive');
   }catch(e){
