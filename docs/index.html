@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データ出典・判定ロジック | 大型車両 通行ルート確認（α版）</title>
+<meta name="description" content="通行可否の判定ロジック、車両諸元・道路種別の扱い、地理院タイル/OpenStreetMap/JARTIC等の無償データ出典と利用方針をまとめた技術メモ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<script>
+  (()=>{try{
+    const mode=localStorage.getItem('routeTheme')||'system';
+    const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.themeMode=mode;
+    document.documentElement.dataset.theme=mode==='system'?(dark?'dark':'light'):mode;
+  }catch{document.documentElement.dataset.theme='dark';document.documentElement.dataset.themeMode='system'}})();
+</script>
+<style>
+  :root{
+    color-scheme:dark light;
+    --bg:#0d1117; --panel:#141b22; --surface:#1b242d; --surface2:#222d38;
+    --line:#2b3742; --text:#e9eef3; --muted:#8a98a5; --faint:#5d6a76;
+    --hiviz:#ffd400; --hiviz-d:#caa800; --pass:#34d27b; --fail:#ff4d57; --tight:#ff9f1c;
+    --blue:#3aa0ff; --purple:#b784ff; --shadow:0 12px 32px rgba(0,0,0,.45);
+    --maxw:880px;
+  }
+  html[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f2f5f7; --panel:#f8fafc; --surface:#ffffff; --surface2:#edf2f6;
+    --line:#d5dee6; --text:#17212b; --muted:#667584; --faint:#8a98a6;
+    --hiviz:#ffd400; --hiviz-d:#b99200; --pass:#149e55; --fail:#d92d3f; --tight:#d97904;
+    --blue:#247ed8; --purple:#8b5cf6; --shadow:0 12px 28px rgba(31,43,55,.14);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Zen Kaku Gothic New",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;-webkit-font-smoothing:antialiased}
+  a{color:var(--hiviz-d)}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.22em;color:var(--hiviz-d);text-transform:uppercase;font-weight:600}
+  h1,h2,h3{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;line-height:1.35;margin:0}
+
+  .nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:58px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:14px;text-decoration:none;color:var(--text)}
+  .brand .mark{width:28px;height:28px;border-radius:8px;background:var(--hiviz);color:#171717;display:grid;place-items:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:15px}
+  .nav-links{display:flex;gap:6px;align-items:center}
+  .nav-links a{font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;padding:8px 11px;border-radius:8px}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{background:var(--hiviz);color:#171717 !important}
+
+  header.head{padding:56px 0 30px}
+  header.head h1{font-size:clamp(26px,4.5vw,40px);margin:14px 0 0}
+  header.head p{color:var(--muted);font-size:15.5px;margin:16px 0 0;max-width:42em}
+  .meta{margin-top:18px;font-size:12.5px;color:var(--faint)}
+
+  main{padding-bottom:60px}
+  section{padding:30px 0;border-top:1px solid var(--line)}
+  section h2{font-size:clamp(20px,3vw,27px)}
+  section h2 .num{font-family:"Oswald",sans-serif;color:var(--hiviz-d);font-weight:600;margin-right:10px}
+  section p{color:var(--text)}
+  section p.lead{color:var(--muted);margin-top:8px}
+  h3.sub{font-size:16px;margin:26px 0 6px}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  th{background:var(--surface2);font-size:12px;letter-spacing:.03em;color:var(--muted);font-weight:800}
+  tr:last-child td{border-bottom:0}
+  td .mono{font-family:"Oswald",sans-serif;font-weight:500}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px}
+  .pill.ok{background:rgba(52,210,123,.16);color:var(--pass)}
+  .pill.ng{background:rgba(255,77,87,.16);color:var(--fail)}
+  .pill.rev{background:rgba(255,159,28,.16);color:var(--tight)}
+  .pill.inv{background:var(--surface2);color:var(--muted)}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0}
+  .card h3{font-size:16px;display:flex;align-items:center;gap:10px}
+  .card .src-meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .card ul{margin:10px 0 0;padding-left:20px;color:var(--muted);font-size:13.5px}
+  .card .refs{margin-top:14px;font-size:12.5px}
+  .card .refs a{display:inline-block;margin-right:14px;word-break:break-all}
+
+  .callout{border-left:3px solid var(--hiviz);background:var(--surface);border-radius:0 12px 12px 0;padding:16px 20px;margin:18px 0;font-size:14px;color:var(--muted)}
+  .callout.warn{border-left-color:var(--tight)}
+  .callout b{color:var(--text)}
+  code{font-family:"Oswald",ui-monospace,monospace;background:var(--surface2);padding:2px 7px;border-radius:5px;font-size:13px}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:16px 0}
+  ol.steps li{position:relative;padding:10px 0 10px 40px;border-top:1px solid var(--line);color:var(--text);font-size:14px}
+  ol.steps li:first-child{border-top:0}
+  ol.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:10px;width:26px;height:26px;border-radius:50%;background:var(--hiviz);color:#171717;font-family:"Oswald",sans-serif;font-weight:700;display:grid;place-items:center;font-size:13px}
+
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--faint);font-size:12.5px}
+  footer a{color:var(--muted);text-decoration:none}
+  @media(max-width:560px){.nav-links a:not(.nav-cta){display:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="../lp/index.html"><span class="mark">R</span><span>通行ルート確認 / Docs</span></a>
+    <div class="nav-links">
+      <a href="../lp/index.html">LP</a>
+      <a class="nav-cta" href="../index.html">α版を開く</a>
+    </div>
+  </div>
+</nav>
+
+<header class="head">
+  <div class="wrap">
+    <span class="eyebrow">Documentation</span>
+    <h1>データ出典・判定ロジック</h1>
+    <p>このツールが「何を根拠に通行可否を表示しているか」と、利用している無償の公的・準公的データの出典・方針をまとめた技術メモです。商用の有料交通APIは前提にしていません。</p>
+    <p class="meta">最終確認: 2026-06-02 / ステータス: α版（試作・仮属性を含む）</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h2><span class="num">01</span>判定の考え方</h2>
+    <p class="lead">基本は <b>車両諸元 × 道路属性</b> の突き合わせです。Google Maps のような完全なライブ渋滞ナビではなく、通行可否の一次検討と現場共有を目的にしています。</p>
+    <div class="callout">
+      候補ルートの評価は、<b>各区間の通行可否</b>を土台に、<b>チーム共有マーカー</b>（現場の最新情報）を加味します。将来は公的な交通量・規制データを「混雑傾向」「注意・不可区間」として重ねます。現場の共有情報は、公的データより優先して表示する方針です。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>入力 — 車両諸元</h2>
+    <p class="lead">区分のワンタップ、車種プリセット、またはカスタム入力（全幅・全高・総重量）で指定します。</p>
+
+    <h3 class="sub">車両区分（代表値）</h3>
+    <table>
+      <thead><tr><th>区分</th><th>全幅</th><th>全高</th><th>総重量</th><th>目安</th></tr></thead>
+      <tbody>
+        <tr><td>普通</td><td class="mono">1.8 m</td><td class="mono">2.1 m</td><td class="mono">2 t</td><td>軽・普通車目安</td></tr>
+        <tr><td>中型</td><td class="mono">2.3 m</td><td class="mono">3.0 m</td><td class="mono">8 t</td><td>4t級まで目安</td></tr>
+        <tr><td>大型</td><td class="mono">2.5 m</td><td class="mono">3.8 m</td><td class="mono">25 t</td><td>大型トラック目安</td></tr>
+        <tr><td>特殊</td><td class="mono">3.0 m</td><td class="mono">4.1 m</td><td class="mono">36 t</td><td>特車確認前提</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub">車種プリセット</h3>
+    <table>
+      <thead><tr><th>車種</th><th>全幅</th><th>全高</th><th>総重量</th></tr></thead>
+      <tbody>
+        <tr><td>4tユニック車</td><td class="mono">2.2 m</td><td class="mono">3.0 m</td><td class="mono">8 t</td></tr>
+        <tr><td>10tダンプ</td><td class="mono">2.5 m</td><td class="mono">3.0 m</td><td class="mono">20 t</td></tr>
+        <tr><td>生コン車（大型）</td><td class="mono">2.5 m</td><td class="mono">3.6 m</td><td class="mono">20 t</td></tr>
+        <tr><td>コンクリポンプ車</td><td class="mono">2.5 m</td><td class="mono">3.8 m</td><td class="mono">25 t</td></tr>
+        <tr><td>ラフター25t</td><td class="mono">3.0 m</td><td class="mono">3.7 m</td><td class="mono">33 t</td></tr>
+        <tr><td>セミトレーラー</td><td class="mono">2.5 m</td><td class="mono">3.8 m</td><td class="mono">36 t</td></tr>
+        <tr><td>重機運搬（低床）</td><td class="mono">3.2 m</td><td class="mono">3.5 m</td><td class="mono">40 t</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub">重量区分（負荷の目安係数）</h3>
+    <p class="lead">走行による路面負荷の目安として、総重量を4区分に分類しています。月報・交渉資料では概算である旨を明示してください。</p>
+    <table>
+      <thead><tr><th>区分</th><th>総重量</th><th>目安係数</th></tr></thead>
+      <tbody>
+        <tr><td>light</td><td class="mono">〜8 t</td><td class="mono">1</td></tr>
+        <tr><td>medium</td><td class="mono">〜20 t</td><td class="mono">8</td></tr>
+        <tr><td>heavy</td><td class="mono">〜30 t</td><td class="mono">30</td></tr>
+        <tr><td>veryheavy</td><td class="mono">30 t 超</td><td class="mono">80</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>入力 — 道路種別</h2>
+    <p class="lead">道路は種別で色分けし、各区間に幅員・高さ・重量の属性を持たせて車両諸元と比較します。</p>
+    <table>
+      <thead><tr><th>種別</th><th>地図色</th><th>扱い</th></tr></thead>
+      <tbody>
+        <tr><td>重要物流道路</td><td><span class="pill" style="background:rgba(255,138,0,.18);color:#ff8a00">オレンジ</span></td><td>大型車両の基幹ルート候補</td></tr>
+        <tr><td>緊急輸送道路</td><td><span class="pill" style="background:rgba(58,160,255,.18);color:var(--blue)">ブルー</span></td><td>幹線として優先評価</td></tr>
+        <tr><td>一般道</td><td><span class="pill inv">グレー</span></td><td>制限を満たす場合に補助的に利用</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <b>仮属性についての注意：</b>現在の各区間の幅・高さ・重量は、道路種別ごとに割り当てた<b>試作の仮属性</b>です。実際の標識・規制が優先します。正式な特殊車両の通行可否は、必ず国の「特殊車両通行確認システム」でご確認ください。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>出力 — 通行可否と共有マーカー</h2>
+    <p class="lead">車両諸元が区間属性を満たせば <span class="pill ok">通行可</span>、超過すれば <span class="pill ng">通行不可</span> として地図と統計に反映します。</p>
+    <h3 class="sub">現場の共有マーカー</h3>
+    <p class="lead">現場の最新情報を、データより優先して表示します。</p>
+    <table>
+      <thead><tr><th>種類</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill rev">渋滞</span></td><td>混雑区間の注意喚起</td></tr>
+        <tr><td><span class="pill ng">通行止め</span></td><td>通行不可として強く反映</td></tr>
+        <tr><td><span class="pill" style="background:rgba(255,212,0,.2);color:var(--hiviz-d)">工事</span></td><td>工事規制区間</td></tr>
+        <tr><td><span class="pill" style="background:rgba(183,132,255,.2);color:var(--purple)">狭い</span></td><td>離合不可・幅員注意</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>地図・位置情報</h2>
+    <h3 class="sub">地図タイル</h3>
+    <ul style="color:var(--muted);font-size:14px">
+      <li><a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル（国土地理院）</a></li>
+      <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></li>
+    </ul>
+    <h3 class="sub">GPS・位置情報</h3>
+    <ul style="color:var(--muted);font-size:14px">
+      <li>Geolocation API は HTTPS が必要です。GitHub Pages はHTTPS配信のため、スマホから現在地取得・追従が可能です。</li>
+      <li>位置共有は画面を開いている間のみ動作します。バックグラウンドでは更新されません。</li>
+      <li>走行距離は GPS 概算です。GPS が使えないセッションは通行実績ログの対象外です（誤データ防止）。</li>
+      <li>本番方針：現場位置情報・通行ログは外部クラウドに置かず、自社管理の <code>PocketBase</code> へ集約します。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>公的交通データ連携（準備中）</h2>
+    <p class="lead">有料の商用交通APIは使わず、無償で利用できる公的・準公的データを優先します。各ソースは利用規約・出典表記・取得頻度・再配布可否を確認してから有効化します。</p>
+
+    <div class="card">
+      <h3>JARTIC/国土交通省 交通量API <span class="pill rev">要規約確認</span></h3>
+      <div class="src-meta">
+        <span class="pill inv">種別: 常時観測交通量</span>
+        <span class="pill ok">費用: 無料</span>
+      </div>
+      <p style="color:var(--muted);font-size:14px;margin:0">ルート周辺の観測交通量から混雑傾向を推定し、候補ルートのスコアに反映します。遅延分数そのものではなく「混雑傾向」として扱います。</p>
+      <ul>
+        <li>ライブ渋滞所要時間そのものではない</li>
+        <li>観測点ベースのため全線を直接カバーしない場合がある</li>
+        <li>観測条件・機器要因で精度が変動する</li>
+      </ul>
+      <div class="refs">
+        <a href="https://www.jartic-open-traffic.org/" target="_blank" rel="noopener">jartic-open-traffic.org</a>
+        <a href="https://www.xroad.mlit.go.jp/database/233/" target="_blank" rel="noopener">xROAD 常時観測交通量</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>JARTIC 交通規制情報オープンデータ <span class="pill rev">要規約確認</span></h3>
+      <div class="src-meta">
+        <span class="pill inv">種別: 交通規制・通行止め・工事</span>
+        <span class="pill ok">費用: 無料 / オープンデータ規約</span>
+      </div>
+      <p style="color:var(--muted);font-size:14px;margin:0">通行止め・規制・工事を候補ルートに重ね、通行不可・注意区間として強く反映します。</p>
+      <ul>
+        <li>API ではなくダウンロード形式の場合、定期取得・整形が必要</li>
+        <li>リアルタイム性は公開更新頻度に依存する</li>
+      </ul>
+      <div class="refs">
+        <a href="https://www.jartic.or.jp/service/opendata/" target="_blank" rel="noopener">jartic.or.jp/service/opendata</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>国土交通省 道路情報提供システム <span class="pill inv">調査中</span></h3>
+      <div class="src-meta">
+        <span class="pill inv">種別: 道路規制・気象・路面</span>
+        <span class="pill ok">費用: 閲覧無料</span>
+      </div>
+      <p style="color:var(--muted);font-size:14px;margin:0">道路気象・路面・規制を注意情報として表示する想定。閲覧サイト中心の可能性があり、スクレイピング前提にはしません。</p>
+      <div class="refs">
+        <a href="https://www.road-info-prvs.mlit.go.jp/roadinfo/" target="_blank" rel="noopener">road-info-prvs.mlit.go.jp</a>
+      </div>
+    </div>
+
+    <h3 class="sub">有効化までの段取り</h3>
+    <ol class="steps">
+      <li>各データソースの利用可否・規約・出典表記・再配布可否を確認する</li>
+      <li>規約同意後、設定で交通量・規制データの連携を有効化する</li>
+      <li>候補ルートの周辺範囲から観測点・規制情報を取得する</li>
+      <li>交通量が大きい区間を「混雑傾向」、規制を「不可・注意区間」として反映する</li>
+      <li>現場のチーム共有マーカーは、公的データより優先して表示する</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>免責</h2>
+    <div class="callout warn">
+      本ツールは一次検討・現場共有のための<b>補助</b>であり、通行可否を保証するものではありません。表示には試作の仮属性・概算値・更新遅延を含みます。正式な特殊車両の通行可否は、国の<b>「特殊車両通行確認システム」</b>および現地の標識・規制で必ずご確認ください。
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="../lp/index.html">← LPへ戻る</a> ・ <a href="../index.html">α版を開く</a>
+    <div style="margin-top:10px">© 2026 大型車両 通行ルート確認ツール — Alpha. 出典: 地理院タイル / OpenStreetMap contributors / JARTIC・国交省（連携候補）</div>
+  </div>
+</footer>
+</body>
+</html>
