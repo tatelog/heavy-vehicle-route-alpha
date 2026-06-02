@@ -175,8 +175,8 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .label-icon,.site-pin-icon{background:transparent;border:0}.label-chip{white-space:nowrap;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 8px;box-shadow:var(--shadow);font-size:12px;font-weight:800;transform:translate(-50%,-100%)}.label-chip.me{border-color:var(--hiviz);color:var(--hiviz)}.label-chip.meet{border-color:var(--pass);color:var(--pass)}.label-chip.alert{border-color:var(--fail);color:var(--fail)}
   .vehicle-icon{background:transparent;border:0}
-  .vehicle-dot{width:30px;height:30px;border-radius:50%;background:#1677ff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 5px rgba(22,119,255,.18);display:grid;place-items:center;color:#fff;font-size:15px;line-height:1}
-  .vehicle-dot::before{content:"🚚";transform:translateY(-1px)}
+  .vehicle-dot{width:34px;height:34px;border-radius:50%;background:#1677ff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 5px rgba(22,119,255,.18);display:grid;place-items:center;color:#fff}
+  .vehicle-dot svg{width:21px;height:21px;display:block}
   .site-pin{width:28px;height:28px;background:var(--hiviz);border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 3px 12px rgba(0,0,0,.36),0 0 0 1px rgba(14,21,28,.28);position:relative;transform:rotate(-45deg)}
   .site-pin::before{content:"";position:absolute;inset:7px;border-radius:50%;background:#17212b;box-shadow:inset 0 0 0 2px rgba(255,255,255,.28)}
   .site-pin::after{content:"";position:absolute;left:50%;top:50%;width:38px;height:14px;border-radius:50%;background:rgba(14,21,28,.22);transform:translate(-24%,-5%) rotate(45deg);filter:blur(3px);z-index:-1}
@@ -201,11 +201,6 @@
           <button type="button" data-view-switch="drive">運転時</button>
           <button type="button" data-view-switch="admin">管理画面</button>
         </div>
-      </div>
-      <div class="theme-switch" aria-label="テーマ切替">
-        <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
-        <button type="button" data-theme-mode="light" aria-pressed="false">ライト</button>
-        <button type="button" data-theme-mode="dark" aria-pressed="false">ダーク</button>
       </div>
     </div>
     <div class="sub"><span id="areaLabel">現在地周辺・OSM試作路線</span></div>
@@ -269,6 +264,13 @@
     </section>
 
     <section class="view" data-view="admin">
+    <div class="sect-label">表示設定</div>
+    <div class="theme-switch" aria-label="テーマ切替">
+      <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
+      <button type="button" data-theme-mode="light" aria-pressed="false">ライト</button>
+      <button type="button" data-theme-mode="dark" aria-pressed="false">ダーク</button>
+    </div>
+
     <details class="fold" id="roomFold" data-alpha-disabled="チーム共有ルームは準備中">
       <summary>共有ルームを開く</summary>
     <div class="room-box">
@@ -1780,7 +1782,15 @@ function sitePinIcon(kind='site'){
   return L.divIcon({className:'site-pin-icon',html:`<div class="${cls}"></div>`,iconSize:[28,28],iconAnchor:[14,28]});
 }
 function currentVehicleIcon(){
-  return L.divIcon({className:'vehicle-icon',html:'<div class="vehicle-dot"></div>',iconSize:[30,30],iconAnchor:[15,15]});
+  const html=`<div class="vehicle-dot" aria-hidden="true">
+    <svg viewBox="0 0 24 24" role="img" focusable="false">
+      <path d="M4 9.5 5.7 6h8.1l1.7 3.5H18a2 2 0 0 1 2 2V17h-2.1a2.25 2.25 0 0 1-4.3 0H10.4a2.25 2.25 0 0 1-4.3 0H4v-5.5a2 2 0 0 1 2-2h-2Z" fill="currentColor"/>
+      <path d="M7 8h5.5l.75 1.5H6.25L7 8Z" fill="#1677ff"/>
+      <circle cx="8.25" cy="17" r="1.05" fill="#1677ff"/>
+      <circle cx="15.75" cy="17" r="1.05" fill="#1677ff"/>
+    </svg>
+  </div>`;
+  return L.divIcon({className:'vehicle-icon',html,iconSize:[34,34],iconAnchor:[17,17]});
 }
 function pinIcon(label,cls){return L.divIcon({className:'label-icon',html:`<div class="label-chip ${cls}">${label}</div>`,iconSize:[0,0]})}
 function renderMeet(room){
