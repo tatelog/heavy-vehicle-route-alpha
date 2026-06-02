@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大型車両・建設現場のための 通行ルート確認アプリ（α版）</title>
+<meta name="description" content="Googleマップでは一般車両扱いになり、大型・特殊車両が通れない道を案内されがちです。車両諸元と道路種別から通行可否を見える化し、現場搬入のルートを事前確認する無償のα版アプリ。GPS現在地・ルート候補・通行可否の色分けに対応。">
+<meta property="og:title" content="大型車両・建設現場のための 通行ルート確認アプリ（α版）">
+<meta property="og:description" content="車両諸元と道路種別から通行可否を見える化。現場搬入ルートを事前確認できる無償のα版。みんなで育てる開発中ツールです。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<script>
+  (()=>{try{
+    const mode=localStorage.getItem('routeTheme')||'system';
+    const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.themeMode=mode;
+    document.documentElement.dataset.theme=mode==='system'?(dark?'dark':'light'):mode;
+  }catch{document.documentElement.dataset.theme='dark';document.documentElement.dataset.themeMode='system'}})();
+</script>
+<style>
+  :root{
+    color-scheme:dark light;
+    --bg:#0d1117; --panel:#141b22; --surface:#1b242d; --surface2:#222d38;
+    --line:#2b3742; --text:#e9eef3; --muted:#8a98a5; --faint:#5d6a76;
+    --hiviz:#ffd400; --hiviz-d:#caa800; --pass:#34d27b; --fail:#ff4d57; --tight:#ff9f1c;
+    --blue:#3aa0ff; --purple:#b784ff; --shadow:0 12px 32px rgba(0,0,0,.45);
+    --maxw:1080px;
+  }
+  html[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f2f5f7; --panel:#f8fafc; --surface:#ffffff; --surface2:#edf2f6;
+    --line:#d5dee6; --text:#17212b; --muted:#667584; --faint:#8a98a6;
+    --hiviz:#ffd400; --hiviz-d:#b99200; --pass:#149e55; --fail:#d92d3f; --tight:#d97904;
+    --blue:#247ed8; --purple:#8b5cf6; --shadow:0 12px 28px rgba(31,43,55,.14);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Zen Kaku Gothic New",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  img{max-width:100%}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.22em;color:var(--hiviz-d);text-transform:uppercase;font-weight:600}
+  h1,h2,h3{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;letter-spacing:.01em;line-height:1.3;margin:0}
+  .btn{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:11px;padding:15px 26px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;transition:transform .12s ease, box-shadow .12s ease;line-height:1}
+  .btn.primary{background:var(--hiviz);color:#171717;box-shadow:0 8px 22px rgba(255,212,0,.28)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,212,0,.4)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--hiviz);color:var(--hiviz-d)}
+  .btn .arrow{font-family:"Oswald",sans-serif}
+
+  /* nav */
+  .nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb, var(--bg) 86%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--hiviz);color:#171717;display:grid;place-items:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:16px;flex-shrink:0}
+  .nav-links{display:flex;align-items:center;gap:8px}
+  .nav-links a{font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:8px}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{background:var(--hiviz);color:#171717 !important;padding:9px 16px !important}
+  .theme-switch{display:inline-grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px}
+  .theme-switch button{background:transparent;color:var(--muted);border:0;border-radius:6px;padding:6px 8px;font-size:10.5px;font-weight:800;line-height:1;cursor:pointer;font-family:inherit}
+  .theme-switch button.on{background:var(--hiviz);color:#171717}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;padding:74px 0 64px}
+  .hero::before{content:"";position:absolute;inset:0;z-index:0;
+    background:
+      radial-gradient(900px 360px at 78% -8%, rgba(255,212,0,.16), transparent 60%),
+      repeating-linear-gradient(135deg, transparent 0 22px, rgba(255,212,0,.045) 22px 44px);}
+  .hero .wrap{position:relative;z-index:1}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:800;color:var(--muted)}
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--hiviz);box-shadow:0 0 0 4px rgba(255,212,0,.18)}
+  .hero h1{font-size:clamp(30px,5.4vw,52px);margin:20px 0 0;max-width:16em}
+  .hero h1 .hl{color:var(--hiviz-d)}
+  .hero .lead{font-size:clamp(15px,2vw,18px);color:var(--muted);max-width:40em;margin:20px 0 0}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:32px}
+  .hero-note{margin-top:16px;font-size:12.5px;color:var(--faint)}
+  .hero-stats{display:flex;flex-wrap:wrap;gap:14px;margin-top:42px}
+  .hero-stats .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px;min-width:150px}
+  .hero-stats .n{font-family:"Oswald",sans-serif;font-size:26px;font-weight:600;color:var(--hiviz-d)}
+  .hero-stats .l{font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* section frame */
+  section.block{padding:62px 0;border-top:1px solid var(--line)}
+  .sec-head{max-width:44em}
+  .sec-head h2{font-size:clamp(23px,3.4vw,34px);margin-top:10px}
+  .sec-head p{color:var(--muted);font-size:15.5px;margin:14px 0 0}
+
+  /* problem cards */
+  .prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:34px}
+  .prob{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--fail);border-radius:14px;padding:22px}
+  .prob h3{font-size:17px;display:flex;gap:10px;align-items:flex-start}
+  .prob h3 .ic{color:var(--fail);font-family:"Oswald",sans-serif;font-weight:700;flex-shrink:0}
+  .prob p{color:var(--muted);font-size:14px;margin:12px 0 0}
+  .prob.solve{border-left-color:var(--pass)}
+  .prob.solve h3 .ic{color:var(--pass)}
+
+  /* feature grid */
+  .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:34px}
+  .feat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative}
+  .feat .ic{width:42px;height:42px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;font-size:21px;margin-bottom:14px}
+  .feat h3{font-size:16.5px}
+  .feat p{color:var(--muted);font-size:13.5px;margin:9px 0 0}
+  .feat .tag{position:absolute;top:18px;right:18px;font-size:10px;font-weight:800;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:rgba(255,159,28,.16);color:var(--tight)}
+
+  /* data / how it works */
+  .info-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:24px;margin-top:34px;align-items:start}
+  @media(max-width:760px){.info-grid{grid-template-columns:1fr}}
+  .panel-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .panel-card h3{font-size:18px;margin-bottom:6px}
+  .data-row{display:flex;gap:14px;padding:15px 0;border-top:1px solid var(--line)}
+  .data-row:first-of-type{border-top:0}
+  .data-row .k{font-weight:800;font-size:14px;min-width:118px;flex-shrink:0}
+  .data-row .v{color:var(--muted);font-size:13.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chip{font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface2)}
+  .chip.ok{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 40%,var(--line))}
+  .chip.ng{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 40%,var(--line))}
+  .chip.b{color:var(--blue)} .chip.o{color:var(--tight)}
+  .verdict-demo{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+  .vd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;background:var(--surface2)}
+  .vd .road{font-weight:700}
+  .vd .badge2{font-family:"Oswald",sans-serif;font-weight:600;font-size:12.5px;padding:3px 9px;border-radius:6px}
+  .vd.ok .badge2{background:rgba(52,210,123,.16);color:var(--pass)}
+  .vd.ng .badge2{background:rgba(255,77,87,.16);color:var(--fail)}
+
+  /* gps strip */
+  .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:30px}
+  .strip .cell{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .strip .cell .ic{font-size:22px}
+  .strip .cell h3{font-size:15px;margin:10px 0 6px}
+  .strip .cell p{color:var(--muted);font-size:13px;margin:0}
+
+  /* roadmap */
+  .road-wrap{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.road-wrap{grid-template-columns:1fr}}
+  .road-col{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .road-col h3{font-size:16px;display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .road-col .pin{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px}
+  .pin.now{background:var(--hiviz);color:#171717}
+  .pin.next{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+  .road-col ul{list-style:none;padding:0;margin:14px 0 0}
+  .road-col li{display:flex;gap:11px;padding:9px 0;font-size:14px;color:var(--text);border-top:1px solid var(--line)}
+  .road-col li:first-child{border-top:0}
+  .road-col li .m{flex-shrink:0;font-family:"Oswald",sans-serif;font-weight:700}
+  li .m.ok{color:var(--pass)} li .m.soon{color:var(--tight)}
+  .road-col.next li{color:var(--muted)}
+
+  /* grow / community */
+  .grow{background:linear-gradient(180deg, var(--surface) 0%, var(--panel) 100%);border:1px solid var(--line);border-radius:20px;padding:40px 32px;margin-top:34px;text-align:center}
+  .grow h3{font-size:clamp(20px,3vw,26px)}
+  .grow p{color:var(--muted);max-width:38em;margin:14px auto 0;font-size:15px}
+  .grow .row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:26px}
+
+  /* notice */
+  .notice{background:color-mix(in srgb,var(--tight) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--tight) 35%,var(--line));border-radius:14px;padding:22px 24px;margin-top:30px}
+  .notice h3{font-size:15px;color:var(--tight);display:flex;gap:9px;align-items:center}
+  .notice ul{margin:12px 0 0;padding-left:20px;color:var(--muted);font-size:13.5px}
+  .notice li{margin:7px 0}
+
+  /* final cta */
+  .final{padding:70px 0;border-top:1px solid var(--line);text-align:center}
+  .final h2{font-size:clamp(26px,4vw,40px);max-width:14em;margin:0 auto}
+  .final p{color:var(--muted);margin:16px auto 0;max-width:34em}
+  .final .row{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13px}
+  .foot-grid{display:flex;flex-wrap:wrap;gap:30px;justify-content:space-between}
+  footer h4{font-size:12px;letter-spacing:.06em;color:var(--text);margin:0 0 10px;text-transform:uppercase;font-family:"Oswald",sans-serif;font-weight:600}
+  footer a{color:var(--muted);text-decoration:none;display:block;padding:3px 0}
+  footer a:hover{color:var(--hiviz-d)}
+  .copy{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+  @media(max-width:620px){.nav-links a:not(.nav-cta):not(.theme-link){display:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" style="text-decoration:none">
+      <span class="mark">R</span><span>大型車両 通行ルート確認</span>
+    </a>
+    <div class="nav-links">
+      <a href="#problem">課題</a>
+      <a href="#features">できること</a>
+      <a href="#data">仕組み</a>
+      <a href="#roadmap">展望</a>
+      <div class="theme-switch" id="themeSwitch" role="group" aria-label="テーマ切替">
+        <button type="button" data-theme-mode="system" class="on">自動</button>
+        <button type="button" data-theme-mode="light">明</button>
+        <button type="button" data-theme-mode="dark">暗</button>
+      </div>
+      <a class="nav-cta" href="../index.html">α版を開く</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="badge"><span class="dot"></span>ALPHA · 完全無償で公開中</span>
+    <h1>大型車両・建設現場のための<br><span class="hl">通行ルート確認</span>アプリ</h1>
+    <p class="lead">
+      ダンプ・生コン車・重機運搬。現場へ何度も入る大型車両は、幅・高さ・重量の制限で「通れない道」があります。
+      一般的な地図アプリは普通車と同じ案内になりがち。本ツールは<b>車両諸元と道路種別から通行可否を色分け</b>し、搬入ルートを走る前に確認できます。
+    </p>
+    <div class="hero-cta">
+      <a class="btn primary" href="../index.html">α版を開く <span class="arrow">→</span></a>
+      <a class="btn ghost" href="#features">できることを見る</a>
+    </div>
+    <p class="hero-note">インストール不要・ブラウザだけで動作 / スマホはHTTPSでGPS現在地に対応 / 正式な通行可否は国の特殊車両通行確認システムでご確認ください</p>
+
+    <div class="hero-stats">
+      <div class="stat"><div class="n">¥0</div><div class="l">α版は無償公開</div></div>
+      <div class="stat"><div class="n">幅 / 高 / 重</div><div class="l">車両諸元で可否判定</div></div>
+      <div class="stat"><div class="n">GPS</div><div class="l">現在地・ルート候補</div></div>
+      <div class="stat"><div class="n">3 View</div><div class="l">ルート選定・運転時・管理</div></div>
+    </div>
+  </div>
+</header>
+
+<section class="block" id="problem">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Why</span>
+      <h2>「通れるはず」で現場に向かうと、通れない</h2>
+      <p>建設現場の搬入は、同じ現場へ何度も大型車が入ります。そのたびにルートの可否を確かめたいのに、既存の地図サービスは大型・特殊車両の制限を前提にしていません。</p>
+    </div>
+    <div class="prob-grid">
+      <div class="prob">
+        <h3><span class="ic">!</span>一般車両と同じ扱いになる</h3>
+        <p>多くの地図ナビは普通車前提でルートを引きます。幅員・高さ制限・重量制限を考慮しないため、大型・特殊車両では実際には通れない道を案内されることがあります。</p>
+      </div>
+      <div class="prob">
+        <h3><span class="ic">!</span>同じ現場へ何度も搬入する</h3>
+        <p>残土搬出、生コン打設、資機材搬入。現場工事は往復が前提です。一度きりでなく「毎回安全に通れるか」を素早く確認できる手段が要ります。</p>
+      </div>
+      <div class="prob solve">
+        <h3><span class="ic">✓</span>だから諸元ベースで見える化する</h3>
+        <p>車両の幅・高さ・総重量と、道路種別ごとの属性を突き合わせ、候補ルートを<b>通行可／不可で色分け</b>。走る前の一次検討と現場共有を支援します。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Features</span>
+      <h2>α版でできること</h2>
+      <p>PocketBase に接続しなくても、車両選択・路線の色分け・現場ピン・通行可ルート表示は動きます。<span style="color:var(--tight);font-weight:700">準備中</span>の機能は今後のアップデートで開放します。</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="ic">🚚</div>
+        <h3>車両を選ぶだけで判定</h3>
+        <p>4tユニックから重機運搬の低床トレーラー（40t級）まで。区分・車種のワンタップ選択、または全幅・全高・総重量のカスタム入力に対応。</p>
+      </div>
+      <div class="feat">
+        <div class="ic">🗺️</div>
+        <h3>通行可否を色分け表示</h3>
+        <p>重要物流道路・緊急輸送道路・一般道を色で区別し、選んだ車両で通れる区間／通れない区間を地図上に表示します。</p>
+      </div>
+      <div class="feat">
+        <div class="ic">📍</div>
+        <h3>GPS現在地とルート候補</h3>
+        <p>現在地を取得して周辺道路を読み込み、行き先・出発地から通行可能道路に沿った候補ルートを提示。LINE共有にも対応。</p>
+      </div>
+      <div class="feat">
+        <div class="ic">🔊</div>
+        <h3>運転時ビュー＋音声案内</h3>
+        <p>運転中は現在地追従とシンプルな案内表示に切替。音声ON/OFFで、画面を見続けなくてもルートを追えます。</p>
+      </div>
+      <div class="feat">
+        <span class="tag">一部準備中</span>
+        <div class="ic">⚠️</div>
+        <h3>現場の共有マーカー</h3>
+        <p>渋滞・通行止め・工事・狭い（離合不可）を地図に置いて共有。現場の最新情報を、データより優先して見えるようにします。</p>
+      </div>
+      <div class="feat">
+        <span class="tag">準備中</span>
+        <div class="ic">👷</div>
+        <h3>チーム共有ルーム</h3>
+        <p>現場ルームで現在地・集合地・通行実績ログを共有。位置情報は外部クラウドではなく自社管理のサーバーへ集約する方針です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="data">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>どんな情報のもとで動くのか</h2>
+      <p>判定は「車両諸元 × 道路属性」が基本です。何を根拠に何を表示しているのかを明確にし、過信を避けられる設計にしています。</p>
+    </div>
+    <div class="info-grid">
+      <div class="panel-card">
+        <h3>入力 — 車両と地図</h3>
+        <div class="data-row"><div class="k">車両諸元</div><div class="v">全幅・全高・総重量。区分（普通／中型／大型／特殊）や車種プリセット、カスタム値から選択。</div></div>
+        <div class="data-row"><div class="k">道路種別</div><div class="v">重要物流道路・緊急輸送道路・一般道。各区間の幅員・高さ・重量は試作の仮属性で評価。</div></div>
+        <div class="data-row"><div class="k">地図タイル</div><div class="v">地理院タイル／OpenStreetMap を使用。</div></div>
+        <div class="data-row"><div class="k">将来の根拠</div><div class="v">JARTIC/国交省の交通量・交通規制オープンデータ連携を準備中。</div></div>
+        <div class="chips">
+          <span class="chip o">重要物流道路</span>
+          <span class="chip b">緊急輸送道路</span>
+          <span class="chip">一般道</span>
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3>出力 — 通行可否の色分け</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 4px">選んだ車両の諸元と各区間の属性を突き合わせ、候補を可否で表示します（イメージ）。</p>
+        <div class="verdict-demo">
+          <div class="vd ok"><span class="road">国道8号 ・ 重要物流道路</span><span class="badge2">通行可</span></div>
+          <div class="vd ok"><span class="road">緊急輸送道路 区間</span><span class="badge2">通行可</span></div>
+          <div class="vd ng"><span class="road">一般道 ・ 高さ/重量制限</span><span class="badge2">通行不可</span></div>
+        </div>
+        <div class="chips" style="margin-top:18px">
+          <span class="chip ok">通行可 区間</span>
+          <span class="chip ng">通行不可 区間</span>
+        </div>
+        <p style="color:var(--faint);font-size:12px;margin-top:16px">※ 仮属性に基づく一次検討の参考値です。正式判定ではありません。</p>
+        <p style="margin:14px 0 0"><a href="../docs/index.html" style="color:var(--hiviz-d);font-weight:800;text-decoration:none">データ出典・判定ロジックの詳細 →</a></p>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="cell">
+        <div class="ic">📡</div>
+        <h3>GPSで現在地・移動できる</h3>
+        <p>GitHub Pages はHTTPS配信のため、スマホのブラウザから位置情報の取得・追従が可能です（端末で位置情報の許可が必要）。</p>
+      </div>
+      <div class="cell">
+        <div class="ic">🌐</div>
+        <h3>インストール不要</h3>
+        <p>アプリストアもサインアップも不要。URLを開くだけ。現場ではLINEでURLを共有してそのまま使えます。</p>
+      </div>
+      <div class="cell">
+        <div class="ic">🔒</div>
+        <h3>位置情報の扱い</h3>
+        <p>本番方針は、現場位置情報や通行ログを外部クラウドに置かず自社管理サーバー（PocketBase）へ集約すること。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="roadmap">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Roadmap</span>
+      <h2>これからの展望</h2>
+      <p>α版は土台です。現場の実データと公的データを取り込みながら、「通れる道」の精度を上げていきます。</p>
+    </div>
+    <div class="road-wrap">
+      <div class="road-col">
+        <h3><span class="pin now">いま動く</span>α版で利用可能</h3>
+        <ul>
+          <li><span class="m ok">✓</span>車両諸元による通行可否の色分け</li>
+          <li><span class="m ok">✓</span>GPS現在地・周辺道路の読み込み</li>
+          <li><span class="m ok">✓</span>行き先・出発地からのルート候補</li>
+          <li><span class="m ok">✓</span>運転時ビューと音声案内</li>
+          <li><span class="m ok">✓</span>地理院タイル / OpenStreetMap 表示</li>
+        </ul>
+      </div>
+      <div class="road-col next">
+        <h3><span class="pin next">準備中</span>これから広げる</h3>
+        <ul>
+          <li><span class="m soon">→</span>チーム共有ルーム・現在地／集合地の共有</li>
+          <li><span class="m soon">→</span>渋滞・通行止め・工事の共有マーカー連携</li>
+          <li><span class="m soon">→</span>リアルタイム交通情報APIとの接続</li>
+          <li><span class="m soon">→</span>JARTIC等の公的データ（交通量・規制）連携</li>
+          <li><span class="m soon">→</span>通行実績・走行サマリのログ化</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grow">
+      <span class="eyebrow">Grow together</span>
+      <h3>無償のα版を、みんなで育てる</h3>
+      <p>
+        このツールは完成品ではなく、現場で使いながら育てる開発中のアプリです。
+        「この道は本当は通れない」「この情報が欲しい」——そうした現場の声が、判定ルールやデータの精度をそのまま良くしていきます。
+        まずは触ってみて、気づいたことを教えてください。
+      </p>
+      <div class="row">
+        <a class="btn primary" href="../index.html">α版を開く <span class="arrow">→</span></a>
+        <a class="btn ghost" href="../docs/index.html">仕組み・データ出典を見る</a>
+      </div>
+    </div>
+
+    <div class="notice">
+      <h3>⚠️ ご利用上の注意</h3>
+      <ul>
+        <li>本ツールは一次検討・現場共有のための<b>補助</b>です。正式な特殊車両の通行可否は、国の「特殊車両通行確認システム」で必ずご確認ください。</li>
+        <li>道路の幅・高さ・重量は、試作段階の<b>仮属性</b>です。実際の規制・標識を優先してください。</li>
+        <li>位置共有は画面を開いている間だけ動作します。GPS走行距離は概算値です。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <span class="eyebrow">Get started</span>
+    <h2>走る前に、通れる道を確かめる。</h2>
+    <p>登録もインストールも不要。スマホでもPCでも、URLを開けばすぐに使えます。</p>
+    <div class="row">
+      <a class="btn primary" href="../index.html">α版を開く <span class="arrow">→</span></a>
+      <a class="btn ghost" href="../docs/index.html">データ出典・判定ロジック</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div style="max-width:24em">
+        <div class="brand" style="margin-bottom:10px"><span class="mark">R</span><span>大型車両 通行ルート確認</span></div>
+        <p style="margin:0;color:var(--muted)">建設・現場搬入・大型/特殊車両のための、通行ルート事前確認ツール（α版・無償）。</p>
+      </div>
+      <div>
+        <h4>ページ</h4>
+        <a href="../index.html">α版アプリを開く</a>
+        <a href="#features">できること</a>
+        <a href="#roadmap">今後の展望</a>
+        <a href="../docs/index.html">データ出典・判定ロジック</a>
+      </div>
+      <div>
+        <h4>データ出典</h4>
+        <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル（国土地理院）</a>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
+        <a href="https://www.jartic-open-traffic.org/" target="_blank" rel="noopener">JARTIC/国交省 交通量API（連携候補）</a>
+        <a href="https://www.jartic.or.jp/service/opendata/" target="_blank" rel="noopener">JARTIC 交通規制オープンデータ（連携候補）</a>
+      </div>
+    </div>
+    <div class="copy">© 2026 大型車両 通行ルート確認ツール — Alpha. 正式な通行可否は特殊車両通行確認システムをご確認ください。</div>
+  </div>
+</footer>
+
+<script>
+  // テーマ切替（アプリと同じ localStorage キーを共有）
+  const root=document.documentElement;
+  const sw=document.getElementById('themeSwitch');
+  function apply(mode){
+    const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.themeMode=mode;
+    root.dataset.theme=mode==='system'?(dark?'dark':'light'):mode;
+    sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.themeMode===mode));
+  }
+  sw.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-theme-mode]'); if(!b) return;
+    const mode=b.dataset.themeMode;
+    try{localStorage.setItem('routeTheme',mode)}catch{}
+    apply(mode);
+  });
+  apply(localStorage.getItem('routeTheme')||'system');
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+    if((localStorage.getItem('routeTheme')||'system')==='system') apply('system');
+  });
+</script>
+</body>
+</html>

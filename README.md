@@ -4,12 +4,28 @@
 
 ## 成果物
 
-- `index.html`: Leaflet + 素の JavaScript + PocketBase JS SDK の単体HTML
+- `index.html`: Leaflet + 素の JavaScript + PocketBase JS SDK の単体HTML（α版アプリ本体）
+- `lp/index.html`: 構想・できること・GPS/動作環境・今後の展望を訴求するランディングページ（LP）
+- `docs/index.html`: 判定ロジックとデータ出典（地理院/OSM/JARTIC候補）の技術メモページ
 - `pocketbase_schema.md`: PocketBase 管理画面で作成するコレクション定義
 - `public_traffic_sources.json`: JARTIC/国交省系の無償交通データ接続候補
 - `public_traffic_data_plan.md`: 利用規約確認、申請、実装順のメモ
+- `pages_lp_plan.md`: GitHub Pages / LP 構想メモ
 
 PocketBase 未接続でも、車両選択、路線色分け、現場ピン、最寄り通行可ルート表示は動きます。
+
+## GitHub Pages 構成（α版）
+
+| パス | 役割 | 主なリンク先 |
+|---|---|---|
+| `/` (`index.html`) | α版アプリ本体（現状はトップに配置） | — |
+| `/lp/` | LP。α版の訴求とアプリ・ドキュメントへの導線 | `../index.html`（α版を開く）, `../docs/` |
+| `/docs/` | データ出典・判定ロジックの説明 | `../lp/`, `../index.html` |
+
+- 公開元ブランチは `claude/construction-app-lp-ZvX4j`。GitHub Pages の Source を本ブランチに設定すると、`/lp/` がLP、`/`（ルート）がα版アプリとして開けます。
+- LP・docs はビルド不要の単体HTMLで、アプリと同じハイビズ配色・テーマ（`routeTheme` を共有）に揃えています。
+- α版の範囲: 車両諸元による通行可否の色分け、GPS現在地・ルート候補、運転時ビュー＋音声案内まで。チーム共有・公的データ連携・通行実績ログは準備中です。
+- GPS は HTTPS が必要なため、スマホ検証は GitHub Pages（HTTPS）URL を使ってください。
 
 ## PocketBase 起動
 
