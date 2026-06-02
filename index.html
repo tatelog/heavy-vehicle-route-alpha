@@ -1350,14 +1350,66 @@ async function showRouteToDestination(){
   }
 }
 async function geocodeDestination(q){
-  const isCoord=q.match(/^\s*([0-9.]+)\s*,\s*([0-9.]+)\s*$/);
+  const isCoord=q.match(/^\s*(-?[0-9.]+)\s*,\s*(-?[0-9.]+)\s*$/);
   if(isCoord) return {lat:+isCoord[1],lng:+isCoord[2],label:q};
-  const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q='+encodeURIComponent(q);
-  const res=await fetch(url,{headers:{'Accept':'application/json'}});
-  if(!res.ok) throw new Error('行き先検索の通信に失敗しました');
-  const data=await res.json();
-  if(!data.length) throw new Error('行き先が見つかりませんでした');
-  return {lat:+data[0].lat,lng:+data[0].lon,label:data[0].display_name?.split(',').slice(0,2).join(', ') || q};
+  const origin=getRouteOrigin(false);
+  const rows=[];
+  for(const query of destinationQueries(q)){
+    const url='https://nominatim.openstreetmap.org/search?format=json&limit=8&countrycodes=jp&accept-language=ja&addressdetails=1&extratags=1&q='+encodeURIComponent(query);
+    const res=await fetch(url,{headers:{'Accept':'application/json'}});
+    if(!res.ok) continue;
+    const data=await res.json();
+    data.forEach(item=>rows.push({...item,_query:query}));
+  }
+  const unique=new Map();
+  rows.forEach(item=>{
+    const key=item.osm_id || `${(+item.lat).toFixed(6)},${(+item.lon).toFixed(6)}`;
+    const scored={...item,_score:scoreDestinationCandidate(item,q,origin)};
+    if(!unique.has(key) || unique.get(key)._score<scored._score) unique.set(key,scored);
+  });
+  const best=[...unique.values()].sort((a,b)=>b._score-a._score)[0];
+  if(!best) throw new Error('行き先が見つかりませんでした');
+  if(best._score<5) throw new Error('行き先候補の精度が低いため採用できませんでした。住所や施設名を少し詳しく入力してください。');
+  return {lat:+best.lat,lng:+best.lon,label:destinationLabel(best),raw:best};
+}
+function destinationQueries(q){
+  const base=q.trim();
+  const variants=new Set([base]);
+  const normalized=base.replace(/市庁舎/g,'市役所').replace(/庁舎/g,'役所');
+  variants.add(normalized);
+  const city=(normalized.match(/(.+?市)(?:役所|役場|庁舎|区役所|$)/)||[])[1];
+  if(city){
+    variants.add(`${normalized} ${city}`);
+    variants.add(`${city} ${normalized}`);
+  }
+  return [...variants].filter(Boolean);
+}
+function scoreDestinationCandidate(item,q,origin){
+  const display=normalizePlaceText(item.display_name||'');
+  const original=normalizePlaceText(q);
+  const normalized=normalizePlaceText(q.replace(/市庁舎/g,'市役所').replace(/庁舎/g,'役所'));
+  let score=(+item.importance||0)*10;
+  if(display.includes(original)) score+=45;
+  if(display.includes(normalized)) score+=55;
+  if((item.class==='amenity'||item.category==='amenity') && item.type==='townhall') score+=55;
+  if(item.class==='highway') score-=75;
+  if(['road','primary','secondary','tertiary','residential'].includes(item.type)) score-=45;
+  const city=(normalized.match(/(.+?市)/)||[])[1];
+  if(city && display.includes(normalizePlaceText(city))) score+=35;
+  if(/市役所|市庁舎|役所/.test(q) && /支所|分室|出張所|北庁舎|南庁舎|支庁/.test(display)) score-=18;
+  if(/市役所|市庁舎|役所/.test(q) && display.startsWith(normalized+',')) score+=25;
+  if(origin && Number.isFinite(+item.lat) && Number.isFinite(+item.lon)){
+    const km=haversine(origin,{lat:+item.lat,lng:+item.lon})/1000;
+    score-=Math.min(km/8,20);
+  }
+  return score;
+}
+function normalizePlaceText(text){
+  return String(text||'').replace(/\s+/g,'').replace(/[（）()]/g,'').toLowerCase();
+}
+function destinationLabel(item){
+  const parts=(item.display_name||'').split(',').map(s=>s.trim()).filter(Boolean);
+  return parts.slice(0,3).join(', ') || item.name || item.display_name || '行き先';
 }
 async function fetchRoutes(from,to){
   const url=`https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=true`;
