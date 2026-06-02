@@ -804,7 +804,6 @@ async function handlePosition(latlng,fromGps){
     updateRoundTrips(latlng);
   }
   state.lastSent={...latlng,time:Date.now()};
-  if(state.guiding) setCurrentLocation(latlng,true);
   if(pb && state.presenceId) await pb.collection('presences').update(state.presenceId,{lat:latlng.lat,lng:latlng.lng}).catch(()=>{});
 }
 function updateRoadPassages(latlng,now){
@@ -997,6 +996,25 @@ function setCurrentLocation(latlng,follow=false){
   if(follow) map.panTo(latlng,{animate:true,duration:.35});
   updateFollowCurrentButton();
   updateGuidance(latlng);
+}
+function latestCurrentLatLng(){
+  if(state.currentMarker){
+    const p=state.currentMarker.getLatLng();
+    return {lat:p.lat,lng:p.lng};
+  }
+  if(state.lastGps) return {lat:state.lastGps.lat,lng:state.lastGps.lng};
+  return null;
+}
+function getRouteOrigin(syncPin=false){
+  const current=latestCurrentLatLng();
+  const origin=current || state.pin;
+  if(!origin) return null;
+  if(syncPin && (!state.pin || haversine(state.pin,origin)>8)){
+    setSitePin(origin,false);
+    siteHint.textContent=`出発地点: 最新GPS ${origin.lat.toFixed(6)}, ${origin.lng.toFixed(6)}`;
+    siteHint.className='hint ok';
+  }
+  return origin;
 }
 function updateFollowCurrentButton(){
   const visible=state.guiding || !!state.currentMarker;
@@ -1291,7 +1309,8 @@ async function showRouteToDestination(){
     setRouteHint('先にあなたの車両区分を選択してください。選択後にGPS現在地を確認します。','ng');
     return;
   }
-  if(!state.pin){
+  const origin=getRouteOrigin(true);
+  if(!origin){
     setRouteHint('先に右下の現在地ボタン、または地図タップで出発地点を置いてください。','ng');
     return;
   }
@@ -1306,7 +1325,7 @@ async function showRouteToDestination(){
     const dest=await geocodeDestination(q);
     state.destination=dest;
     setRouteHint('ルートを取得しています...','warn');
-    const routes=await fetchRoutes(state.pin,dest);
+    const routes=await fetchRoutes(origin,dest);
     const ranked=rankRouteCandidates(routes,dest);
     state.routeCandidates=ranked.filter(c=>c.passable);
     state.selectedRoute=0;
@@ -1617,6 +1636,7 @@ function startGuidance(){
   state.guideWatchId=navigator.geolocation.watchPosition(pos=>{
     const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
     handlePosition(latlng,true);
+    setCurrentLocation(latlng,true);
   },err=>{
     setRouteHint(gpsErrorMessage(err),'ng');
     stopGuidance(false);
@@ -1669,7 +1689,7 @@ function setRouteHint(msg,type=''){
 }
 let routeRecalcTimer=null;
 function maybeRecalculateRoute(){
-  if(!state.pin || !destInput.value.trim()) return;
+  if(!getRouteOrigin(false) || !destInput.value.trim()) return;
   clearTimeout(routeRecalcTimer);
   setRouteHint('車両条件を変更しました。ルートを再計算しています...','warn');
   routeRecalcTimer=setTimeout(()=>showRouteToDestination(),450);
@@ -1693,7 +1713,8 @@ function buildShareUrl(){
     params.set('cw',cw.value); params.set('ch',ch.value); params.set('ct',ct.value);
   }
   if(state.room?.id) params.set('room',state.room.id);
-  if(state.pin){params.set('lat',state.pin.lat.toFixed(6)); params.set('lng',state.pin.lng.toFixed(6));}
+  const origin=getRouteOrigin(false);
+  if(origin){params.set('lat',origin.lat.toFixed(6)); params.set('lng',origin.lng.toFixed(6));}
   return `${location.origin}${location.pathname}?${params.toString()}`;
 }
 function applyUrlParams(){
