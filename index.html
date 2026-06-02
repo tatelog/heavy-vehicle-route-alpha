@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme-mode="system" data-theme="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>大型車両 通行ルート共有ツール</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<script>
+  (()=>{try{
+    const mode=localStorage.getItem('routeTheme')||'system';
+    const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.themeMode=mode;
+    document.documentElement.dataset.theme=mode==='system'?(dark?'dark':'light'):mode;
+  }catch{document.documentElement.dataset.theme='dark';document.documentElement.dataset.themeMode='system'}})();
+</script>
+<style>
+  :root{
+    color-scheme:dark light;
+    --bg:#0d1117; --panel:#141b22; --surface:#1b242d; --surface2:#222d38;
+    --line:#2b3742; --text:#e9eef3; --muted:#8a98a5; --faint:#5d6a76;
+    --hiviz:#ffd400; --hiviz-d:#caa800; --pass:#34d27b; --fail:#ff4d57; --tight:#ff9f1c;
+    --blue:#3aa0ff; --shadow:0 12px 32px rgba(0,0,0,.45);
+  }
+  html[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f2f5f7; --panel:#f8fafc; --surface:#ffffff; --surface2:#edf2f6;
+    --line:#d5dee6; --text:#17212b; --muted:#667584; --faint:#8a98a6;
+    --hiviz:#ffd400; --hiviz-d:#b99200; --pass:#149e55; --fail:#d92d3f; --tight:#d97904;
+    --blue:#247ed8; --shadow:0 12px 28px rgba(31,43,55,.18);
+  }
+  html[data-theme="dark"]{color-scheme:dark}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{font-family:"Zen Kaku Gothic New",system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100dvh}
+  button,input,textarea{font:inherit}
+  button{border:0;cursor:pointer}
+  #map{flex:1;height:100%;background:#e8e8e2;z-index:1}
+  .tile-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:900;max-width:320px;background:var(--panel);border:1px solid var(--hiviz);border-radius:12px;padding:16px 18px;font-size:12.5px;line-height:1.7;color:var(--text);text-align:center;box-shadow:var(--shadow)}
+  .tile-banner b{color:var(--hiviz)}
+  .leaflet-container{font-family:inherit}
+  .leaflet-tile{filter:saturate(.38) contrast(.86) brightness(1.12)}
+  html[data-theme="light"] .leaflet-tile{filter:saturate(.32) contrast(.82) brightness(1.08)}
+  .leaflet-popup-content-wrapper{background:var(--panel);color:var(--text);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .leaflet-popup-tip{background:var(--panel);border:1px solid var(--line)}
+  .leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.6}
+  .pop-name{font-weight:700;font-size:14px;margin-bottom:4px}
+  .pop-row{display:flex;justify-content:space-between;gap:16px;color:var(--muted)}
+  .pop-row b{color:var(--text);font-family:"Oswald",sans-serif;font-weight:500}
+  .pop-verdict{margin-top:8px;padding:5px 8px;border-radius:6px;font-weight:700;font-size:12px;text-align:center}
+  .pop-ok{background:rgba(52,210,123,.16);color:var(--pass)}
+  .pop-ng{background:rgba(255,77,87,.16);color:var(--fail)}
+  #panel{width:370px;flex-shrink:0;height:100%;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:1000;position:relative}
+  .hiviz-bar{display:none}
+  header{padding:10px 18px 9px;border-bottom:1px solid var(--line)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .eyebrow{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.22em;color:var(--hiviz);text-transform:uppercase;font-weight:600;margin-bottom:5px}
+  h1{display:none}
+  .sub{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .theme-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px;flex-shrink:0}
+  .theme-switch button{background:transparent;color:var(--muted);border-radius:6px;padding:5px 7px;font-size:10.5px;font-weight:800;line-height:1}
+  .theme-switch button.on{background:var(--hiviz);color:#171717}
+  .menu-wrap{position:relative;display:flex;align-items:center;gap:8px;min-width:0}
+  .menu-btn{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:20px;line-height:1;font-weight:900;flex-shrink:0}
+  .view-title{font-size:12.5px;color:var(--text);font-weight:900;white-space:nowrap}
+  .view-menu{position:absolute;top:38px;left:0;z-index:20;min-width:136px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:none}
+  .view-menu.open{display:block}
+  .view-menu button{display:block;width:100%;text-align:left;background:transparent;color:var(--muted);font-size:12px;font-weight:800;padding:7px 9px;border-radius:6px;line-height:1.2}
+  .view-menu button+button{margin-top:1px}
+  .view-menu button.on{background:rgba(255,212,0,.08);color:var(--hiviz)}
+  .badge{background:rgba(255,212,0,.14);color:var(--hiviz);font-family:"Oswald",sans-serif;font-size:10px;font-weight:600;letter-spacing:.08em;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,212,0,.3)}
+  .scroll{overflow-y:auto;flex:1;padding:14px 16px 92px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .view{display:none}.view.active{display:block}
+  .scroll::-webkit-scrollbar{width:7px}.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .sect-label{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;font-weight:600;margin:18px 2px 9px}
+  .sect-label:first-child{margin-top:2px}
+  .room-box,.custom,.notice,.small-panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .room-row{display:flex;gap:8px;margin-top:8px}.room-row:first-child{margin-top:0}
+  input,textarea,select{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:8px 9px;width:100%;min-width:0}
+  textarea{resize:vertical;min-height:58px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--hiviz)}
+  .btn{background:var(--hiviz);color:#171717;font-weight:800;border-radius:8px;padding:8px 10px;min-height:36px}
+  .btn.subtle{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+  .btn.danger{background:rgba(255,77,87,.18);color:var(--fail);border:1px solid rgba(255,77,87,.34)}
+  .btn:disabled{opacity:.48;cursor:not-allowed}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .lamp{width:9px;height:9px;border-radius:50%;background:var(--faint);flex-shrink:0}.lamp.ok{background:var(--pass)}.lamp.ng{background:var(--fail)}
+  .veh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .fold{margin-top:12px}
+  .fold summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 11px;font-size:12px;font-weight:800;list-style:none}
+  .fold summary::-webkit-details-marker{display:none}
+  .fold summary::after{content:"›";font-size:14px;letter-spacing:0;color:var(--hiviz);transition:.15s}
+  .fold[open] summary::after{transform:rotate(90deg)}
+  .class-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+  .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 4px;text-align:center;font-weight:900;min-width:0}
+  .class-btn.on{border-color:var(--hiviz);background:rgba(255,212,0,.08);color:var(--hiviz)}
+  .class-note-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+  .class-note{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:11px;color:var(--muted);line-height:1.4}
+  .class-note b{display:block;color:var(--text);font-size:12px;margin-bottom:2px}
+  .class-note.on{border-color:var(--hiviz);background:rgba(255,212,0,.07)}
+  .veh{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 11px;cursor:pointer;transition:.13s;position:relative;overflow:hidden}
+  .veh:hover{border-color:var(--faint);background:var(--surface2)}
+  .veh.on{border-color:var(--hiviz);background:rgba(255,212,0,.07)}
+  .veh.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--hiviz)}
+  .veh-name{font-weight:700;font-size:12.5px;line-height:1.3;margin-bottom:7px}
+  .veh-specs{display:flex;gap:9px;font-family:"Oswald",sans-serif;font-size:11px;color:var(--muted)}
+  .veh-specs span b{color:var(--text);font-weight:500}
+  .custom{border-style:dashed;margin-top:8px}.custom.on{border-style:solid;border-color:var(--hiviz);background:rgba(255,212,0,.07)}
+  .custom-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12.5px;margin-bottom:10px;cursor:pointer}
+  .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
+  .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
+  .stats{display:flex;gap:8px;margin-bottom:4px}.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px}.stat .n{font-family:"Oswald",sans-serif;font-size:26px;font-weight:700;line-height:1}.stat .l{font-size:10.5px;color:var(--muted);margin-top:5px}.stat.ok .n{color:var(--pass)}.stat.ng .n{color:var(--fail)}
+  .leg{display:flex;flex-direction:column;gap:7px}.leg-item,.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
+  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:22px;height:0;border-top:3px solid;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch{background:var(--hiviz)}.tog.on .switch::after{left:19px}
+  .share-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:9px;cursor:pointer}.share-toggle.on{border-color:var(--hiviz)}
+  .share-toggle .title{font-weight:800;font-size:13px}.share-toggle .desc{font-size:10.8px;color:var(--muted);margin-top:2px}
+  .list{display:flex;flex-direction:column;gap:7px}.person,.marker-row{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12px;cursor:pointer}.person .name,.marker-row .name{font-weight:800}.person .meta,.marker-row .meta{color:var(--muted);font-size:11px;margin-top:3px}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}.quick .btn{font-size:12px}
+  .drive-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .drive-card .primary{font-size:18px;font-weight:900;line-height:1.35}
+  .drive-card .secondary{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .notice{font-size:11px;color:var(--muted);line-height:1.6}.notice b{color:var(--hiviz)}
+  .route-box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .route-box .room-row{flex-wrap:wrap}
+  .route-box .room-row .btn{flex:1;min-width:82px}
+  .site-fields{margin-top:8px}
+  .site-fields .room-row{display:none}
+  .site-fields .label{display:none}
+  .link-action{display:inline-flex;background:transparent;color:var(--muted);font-size:11px;font-weight:800;padding:0;margin-top:6px;text-decoration:underline;text-decoration-color:var(--line)}
+  .route-box .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
+  .route-box .hint.ok{color:var(--pass)}.route-box .hint.ng{color:var(--fail)}.route-box .hint.warn{color:var(--tight)}
+  #siteHint.hint.ok{font-size:10.5px;color:rgba(52,210,123,.78)}
+  .candidate-list{display:none;flex-direction:column;gap:7px;margin-top:10px}
+  .route-candidate{width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:9px 10px}
+  .route-candidate.on{border-color:var(--blue);background:rgba(58,160,255,.1)}
+  .route-candidate .main{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;font-size:12.5px}
+  .route-candidate .tag{font-size:10px;color:#fff;background:var(--blue);border-radius:999px;padding:2px 7px;flex-shrink:0}
+  .route-candidate .meta{color:var(--muted);font-size:11px;line-height:1.45;margin-top:4px}
+  .route-candidate .risk{color:var(--tight)}.route-candidate.bad .risk{color:var(--fail)}
+  .guide-box{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  .guide-controls{display:flex;gap:8px}.guide-controls .btn{flex:1}
+  .guide-list{display:flex;flex-direction:column;gap:6px;margin-top:9px;max-height:156px;overflow:auto}
+  .guide-step{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--muted);font-size:11.5px;line-height:1.45}
+  .guide-step .idx{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);color:var(--text);font-family:"Oswald",sans-serif;font-size:11px}
+  .guide-step .txt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;color:var(--text);font-weight:700}
+  .guide-step .place{color:var(--blue);font-size:10.5px;font-weight:800;text-align:right;max-width:44%;line-height:1.35}
+  .guide-step .dist{font-size:10.5px;color:var(--faint);margin-top:2px}
+  .guide-step.current{border-color:var(--blue);background:rgba(58,160,255,.09)}.guide-step.current .idx{background:var(--blue);color:white}
+  .veh-class{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+  .veh-class b{color:var(--hiviz)}
+  .note{font-size:11px;color:var(--faint);line-height:1.65;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.note a{color:var(--hiviz);text-decoration:none;border-bottom:1px dotted var(--hiviz-d)}.note b{color:var(--muted)}
+  .alpha-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,212,0,.14);border:1px solid rgba(255,212,0,.35);color:var(--hiviz);border-radius:999px;padding:3px 8px;font-size:10.5px;font-weight:900;line-height:1}
+  .alpha-note{margin:8px 0 10px;background:var(--surface);border:1px dashed var(--line);border-radius:9px;padding:9px 10px;color:var(--muted);font-size:11.5px;line-height:1.55}
+  .alpha-disabled{opacity:.46;filter:grayscale(.65)}
+  .alpha-disabled button,.alpha-disabled input,.alpha-disabled .share-toggle{cursor:not-allowed}
+  .alpha-disabled .share-toggle{pointer-events:none}
+  .pin-hint{position:absolute;bottom:0;left:0;right:0;padding:11px 16px;background:linear-gradient(transparent,var(--panel) 30%);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;pointer-events:none}.pin-hint b{color:var(--hiviz)}
+  .map-action{position:absolute;right:14px;bottom:18px;z-index:1000;background:var(--hiviz);color:#171717;border:1px solid rgba(0,0,0,.25);border-radius:10px;box-shadow:var(--shadow);font-weight:900;font-size:12.5px;padding:10px 13px;min-height:42px;display:flex;align-items:center;gap:7px}
+  .map-action.secondary{bottom:66px;background:var(--panel);color:var(--text);border-color:var(--line);display:none}
+  .map-action.icon-only{width:44px;justify-content:center;padding:0}
+  .map-action:disabled{opacity:.56;cursor:not-allowed}
+  .locate-cursor{position:relative;width:18px;height:18px;border:2px solid currentColor;border-radius:50%;display:block}
+  .locate-cursor::before,.locate-cursor::after{content:"";position:absolute;background:currentColor;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .locate-cursor::before{width:26px;height:2px}.locate-cursor::after{width:2px;height:26px}
+  .locate-cursor span{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translate(-50%,-50%)}
+  .map-action.loading .locate-cursor{animation:spin .8s linear infinite}
+  .map-status{position:absolute;right:14px;bottom:116px;z-index:1000;max-width:min(300px,calc(100vw - 28px));background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);font-size:12px;line-height:1.5;padding:9px 11px;display:none}
+  .map-status.ok{border-color:rgba(52,210,123,.55);color:var(--pass)}
+  .map-status.warn{border-color:rgba(255,159,28,.65);color:var(--tight)}
+  .map-status.ng{border-color:rgba(255,77,87,.65);color:var(--fail)}
+  .map-loading{position:absolute;left:14px;bottom:18px;z-index:1000;display:none;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:9px 11px;color:var(--text);font-size:12px;font-weight:800}
+  .map-loading.on{display:flex}
+  .spinner{width:16px;height:16px;border-radius:50%;border:3px solid rgba(255,212,0,.22);border-top-color:var(--hiviz);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .label-icon,.site-pin-icon{background:transparent;border:0}.label-chip{white-space:nowrap;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 8px;box-shadow:var(--shadow);font-size:12px;font-weight:800;transform:translate(-50%,-100%)}.label-chip.me{border-color:var(--hiviz);color:var(--hiviz)}.label-chip.meet{border-color:var(--pass);color:var(--pass)}.label-chip.alert{border-color:var(--fail);color:var(--fail)}
+  .site-pin{width:28px;height:28px;background:var(--hiviz);border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 3px 12px rgba(0,0,0,.36),0 0 0 1px rgba(14,21,28,.28);position:relative;transform:rotate(-45deg)}
+  .site-pin::before{content:"";position:absolute;inset:7px;border-radius:50%;background:#17212b;box-shadow:inset 0 0 0 2px rgba(255,255,255,.28)}
+  .site-pin::after{content:"";position:absolute;left:50%;top:50%;width:38px;height:14px;border-radius:50%;background:rgba(14,21,28,.22);transform:translate(-24%,-5%) rotate(45deg);filter:blur(3px);z-index:-1}
+  .site-pin.dest{background:var(--blue)}
+  #handle{display:none}
+  @media(max-width:760px){
+    body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}
+  }
+</style>
+</head>
+<body>
+<aside id="panel">
+  <div class="hiviz-bar"></div>
+  <div id="handle"></div>
+  <header>
+    <div class="topbar">
+      <div class="menu-wrap">
+        <button class="menu-btn" id="viewMenuBtn" type="button" aria-label="画面メニュー" aria-expanded="false">☰</button>
+        <div class="view-title" id="viewTitle">ルート選定</div>
+        <div class="view-menu" id="viewMenu">
+          <button type="button" data-view-switch="route" class="on">ルート選定</button>
+          <button type="button" data-view-switch="drive">運転時</button>
+          <button type="button" data-view-switch="admin">管理画面</button>
+        </div>
+      </div>
+      <div class="theme-switch" aria-label="テーマ切替">
+        <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
+        <button type="button" data-theme-mode="light" aria-pressed="false">ライト</button>
+        <button type="button" data-theme-mode="dark" aria-pressed="false">ダーク</button>
+      </div>
+    </div>
+    <div class="sub"><span id="areaLabel">現在地周辺・OSM試作路線</span></div>
+    <div class="sub"><span class="alpha-pill">α版</span><span>GPS・ルート・音声案内の検証版</span></div>
+  </header>
+  <div class="scroll">
+    <section class="view active" data-view="route">
+    <div class="sect-label">行き先</div>
+    <div class="route-box">
+      <div class="room-row"><input id="destInput" placeholder="行き先 例: 〇〇建設 現場 / 住所"></div>
+      <div class="site-fields">
+        <div class="label">出発地点</div>
+        <div class="room-row"><input id="siteInput" placeholder="出発地点の住所・名称を入力"><button class="btn subtle" id="siteSearchBtn" type="button">出発地設定</button></div>
+        <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
+        <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
+      </div>
+      <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">LINE共有</button><button class="btn subtle" id="clearRouteBtn">解除</button></div>
+      <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
+      <div class="candidate-list" id="routeCandidates" style="display: none;"></div>
+    </div>
+
+    <div class="sect-label">車両区分を選択</div>
+    <div class="class-grid" id="classGrid"></div>
+
+    <details class="fold" id="vehicleFold">
+      <summary>車種が分からない場合は使用車両から選択</summary>
+      <div class="class-note-grid" id="classNotes"></div>
+      <div class="veh-grid" id="vehGrid"></div>
+      <div class="custom" id="custom">
+        <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
+        <div class="crow"><label>全幅</label><input id="cw" type="number" step="0.1" value="2.5"><span class="unit">m</span></div>
+        <div class="crow"><label>全高</label><input id="ch" type="number" step="0.1" value="3.8"><span class="unit">m</span></div>
+        <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
+      </div>
+    </details>
+    </section>
+
+    <section class="view" data-view="drive">
+    <div class="sect-label">運転時</div>
+    <div class="drive-card" id="driveSummary">
+      <div class="primary">ルート未選択</div>
+      <div class="secondary">ルート選定で行き先を指定すると、案内と現在地追従をここに表示します。</div>
+    </div>
+    <div class="alpha-note">音声ガイダンスは必須機能として検証中です。案内開始時に読み上げも有効化します。</div>
+    <div class="guide-box" id="guideBox" style="display: none;">
+      <div class="guide-controls">
+        <button class="btn subtle" id="guideBtn" type="button">案内開始</button>
+        <button class="btn subtle" id="voiceBtn" type="button">音声OFF</button>
+      </div>
+      <div class="guide-list" id="guideList"></div>
+    </div>
+    <div class="sect-label">現場共有</div>
+    <div class="alpha-note">α版では共有マーカー同期は準備中です。表示だけ残しています。</div>
+    <div class="quick" data-alpha-disabled="共有マーカー同期は準備中">
+      <button class="btn subtle" data-marker="jam">渋滞</button>
+      <button class="btn subtle" data-marker="closed">通行止め</button>
+      <button class="btn subtle" data-marker="work">工事</button>
+      <button class="btn subtle" data-marker="narrow">狭い</button>
+    </div>
+    </section>
+
+    <section class="view" data-view="admin">
+    <details class="fold" id="roomFold" data-alpha-disabled="チーム共有ルームは準備中">
+      <summary>共有ルームを開く</summary>
+    <div class="room-box">
+      <div id="joinBox">
+        <div class="room-row"><input id="roomId" placeholder="ルームID 例: toyama3a"><input id="displayName" placeholder="表示名"></div>
+        <div class="room-row"><input id="roomName" placeholder="新規作成時の現場名"></div>
+        <div class="room-row"><button class="btn" id="joinRoom">参加</button><button class="btn subtle" id="createRoom">新規作成</button></div>
+      </div>
+      <div id="activeRoom" style="display:none">
+        <div class="status"><span class="lamp ng" id="pbLamp"></span><span id="roomStatus">PocketBase未確認。未接続でも通行可否表示は動きます。</span></div>
+        <div class="share-toggle" id="shareToggle">
+          <div><div class="title">位置共有 OFF</div><div class="desc">ONの間だけ現在地を共有します</div></div>
+          <span class="switch"></span>
+        </div>
+        <div class="room-row"><button class="btn subtle" id="copyLink">URLコピー</button><button class="btn danger" id="leaveRoom">退出</button></div>
+      </div>
+    </div>
+    </details>
+
+    <div class="sect-label">共有操作</div>
+    <div class="notice" id="modeNotice">現在地周辺の道路 180 件を読み込みました。幅・高さ・重量は道路種別ごとの仮属性です。</div>
+    <div class="room-row">
+      <button class="btn subtle" id="setMeet" data-alpha-single-disabled="集合地共有は準備中">集合地を設定</button>
+      <button class="btn subtle" id="manualSelf">現在地を手動設置</button>
+      <button class="btn subtle" id="mapRefreshBtn">マップ更新</button>
+    </div>
+
+    <div id="presenceSection" style="display:none">
+      <div class="sect-label">参加者</div>
+      <div class="list" id="presenceList"></div>
+    </div>
+
+    <div id="markerSection" style="display:none">
+      <div class="sect-label">規制・渋滞</div>
+      <div class="list" id="markerList"></div>
+    </div>
+    <div class="alpha-note">交通情報API、チーム位置同期、共有マーカーは今後追加予定です。α版ではGPS・ルート候補・音声案内・通行可否の参考表示を優先します。</div>
+
+    <div class="stats" hidden>
+      <div class="stat ok"><div class="n" id="nOk">97</div><div class="l">通行可 区間</div></div>
+      <div class="stat ng"><div class="n" id="nNg">83</div><div class="l">通行不可 区間</div></div>
+    </div>
+    <div class="veh-class" id="vehClass">車両区分: <b>特殊</b> / 区分ボタンで選択（代表値: 幅3m・高4.1m・重36t）</div>
+
+    <div class="sect-label">表示レイヤ</div>
+    <div class="tog on" data-class="重要物流道路"><span class="lbl"><span class="dash" style="border-color:#ff8a00"></span>重要物流道路</span><span class="switch"></span></div>
+    <div class="tog on" data-class="緊急輸送道路"><span class="lbl"><span class="dash" style="border-color:#3aa0ff"></span>緊急輸送道路</span><span class="switch"></span></div>
+    <div class="tog on" data-class="一般道"><span class="lbl"><span class="dash" style="border-color:#9aa7b3"></span>一般道</span><span class="switch"></span></div>
+
+    <div class="note">
+      α版では位置共有・交通情報APIは準備中です。正式な通行可否は <a href="https://www.tokusya.ktr.mlit.go.jp/PR/" target="_blank" rel="noopener">特殊車両通行確認システム</a> でご確認ください。<br>
+      走行距離はGPS概算です。<br>
+      <b>出典:</b> 地理院タイル（国土地理院）／OpenStreetMap contributors（試作路線中心線）
+    </div>
+    </section>
+  </div>
+  <div class="pin-hint">地図タップで<b id="tapMode">地点情報</b>を設置できます</div>
+</aside>
+
+<div id="map">
+  <div class="map-loading" id="roadLoading" aria-live="polite"><span class="spinner"></span><span>道路データ読込中</span></div>
+  <div class="map-status warn" id="gpsStatus" style="display:none"></div>
+  <button class="map-action secondary" id="followCurrent" type="button" title="運転中の現在地へ戻る">現在地へ</button>
+  <button class="map-action icon-only" id="gpsSite" type="button" title="GPS現在地へ移動して周辺道路を読み込み" aria-label="現在地を取得"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/pocketbase@0.26.2/dist/pocketbase.umd.js"></script>
+<script>
+const CONFIG = {
+  pocketBaseUrl: location.origin,
+  locationIntervalMs: 10000,
+  minMoveMeters: 8,
+  stalePresenceMs: 60000,
+  roadNearMeters: 30,
+  routeMatchMeters: 55,
+  meetArriveMeters: 45,
+  meetLeaveMeters: 80,
+  maxGpsJumpMeters: 800,
+  publicTraffic: {
+    enabled: false,
+    sourcesPath: './public_traffic_sources.json',
+    jarticTrafficVolume: {
+      enabled: false,
+      baseUrl: 'https://api.jartic-open-traffic.org/geoserver',
+      layer: 't_travospublic_measure_5m',
+      requiresTermsAgreement: true
+    },
+    jarticRegulationOpenData: {
+      enabled: false,
+      infoUrl: 'https://www.jartic.or.jp/service/opendata/',
+      requiresDownloadReview: true
+    }
+  },
+  weightRules: [
+    {cls:'light', max:8, factor:1},
+    {cls:'medium', max:20, factor:8},
+    {cls:'heavy', max:30, factor:30},
+    {cls:'veryheavy', max:Infinity, factor:80}
+  ]
+};
+
+const VEHICLES = [
+  {id:'unic4',  name:'4tユニック車',      w:2.2, h:3.0, t:8},
+  {id:'dump10', name:'10tダンプ',         w:2.5, h:3.0, t:20},
+  {id:'mixer',  name:'生コン車(大型)',    w:2.5, h:3.6, t:20},
+  {id:'pump',   name:'コンクリポンプ車',  w:2.5, h:3.8, t:25},
+  {id:'crane25',name:'ラフター25t',       w:3.0, h:3.7, t:33},
+  {id:'trailer',name:'セミトレーラー',    w:2.5, h:3.8, t:36},
+  {id:'lowbed', name:'重機運搬(低床)',    w:3.2, h:3.5, t:40}
+];
+const VEHICLE_CLASSES = [
+  {id:'normal', label:'普通', name:'普通車両', w:1.8, h:2.1, t:2, note:'軽・普通車目安'},
+  {id:'medium', label:'中型', name:'中型車両', w:2.3, h:3.0, t:8, note:'4t級まで目安'},
+  {id:'large', label:'大型', name:'大型車両', w:2.5, h:3.8, t:25, note:'大型トラック目安'},
+  {id:'special', label:'特殊', name:'特殊車両', w:3.0, h:4.1, t:36, note:'特車確認前提'}
+];
+let ROADS = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"name":"国道8号","cls":"重要物流道路","w_m":3.5,"t_t":40,"h_m":4.5},"geometry":{"type":"MultiLineString","coordinates":[[[137.216199,36.732629],[137.216946,36.732253],[137.221067,36.730164]],[[137.279257,36.717986],[137.27836,36.718043],[137.277473,36.718121],[137.271418,36.718715]],[[137.260959,36.720342],[137.260832,36.720348],[137.25986,36.720386],[137.25954,36.720402],[137.258676,36.720435],[137.258118,36.72045],[137.256633,36.720477],[137.255472,36.72056],[137.2548,36.720616],[137.253859,36.720726],[137.25305,36.720823],[137.251906,36.721002],[137.2507,36.721211]],[[137.149497,36.725931],[137.148339,36.725889],[137.146822,36.725857],[137.145014,36.725871],[137.144497,36.725875],[137.141538,36.725955],[137.141388,36.725959]],[[137.168572,36.728254],[137.175581,36.729209],[137.179886,36.729853],[137.182975,36.730438],[137.183137,36.730469],[137.183327,36.730505],[137.185182,36.730855],[137.186904,36.731146]],[[137.141412,36.726049],[137.141544,36.726044],[137.142121,36.726024],[137.143927,36.725983],[137.144515,36.725978],[137.146828,36.725956],[137.148339,36.72599],[137.149496,36.726029]],[[137.186929,36.731054],[137.18526,36.73075],[137.183361,36.730384],[137.18314,36.730341],[137.18301,36.730319],[137.179891,36.729772],[137.176088,36.729188],[137.175565,36.729117],[137.172095,36.728638],[137.168596,36.728169]],[[137.192719,36.73201],[137.193155,36.732065]],[[137.187267,36.731115],[137.186929,36.731054]],[[137.193201,36.731974],[137.192793,36.731924]],[[137.158388,36.726866],[137.158883,36.726931]],[[137.221067,36.730164],[137.222571,36.729373]],[[137.186904,36.731146],[137.187245,36.731205]],[[137.193155,36.732065],[137.194842,36.732278],[137.197357,36.732677],[137.199496,36.733078],[137.201846,36.733571],[137.204143,36.734065],[137.204319,36.734103],[137.204425,36.734125],[137.204595,36.734156],[137.205777,36.734369],[137.206712,36.734499],[137.207424,36.734562],[137.208182,36.734609],[137.208832,36.734623],[137.209807,36.734592],[137.210506,36.734533],[137.211278,36.734407],[137.211523,36.734363],[137.211693,36.734332],[137.211861,36.734296],[137.212047,36.734257],[137.212392,36.734176],[137.212884,36.734038],[137.213455,36.73384],[137.21398,36.733639],[137.215136,36.733146],[137.216199,36.732629]],[[137.158937,36.726845],[137.158423,36.726781]],[[137.216113,36.732518],[137.215055,36.733045],[137.213943,36.733554],[137.212849,36.733945],[137.212465,36.734067],[137.21187,36.734209],[137.211705,36.734241],[137.211533,36.734273],[137.211246,36.734328],[137.210494,36.734437],[137.209755,36.734503],[137.208853,36.734532],[137.208193,36.734518],[137.207446,36.734474],[137.206731,36.734401],[137.206073,36.734312],[137.205449,36.734218],[137.204603,36.734051],[137.204442,36.734019],[137.204332,36.733997],[137.204152,36.733959],[137.201893,36.733486],[137.199631,36.732999],[137.198528,36.7328],[137.197249,36.732572],[137.194855,36.732197],[137.193201,36.731974]],[[137.222511,36.729273],[137.220978,36.730056],[137.216113,36.732518]],[[137.187245,36.731205],[137.188808,36.731473],[137.190533,36.73172],[137.192719,36.73201]],[[137.192793,36.731924],[137.192342,36.731871],[137.190557,36.731624],[137.18883,36.731374],[137.187267,36.731115]],[[137.2507,36.721211],[137.250552,36.721251],[137.250413,36.721302],[137.249685,36.721519],[137.249101,36.721649],[137.248184,36.721877],[137.247995,36.721927],[137.246931,36.722211],[137.246456,36.722336],[137.245706,36.722549]],[[137.23963,36.723826],[137.23781,36.724064],[137.236469,36.724245],[137.236113,36.724294],[137.235352,36.724394]],[[137.224728,36.728126],[137.224123,36.728434],[137.222794,36.729126],[137.222511,36.729273]],[[137.227014,36.727005],[137.22636,36.72731],[137.225896,36.727528],[137.225712,36.727619],[137.225418,36.727764],[137.224728,36.728126]],[[137.245706,36.722549],[137.245349,36.722641],[137.244611,36.722834],[137.243815,36.723031],[137.24331,36.72315],[137.242809,36.723262],[137.242122,36.723405],[137.241447,36.723531],[137.240816,36.723646],[137.23963,36.723826]],[[137.227039,36.727108],[137.227542,36.726872],[137.227749,36.726776],[137.228095,36.726617],[137.228891,36.726251],[137.230247,36.725736],[137.231441,36.72535],[137.231583,36.72531],[137.231778,36.725255],[137.232187,36.725138],[137.232487,36.725054],[137.233826,36.724745],[137.235088,36.724525],[137.235272,36.724506],[137.235374,36.724495]],[[137.245733,36.722636],[137.246477,36.722439],[137.246977,36.722306],[137.247997,36.722038],[137.248204,36.721983],[137.249134,36.72175],[137.249719,36.721621],[137.250487,36.721517],[137.250629,36.721491],[137.250777,36.721468]],[[137.224778,36.728225],[137.225415,36.727909],[137.225787,36.727721],[137.226419,36.7274],[137.227039,36.727108]],[[137.222571,36.729373],[137.22267,36.729321],[137.224067,36.728577],[137.224183,36.728519],[137.224778,36.728225]],[[137.239652,36.723916],[137.240547,36.723777],[137.241431,36.723628],[137.242137,36.723492],[137.242838,36.723348],[137.243839,36.723119],[137.244641,36.722922],[137.245379,36.722729],[137.245733,36.722636]],[[137.284505,36.717914],[137.286054,36.717874],[137.286922,36.717859],[137.287335,36.717855],[137.288301,36.717846],[137.289029,36.717852],[137.290113,36.717857],[137.290303,36.717858],[137.290449,36.717861],[137.291747,36.71787],[137.292326,36.717897],[137.292961,36.717954],[137.293275,36.718],[137.29382,36.718097],[137.294781,36.718286],[137.295374,36.718384],[137.295802,36.718429],[137.296111,36.718448],[137.296568,36.718474],[137.296894,36.718494],[137.297132,36.718506],[137.297384,36.718515],[137.30032,36.718632],[137.302789,36.71874],[137.303578,36.718774],[137.304482,36.718806],[137.304643,36.718814]],[[137.250777,36.721468],[137.252028,36.721251],[137.253041,36.721102],[137.253933,36.720993],[137.254715,36.720897],[137.255978,36.720791],[137.25706,36.720676],[137.25814,36.720583],[137.258706,36.720532],[137.259564,36.720485],[137.259833,36.720471],[137.260977,36.720427]],[[137.269343,36.718997],[137.269956,36.71894],[137.271451,36.718801]],[[137.263084,36.720283],[137.26356,36.72021],[137.263981,36.720126],[137.264567,36.719988],[137.266908,36.719381],[137.267498,36.719248],[137.268129,36.719139],[137.269047,36.719022],[137.269343,36.718997]],[[137.286843,36.717762],[137.284504,36.71782],[137.283185,36.71785],[137.282094,36.717878],[137.28187,36.717886],[137.281468,36.717896],[137.280479,36.71792],[137.279506,36.717971],[137.279257,36.717986]],[[137.279291,36.718066],[137.279542,36.718054],[137.280484,36.718023],[137.281874,36.717989],[137.282096,36.717986],[137.283187,36.717954],[137.284505,36.717914]],[[137.304625,36.718721],[137.304452,36.718715],[137.303045,36.718654],[137.302795,36.718641],[137.300348,36.718539],[137.297391,36.718422],[137.297137,36.718399],[137.296901,36.718388],[137.296572,36.718376],[137.296136,36.718355],[137.295815,36.718329],[137.295393,36.718291],[137.294809,36.718193],[137.293968,36.718032],[137.293502,36.717944],[137.292959,36.717861],[137.292337,36.717793],[137.291766,36.717771],[137.290384,36.71775],[137.290113,36.71775],[137.288075,36.717749],[137.287306,36.717757],[137.286924,36.717762],[137.286843,36.717762]],[[137.271451,36.718801],[137.277403,36.718214],[137.278285,36.718131],[137.279291,36.718066]],[[137.271418,36.718715],[137.269277,36.718924]],[[137.269277,36.718924],[137.268154,36.719052],[137.26746,36.71917],[137.266885,36.719297],[137.264709,36.71986],[137.263927,36.720048],[137.263528,36.72013],[137.263042,36.720206]],[[137.235352,36.724394],[137.235251,36.72441],[137.234474,36.724533],[137.23382,36.724665],[137.233046,36.724823],[137.232201,36.725049],[137.231546,36.725231],[137.231388,36.725276],[137.230221,36.725643],[137.228856,36.726171],[137.227501,36.726779],[137.227014,36.727005]],[[137.235374,36.724495],[137.236167,36.724382],[137.236478,36.724346],[137.23783,36.724161],[137.238538,36.724064],[137.239652,36.723916]],[[137.263042,36.720206],[137.262647,36.720247],[137.262044,36.720297],[137.260959,36.720342]],[[137.260977,36.720427],[137.262065,36.720378],[137.262667,36.720327],[137.263084,36.720283]],[[137.151357,36.726151],[137.15269,36.726242],[137.153912,36.726355],[137.155437,36.726517],[137.156423,36.726633],[137.158388,36.726866]],[[137.158423,36.726781],[137.156775,36.726581],[137.155457,36.726431],[137.153908,36.726266],[137.152701,36.726155],[137.151228,36.726047]],[[137.168596,36.728169],[137.166775,36.727916],[137.164912,36.727662],[137.16356,36.727482],[137.163412,36.727462]],[[137.163358,36.727567],[137.163537,36.727589],[137.164846,36.727745],[137.1651,36.727779],[137.166764,36.728006],[137.167823,36.728149],[137.168572,36.728254]],[[137.137375,36.726165],[137.139663,36.726097],[137.141412,36.726049]],[[137.141388,36.725959],[137.139664,36.726005],[137.137361,36.726074]],[[137.151228,36.726047],[137.150351,36.725979],[137.149698,36.725942],[137.149497,36.725931]],[[137.149496,36.726029],[137.149692,36.726037],[137.15057,36.726073],[137.151357,36.726151]],[[137.158883,36.726931],[137.159687,36.727035],[137.161848,36.727341],[137.163358,36.727567]],[[137.163412,36.727462],[137.161886,36.727244],[137.159701,36.726955],[137.158937,36.726845]]]}},{"type":"Feature","properties":{"name":"国道41号","cls":"重要物流道路","w_m":3.3,"t_t":40,"h_m":4.1},"geometry":{"type":"MultiLineString","coordinates":[[[137.210054,36.666804],[137.210116,36.667416],[137.210203,36.668491],[137.21021,36.668614],[137.210216,36.668727],[137.210316,36.669811],[137.21033,36.66996],[137.210337,36.670066],[137.210375,36.67066],[137.210417,36.671148],[137.21043,36.671296],[137.210436,36.671389],[137.21051,36.672471],[137.210516,36.672606],[137.21055,36.673078],[137.21058,36.673563],[137.210625,36.674136],[137.21064,36.674289],[137.210767,36.675557],[137.21084,36.676551],[137.210852,36.676713],[137.211026,36.678999]],[[137.220216,36.692159],[137.220258,36.692163],[137.22066,36.692193],[137.221068,36.692232],[137.221307,36.692254],[137.221482,36.69227],[137.22185,36.692303],[137.222004,36.692315],[137.222898,36.692386],[137.223034,36.6924],[137.22391,36.692474],[137.224217,36.692503],[137.224458,36.692522],[137.22494,36.692565],[137.225041,36.692574],[137.225139,36.692583],[137.225695,36.692644],[137.22623,36.692685],[137.226423,36.6927],[137.226593,36.692706],[137.227338,36.692735],[137.227566,36.692768],[137.227768,36.692825],[137.228265,36.693009],[137.228854,36.693221],[137.228955,36.693257],[137.229062,36.693316],[137.229563,36.693594],[137.230092,36.693927],[137.230539,36.694196],[137.230629,36.69424],[137.230807,36.694329],[137.231029,36.694382],[137.231779,36.694561],[137.232041,36.694608],[137.232884,36.69481],[137.233105,36.694862],[137.233188,36.694878],[137.233505,36.694937],[137.233952,36.695038],[137.234056,36.695061],[137.235171,36.695313],[137.235184,36.695316]],[[137.209731,36.659852],[137.209733,36.660304],[137.209734,36.660413],[137.209734,36.660504],[137.209736,36.661091],[137.209757,36.661571],[137.209768,36.66193],[137.209772,36.662051],[137.209776,36.662188],[137.209796,36.662924],[137.2098,36.663065],[137.209805,36.663233],[137.209829,36.663956],[137.209855,36.66449],[137.209901,36.665061],[137.209962,36.665605],[137.21004,36.666592],[137.21005,36.666714]],[[137.211718,36.682699],[137.211715,36.682683],[137.211711,36.68265],[137.211642,36.682212],[137.211374,36.681575],[137.211361,36.681545],[137.211247,36.681289],[137.211224,36.681238],[137.211211,36.681211],[137.211103,36.680954],[137.211039,36.680812],[137.210998,36.680602],[137.211016,36.680182],[137.211055,36.679479],[137.211094,36.679138],[137.21111,36.678995],[137.211049,36.678175],[137.21094,36.676711],[137.210925,36.676547],[137.21083,36.675481],[137.210751,36.674285],[137.210742,36.674138],[137.210621,36.672637],[137.210601,36.672456],[137.210542,36.671382],[137.210533,36.671224],[137.210525,36.671131],[137.210475,36.670513],[137.210446,36.67006],[137.21044,36.669961],[137.210427,36.669806],[137.210331,36.668719],[137.210322,36.668611],[137.210226,36.667489],[137.210205,36.667298],[137.21017,36.666798]],[[137.149381,36.719317],[137.149503,36.719621],[137.149554,36.719752],[137.149551,36.719873],[137.149549,36.719954],[137.149384,36.722974],[137.149349,36.723568],[137.149361,36.723983],[137.149446,36.725241],[137.149489,36.725815],[137.149497,36.725931]],[[137.152785,36.737837],[137.152995,36.73838],[137.153133,36.738755],[137.153379,36.739419],[137.153432,36.739622],[137.153468,36.739828],[137.153479,36.740072],[137.153476,36.740144],[137.153468,36.740353],[137.153412,36.740656],[137.153348,36.740854],[137.153073,36.741599],[137.152691,36.742575],[137.152644,36.742696],[137.152585,36.742848],[137.151957,36.74448],[137.151663,36.745258],[137.151281,36.74626]],[[137.147185,36.713191],[137.147205,36.713353]],[[137.152732,36.737704],[137.152776,36.737812]],[[137.15111,36.733486],[137.151184,36.733679]],[[137.147707,36.715484],[137.14883,36.718069]],[[137.147205,36.713353],[137.147277,36.713924],[137.147352,36.714488],[137.147406,36.714709],[137.147513,36.715059],[137.147707,36.715484]],[[137.151184,36.733679],[137.151399,36.734239],[137.151748,36.735127],[137.152239,36.736445],[137.152456,36.737009],[137.152497,36.737115],[137.152536,36.737213],[137.152727,36.737687]],[[137.235184,36.695316],[137.235496,36.695384]],[[137.235496,36.695384],[137.236043,36.695505],[137.236491,36.695604],[137.236535,36.695615],[137.23676,36.695674],[137.236947,36.69571],[137.237123,36.695743],[137.237376,36.695794],[137.237812,36.69583],[137.238305,36.695838],[137.238941,36.695864],[137.239882,36.695905],[137.240353,36.695924],[137.240528,36.695931],[137.241075,36.695952]],[[137.219983,36.69214],[137.220216,36.692159]],[[137.207196,36.629185],[137.207694,36.629489],[137.20807,36.629766],[137.208293,36.629978],[137.208466,36.630179],[137.208669,36.630474],[137.208798,36.630732],[137.208915,36.631052],[137.208978,36.63129],[137.208995,36.63158],[137.209005,36.631753],[137.20901,36.631934],[137.209032,36.632654],[137.209035,36.632791],[137.209039,36.632946],[137.209074,36.634315],[137.209076,36.634397],[137.209107,36.635679],[137.209111,36.635733],[137.209166,36.637479],[137.209169,36.637578],[137.209258,36.639243],[137.209267,36.639418],[137.209404,36.64236],[137.209412,36.642516],[137.209433,36.642986],[137.209442,36.643134]],[[137.209671,36.656258],[137.209675,36.656642]],[[137.209675,36.656642],[137.209674,36.657027],[137.209674,36.657159],[137.209677,36.657286],[137.209725,36.659041],[137.209728,36.65915],[137.209727,36.659227],[137.209722,36.659613]],[[137.153679,36.755416],[137.153688,36.755452]],[[137.151281,36.74626],[137.151205,36.746463]],[[137.153719,36.755586],[137.1538,36.75595],[137.153909,36.757007],[137.153917,36.757134],[137.153946,36.757617],[137.153953,36.757754],[137.154065,36.759291],[137.154068,36.759335],[137.154141,36.760433],[137.154153,36.760615]],[[137.151205,36.746463],[137.151184,36.74651],[137.151011,36.747025],[137.150932,36.747424],[137.150922,36.747865],[137.150938,36.748124]],[[137.209722,36.659613],[137.209731,36.659852]],[[137.212708,36.691882],[137.212897,36.691875],[137.213858,36.691841],[137.213973,36.691837],[137.214728,36.691809],[137.214826,36.691805],[137.21495,36.6918],[137.215256,36.691786]],[[137.21163,36.68276],[137.211683,36.683087],[137.211716,36.683377],[137.211716,36.683387],[137.211717,36.68352],[137.211724,36.683654],[137.211725,36.683681],[137.211756,36.684036],[137.211772,36.684363],[137.211794,36.684621],[137.211857,36.685245],[137.211895,36.685598],[137.211941,36.6861],[137.211953,36.686234],[137.211965,36.686351],[137.211988,36.686568],[137.212056,36.68732],[137.212067,36.687437],[137.212073,36.687489],[137.212133,36.687994],[137.212145,36.688096],[137.212154,36.688197],[137.212207,36.68878],[137.212221,36.688925],[137.212227,36.688988],[137.212233,36.689049],[137.212251,36.689203],[137.212318,36.689782],[137.212373,36.690265],[137.212424,36.690711],[137.212494,36.691311],[137.212544,36.691715],[137.212565,36.691891]],[[137.259132,36.702754],[137.259128,36.702856],[137.259099,36.703561],[137.259105,36.705571],[137.259102,36.705903],[137.259091,36.706932],[137.259079,36.707942],[137.259078,36.708049],[137.259078,36.708198],[137.259075,36.709661],[137.259066,36.711103],[137.259062,36.71189],[137.259057,36.712393],[137.259061,36.71311],[137.259061,36.713202],[137.259068,36.713295],[137.259075,36.713383],[137.259143,36.713713],[137.259232,36.714087],[137.259326,36.714373],[137.259441,36.714639],[137.259508,36.714781],[137.259663,36.715076],[137.260383,36.716182],[137.260478,36.716328],[137.260541,36.716425],[137.261433,36.717794],[137.26169,36.718165],[137.261828,36.718374],[137.262589,36.719527],[137.262705,36.719711],[137.262733,36.719755],[137.262917,36.720021],[137.262984,36.720117],[137.263137,36.720368]],[[137.14283,36.692389],[137.142886,36.692567],[137.1431,36.693039],[137.143327,36.693388],[137.14355,36.693643],[137.143694,36.693783],[137.143796,36.693883],[137.143878,36.693964],[137.144078,36.694162],[137.144341,36.694465],[137.144434,36.694572],[137.144583,36.694796],[137.144709,36.69502],[137.144819,36.695277],[137.144865,36.695431],[137.144929,36.695641],[137.144994,36.695965],[137.145064,36.696445],[137.145091,36.696625],[137.145123,36.696832],[137.145214,36.697419],[137.145361,36.69834]],[[137.14283,36.692389],[137.14283,36.692336],[137.142831,36.692205]],[[137.150938,36.748124],[137.151005,36.748493],[137.151072,36.748729],[137.151104,36.748805],[137.151668,36.750244]],[[137.151668,36.750244],[137.152635,36.752718],[137.153349,36.75454],[137.153604,36.75519],[137.153679,36.755416]],[[137.241075,36.695952],[137.242375,36.696034],[137.242575,36.696048],[137.242675,36.696056],[137.242896,36.696064],[137.243532,36.696087],[137.244531,36.696139],[137.245302,36.69617],[137.245382,36.696173],[137.245472,36.696177],[137.246334,36.696215],[137.247038,36.696238],[137.247462,36.696255],[137.248203,36.696285],[137.248649,36.696304],[137.248983,36.696325],[137.249059,36.696329],[137.249157,36.696332],[137.249373,36.696337],[137.250254,36.696377],[137.251114,36.696404],[137.251161,36.696408],[137.251363,36.696422],[137.251456,36.696424],[137.251573,36.696429],[137.251867,36.696441],[137.252348,36.696471],[137.252865,36.696537],[137.253387,36.696614],[137.253854,36.696708],[137.253998,36.696748],[137.254112,36.696778],[137.254171,36.696793],[137.254238,36.696812],[137.254358,36.696846],[137.254753,36.696979],[137.255112,36.697124],[137.255583,36.697341],[137.255807,36.697453],[137.255968,36.697543],[137.256187,36.697689],[137.256245,36.697727],[137.256334,36.697785],[137.256498,36.697895],[137.256632,36.697987]],[[137.258853,36.700604],[137.25868,36.700266],[137.258448,36.699895],[137.258196,36.699513],[137.257979,36.699205],[137.257704,36.698875],[137.257369,36.698522],[137.257018,36.698202],[137.256687,36.697942]],[[137.21005,36.666714],[137.210054,36.666804]],[[137.209833,36.659857],[137.209821,36.659612]],[[137.209821,36.659612],[137.209811,36.659226],[137.209808,36.659146],[137.209807,36.65904],[137.209787,36.657277],[137.209786,36.657157],[137.209784,36.657025],[137.209781,36.656638]],[[137.209779,36.656259],[137.209772,36.655812],[137.209767,36.655569],[137.209754,36.654416],[137.209721,36.65255],[137.209725,36.652107],[137.209719,36.651517],[137.209718,36.651414],[137.209716,36.651307],[137.209695,36.650358],[137.20967,36.649264],[137.209667,36.649168],[137.209665,36.649078],[137.209637,36.648021],[137.209609,36.646858],[137.209608,36.646759],[137.209593,36.644977],[137.209593,36.644944],[137.209592,36.644872],[137.209564,36.643362],[137.209563,36.64331],[137.20956,36.643132],[137.209538,36.642513],[137.20953,36.642357],[137.209381,36.639413],[137.209373,36.63924],[137.209291,36.63755],[137.209289,36.637477],[137.209234,36.635701],[137.209201,36.634399],[137.209199,36.634314],[137.209172,36.632945],[137.209169,36.632805],[137.209166,36.63265],[137.209153,36.631933],[137.20915,36.631756],[137.209128,36.631579],[137.209088,36.631254],[137.209016,36.630982],[137.208934,36.630748],[137.208841,36.630558],[137.208579,36.630155],[137.20839,36.629928],[137.208173,36.629714],[137.207763,36.629415],[137.207231,36.629091]],[[137.209781,36.656638],[137.209779,36.656259]],[[137.21017,36.666798],[137.210165,36.666709],[137.210157,36.666586],[137.210084,36.665579],[137.209972,36.664477],[137.209926,36.663231],[137.20992,36.663062],[137.209915,36.662923],[137.209888,36.662187],[137.209882,36.66205],[137.20988,36.661928],[137.209875,36.661579],[137.209847,36.660502],[137.209845,36.660409],[137.209842,36.660304],[137.209833,36.659857]],[[137.153688,36.755452],[137.153719,36.755586]],[[137.256317,36.697665],[137.256236,36.697619],[137.256016,36.697494],[137.255823,36.69738],[137.255557,36.69725],[137.255149,36.697072],[137.25479,36.69692],[137.254415,36.696795],[137.254268,36.696745],[137.254212,36.696729],[137.254154,36.696714],[137.254024,36.696679],[137.253878,36.696639],[137.253405,36.696544],[137.252943,36.696485],[137.252401,36.696409],[137.252094,36.696375],[137.251576,36.696343],[137.251451,36.696335],[137.251353,36.69633],[137.251165,36.696332],[137.251119,36.696332],[137.250258,36.696306],[137.249377,36.696265],[137.249164,36.69626],[137.249042,36.696257],[137.248986,36.696255],[137.248659,36.696244],[137.248207,36.696224],[137.247468,36.696184],[137.247042,36.696166],[137.246339,36.696143],[137.245477,36.696105],[137.245385,36.696101],[137.24531,36.696098],[137.244536,36.696067],[137.243552,36.696019],[137.242901,36.695998],[137.2428,36.695995],[137.242578,36.695987],[137.242382,36.695981],[137.241075,36.695952]],[[137.212565,36.691891],[137.212708,36.691882]],[[137.145361,36.69834],[137.145424,36.698856],[137.145489,36.699379],[137.145496,36.699441],[137.145605,36.700328],[137.145632,36.700547],[137.145648,36.700679],[137.145665,36.700817],[137.145746,36.701472],[137.145766,36.701636],[137.145884,36.702596],[137.14601,36.703614],[137.146132,36.704605],[137.146252,36.705587],[137.146345,36.706339],[137.146422,36.706947],[137.146433,36.707035],[137.146446,36.707137],[137.146549,36.707997],[137.14667,36.708977],[137.146792,36.709969],[137.146858,36.710505],[137.146987,36.711557],[137.147093,36.712416],[137.147111,36.712561],[137.147125,36.712682],[137.147185,36.713191]],[[137.142711,36.692229],[137.142796,36.692343],[137.14283,36.692389]],[[137.142831,36.692205],[137.142793,36.692113]],[[137.142793,36.692113],[137.142752,36.69198],[137.142583,36.691436],[137.142424,36.690968],[137.142255,36.690441]],[[137.14268,36.692138],[137.142711,36.692229]],[[137.138908,36.687644],[137.139056,36.687724],[137.139696,36.688071],[137.139831,36.688144],[137.140175,36.688348],[137.14066,36.68867],[137.141016,36.688935]],[[137.141016,36.688935],[137.141334,36.689254],[137.141517,36.68948],[137.141767,36.68979],[137.141806,36.689838],[137.141981,36.690123],[137.142083,36.690345],[137.142087,36.690352],[137.142143,36.690472]],[[137.141112,36.688915],[137.140714,36.688606],[137.140232,36.688283],[137.139912,36.688085],[137.139118,36.68765],[137.138966,36.687566]],[[137.142143,36.690472],[137.142333,36.690997],[137.142469,36.691461],[137.142638,36.692003],[137.14268,36.692138]],[[137.142255,36.690441],[137.142187,36.690319],[137.142073,36.690111],[137.141846,36.689762],[137.141589,36.689422],[137.141394,36.68921],[137.141112,36.688915]],[[137.149496,36.726029],[137.149506,36.72617],[137.149617,36.727736],[137.149714,36.729209],[137.149794,36.730391],[137.149863,36.730843],[137.149948,36.731149],[137.150086,36.731455],[137.150224,36.731712],[137.150601,36.732333],[137.150814,36.732744],[137.151012,36.733261],[137.151051,36.73335],[137.15111,36.733486]],[[137.149497,36.725931],[137.149496,36.726029]],[[137.212708,36.691882],[137.212687,36.691708],[137.21265,36.691395],[137.212504,36.69015],[137.21247,36.68977],[137.212409,36.689192],[137.212392,36.689036],[137.212383,36.688978],[137.212373,36.688918],[137.212357,36.688771],[137.212295,36.688191],[137.212283,36.688074],[137.212274,36.687984],[137.212259,36.687819],[137.212227,36.687479],[137.212221,36.687422],[137.212213,36.687312],[137.212146,36.686406],[137.21214,36.686342],[137.212127,36.686211],[137.212114,36.686091],[137.212093,36.685888],[137.212074,36.685728],[137.212033,36.685342],[137.211989,36.684804],[137.211951,36.68447],[137.211863,36.683681],[137.211857,36.683643],[137.211835,36.683509],[137.211813,36.68338],[137.211771,36.68308],[137.211726,36.682761],[137.211723,36.682741]],[[137.211723,36.682741],[137.211718,36.682699]],[[137.211026,36.678999],[137.211005,36.67914],[137.21097,36.679386],[137.210956,36.679545],[137.210916,36.680048],[137.210887,36.680494],[137.210889,36.680598],[137.210921,36.680746],[137.210965,36.680857],[137.211082,36.681124],[137.211132,36.681268],[137.211227,36.681469],[137.211269,36.68157],[137.211277,36.681591],[137.211397,36.681881],[137.21153,36.682212],[137.211549,36.682282],[137.211623,36.682722]],[[137.211623,36.682722],[137.21163,36.68276]],[[137.14883,36.718069],[137.149048,36.718555],[137.149381,36.719317]],[[137.152727,36.737687],[137.152732,36.737704]],[[137.152776,36.737812],[137.152785,36.737837]],[[137.256632,36.697987],[137.256963,36.698241],[137.257309,36.698558],[137.257643,36.698908],[137.257914,36.699232],[137.258137,36.699546],[137.258387,36.699923],[137.258611,36.700283],[137.258779,36.700628]],[[137.256687,36.697942],[137.256479,36.697792],[137.256317,36.697665]],[[137.259132,36.702754],[137.259146,36.702642],[137.259151,36.702603],[137.259162,36.702155],[137.259161,36.701838],[137.259141,36.701637],[137.259092,36.701367],[137.259025,36.701085],[137.25898,36.700934],[137.258853,36.700604]],[[137.258779,36.700628],[137.258916,36.700971],[137.259014,36.701346],[137.259071,36.701648],[137.25909,36.701845],[137.25909,36.702156],[137.259087,36.702613],[137.259096,36.702642],[137.259132,36.702754]],[[137.209442,36.643134],[137.20945,36.643311],[137.209481,36.644357],[137.209473,36.644802],[137.209478,36.644867],[137.209476,36.644943],[137.209479,36.645627],[137.209498,36.64676],[137.2095,36.646857],[137.209527,36.64801],[137.209543,36.649078],[137.209544,36.649168],[137.209545,36.649264],[137.209547,36.649571],[137.209565,36.650358],[137.209583,36.651308],[137.209585,36.651416],[137.209587,36.651518],[137.209598,36.652106],[137.209612,36.652574],[137.209642,36.653001],[137.209643,36.65442],[137.209649,36.655504],[137.209654,36.655735],[137.209671,36.656258]],[[137.216433,36.691828],[137.216904,36.691872],[137.217434,36.691919],[137.217574,36.691931],[137.217908,36.69196],[137.218368,36.692007],[137.218484,36.692019],[137.218626,36.692029],[137.218972,36.692054],[137.219334,36.692085],[137.219623,36.692109],[137.219779,36.692123],[137.219837,36.692128],[137.219968,36.692139],[137.219983,36.69214]],[[137.215862,36.691774],[137.216024,36.69179],[137.216082,36.691795],[137.216433,36.691828]],[[137.215757,36.691766],[137.215789,36.691767],[137.215826,36.691771],[137.215862,36.691774]],[[137.215256,36.691786],[137.215545,36.691773],[137.215588,36.691772],[137.215757,36.691766]]]}},{"type":"Feature","properties":{"name":"国道415号","cls":"一般道","w_m":3,"t_t":25,"h_m":4.1},"geometry":{"type":"MultiLineString","coordinates":[[[137.215192,36.745866],[137.21508,36.745867],[137.214926,36.745868]],[[137.221105,36.745765],[137.215192,36.745866]],[[137.222302,36.745805],[137.221775,36.745773]],[[137.213506,36.745899],[137.213366,36.7459],[137.212442,36.745918],[137.21197,36.745927],[137.211195,36.745945]],[[137.215211,36.746],[137.221095,36.745915]],[[137.213505,36.745993],[137.214908,36.746005]],[[137.214926,36.745868],[137.213506,36.745899]],[[137.221095,36.745915],[137.221258,36.745912]],[[137.221775,36.745773],[137.221534,36.745768],[137.221225,36.745762]],[[137.214908,36.746005],[137.215081,36.746002],[137.215211,36.746]],[[137.221772,36.745912],[137.2223,36.74593]],[[137.22686,36.746021],[137.226319,36.746001],[137.223864,36.745916],[137.223644,36.745908],[137.222302,36.745805]],[[137.2223,36.74593],[137.223652,36.745978],[137.223863,36.745984],[137.226316,36.746066],[137.226784,36.746088]],[[137.2057,36.747716],[137.207834,36.746935],[137.208804,36.74659],[137.208957,36.746534],[137.209367,36.746383],[137.209745,36.746254],[137.209946,36.74619],[137.210149,36.74614],[137.210242,36.746122],[137.210378,36.746095],[137.210607,36.74606],[137.211009,36.746039],[137.211202,36.746029]],[[137.191071,36.756351],[137.19097,36.75639]],[[137.205472,36.747802],[137.2057,36.747716]],[[137.189934,36.756788],[137.189841,36.756801],[137.189725,36.756797],[137.189014,36.756751],[137.187734,36.756703]],[[137.284725,36.729211],[137.285867,36.728542],[137.287304,36.72769],[137.288072,36.727241],[137.288567,36.72697],[137.28906,36.726735],[137.289238,36.726683],[137.289292,36.726667],[137.28969,36.726588]],[[137.280621,36.731248],[137.284196,36.729486]],[[137.284461,36.729346],[137.284725,36.729211]],[[137.284196,36.729486],[137.284321,36.729418]],[[137.253412,36.742813],[137.253444,36.742763],[137.253808,36.742392],[137.253903,36.742295],[137.254154,36.742037],[137.254401,36.741778],[137.254555,36.741616],[137.254718,36.741473],[137.255112,36.741208],[137.255567,36.740893],[137.2557,36.740793],[137.255887,36.740652],[137.256025,36.740548],[137.256221,36.740401],[137.256555,36.74015],[137.256773,36.73999],[137.256921,36.739881],[137.256942,36.739861],[137.257084,36.739728],[137.257115,36.739586],[137.257031,36.739333],[137.256962,36.739118]],[[137.240542,36.745503],[137.240315,36.745502],[137.240081,36.745517],[137.239516,36.745557],[137.238751,36.745608]],[[137.238751,36.745608],[137.237441,36.745708]],[[137.241151,36.745502],[137.240936,36.745497],[137.240542,36.745503]],[[137.245285,36.74579],[137.245175,36.745777],[137.244889,36.745759],[137.244861,36.745757],[137.244077,36.7457],[137.243854,36.745677],[137.243221,36.745628],[137.242997,36.745608],[137.242549,36.745583],[137.242034,36.74555],[137.24196,36.745546],[137.241466,36.74552],[137.241151,36.745502]],[[137.251579,36.743666],[137.252157,36.743518],[137.252319,36.743482],[137.252688,36.743389],[137.252915,36.743318],[137.253086,36.743228],[137.253229,36.743142],[137.253248,36.743107],[137.253308,36.742999]],[[137.247915,36.745681],[137.247689,36.745733],[137.24749,36.745779],[137.24719,36.745816],[137.246873,36.745844],[137.246663,36.745861],[137.246442,36.745857],[137.246078,36.745836],[137.245572,36.745807],[137.245285,36.74579]],[[137.211195,36.745945],[137.210949,36.745953],[137.210662,36.745978],[137.210439,36.746008],[137.210117,36.746073],[137.209906,36.746131],[137.209693,36.746197],[137.209363,36.746313],[137.208923,36.746473],[137.208799,36.746518],[137.207857,36.74686],[137.207176,36.747107],[137.205654,36.747663]],[[137.201594,36.749073],[137.201572,36.749157],[137.20154,36.749282],[137.201277,36.750347],[137.201234,36.750462],[137.201009,36.751066],[137.200858,36.751687],[137.200806,36.751835],[137.200697,36.751992],[137.200324,36.752333],[137.199756,36.752846],[137.199464,36.753116]],[[137.211202,36.746029],[137.211969,36.746008],[137.212716,36.745994],[137.212773,36.745994],[137.213321,36.745993],[137.213505,36.745993]],[[137.290806,36.72616],[137.291067,36.726087]],[[137.291067,36.726087],[137.291687,36.725906],[137.291846,36.72586],[137.29293,36.725563],[137.293255,36.72551],[137.293774,36.725457],[137.294262,36.725411],[137.294567,36.725383],[137.294844,36.725354],[137.295577,36.725282],[137.296194,36.72522],[137.296838,36.72516],[137.298067,36.725041],[137.298229,36.725026],[137.29859,36.724986],[137.299002,36.724919],[137.29937,36.724766],[137.300177,36.724385],[137.301206,36.723866],[137.301229,36.723851],[137.301511,36.723746],[137.302044,36.723559],[137.30229,36.7235],[137.30267,36.723429],[137.303242,36.723354],[137.303484,36.723332],[137.30386,36.723305],[137.304196,36.72328],[137.304538,36.723263],[137.30488,36.723245],[137.305268,36.723239],[137.305989,36.723251]],[[137.234091,36.745956],[137.234007,36.745961],[137.233754,36.745974],[137.232838,36.746052],[137.232455,36.746079],[137.23195,36.746114],[137.231805,36.74612],[137.231417,36.74611],[137.231003,36.7461],[137.230141,36.746081],[137.229616,36.746067],[137.228795,36.746047],[137.228575,36.746041],[137.228043,36.74605],[137.227798,36.746045],[137.227613,36.746041]],[[137.205654,36.747663],[137.205412,36.747751]],[[137.237441,36.745708],[137.236597,36.745764],[137.236507,36.74577],[137.235611,36.745838],[137.235533,36.745843],[137.234178,36.74595],[137.234091,36.745956]],[[137.205412,36.747751],[137.203681,36.748383],[137.203112,36.748579],[137.203067,36.748594],[137.202168,36.748886],[137.201895,36.748975],[137.201594,36.749073]],[[137.196661,36.757151],[137.196376,36.756967],[137.195396,36.756336],[137.195227,36.756301],[137.194267,36.75627],[137.194057,36.756257],[137.193509,36.756216],[137.192723,36.756105]],[[137.167619,36.760065],[137.167822,36.760028],[137.16899,36.759849],[137.169309,36.759795],[137.170118,36.759662],[137.170401,36.759636],[137.170684,36.759619],[137.171215,36.759572],[137.171927,36.759477],[137.172703,36.759367],[137.173039,36.759312],[137.173277,36.759257]],[[137.173277,36.759257],[137.174185,36.758994],[137.174601,36.758867],[137.174994,36.75873],[137.175249,36.758634],[137.175949,36.75836]],[[137.227625,36.746122],[137.227809,36.746125],[137.228056,36.74613]],[[137.226784,36.746088],[137.227285,36.74611],[137.227422,36.746114],[137.227625,36.746122]],[[137.19097,36.75639],[137.190587,36.756544],[137.190209,36.756695],[137.189934,36.756788]],[[137.18757,36.756699],[137.187512,36.756694],[137.187155,36.756667],[137.18698,36.75666],[137.186699,36.75667],[137.186474,36.756692],[137.186356,36.756707],[137.185748,36.756768],[137.185518,36.756781],[137.184862,36.756802],[137.184148,36.756804],[137.183878,36.756808],[137.183453,36.756828],[137.182428,36.75693],[137.182334,36.756938],[137.182203,36.75695],[137.181091,36.75708],[137.180369,36.757195],[137.179909,36.757298],[137.178261,36.757787],[137.178221,36.757802],[137.178103,36.757837],[137.177542,36.757977],[137.176984,36.758082],[137.176681,36.758148],[137.176231,36.758252],[137.175949,36.75836]],[[137.187734,36.756703],[137.18757,36.756699]],[[137.192723,36.756105],[137.192242,36.756029],[137.19206,36.756027],[137.19189,36.756047],[137.191731,36.756089],[137.191647,36.756117],[137.191071,36.756351]],[[137.227613,36.746041],[137.227418,36.74604],[137.227383,36.74604],[137.22686,36.746021]],[[137.247775,36.74546],[137.247878,36.745424],[137.247958,36.745406],[137.248049,36.745401],[137.248137,36.745413],[137.248231,36.745422],[137.248296,36.745417],[137.248458,36.745355],[137.249004,36.745031],[137.249194,36.744902],[137.249469,36.744716],[137.249959,36.744389]],[[137.284321,36.729418],[137.284431,36.729362],[137.284461,36.729346]],[[137.247981,36.745776],[137.24821,36.745694],[137.248299,36.745662],[137.248629,36.745524],[137.248886,36.745376],[137.249277,36.74514]],[[137.252895,36.74247],[137.253165,36.74225],[137.253353,36.742105],[137.253795,36.741754],[137.253892,36.741676],[137.254669,36.741059],[137.254862,36.740901],[137.255238,36.740594],[137.255924,36.740053],[137.256407,36.739631],[137.256769,36.739295]],[[137.256769,36.739295],[137.256332,36.739545],[137.255849,36.739941],[137.255427,36.740274],[137.255109,36.740525],[137.254776,36.740808],[137.254358,36.741145],[137.253833,36.74159],[137.253737,36.741666],[137.253262,36.742044],[137.252803,36.742415]],[[137.251398,36.743638],[137.251659,36.743457],[137.251968,36.743223],[137.252228,36.742993],[137.252412,36.742848],[137.252555,36.742736]],[[137.249277,36.74514],[137.249591,36.744925],[137.251398,36.743638]],[[137.253308,36.742999],[137.253412,36.742813]],[[137.199337,36.753284],[137.198995,36.753762],[137.198536,36.754433],[137.198121,36.755062],[137.19783,36.755489]],[[137.199464,36.753116],[137.199337,36.753284]],[[137.221225,36.745762],[137.221105,36.745765]],[[137.221258,36.745912],[137.221772,36.745912]],[[137.250318,36.744127],[137.250587,36.743928],[137.250784,36.743778],[137.250882,36.743708],[137.250976,36.743641],[137.251187,36.743493],[137.251233,36.743458],[137.251449,36.743318],[137.25174,36.743065],[137.251836,36.742985],[137.251967,36.742877],[137.252097,36.742766],[137.252211,36.742595],[137.252293,36.742517]],[[137.256962,36.739118],[137.257101,36.738997],[137.257806,36.73845],[137.258642,36.737775],[137.259558,36.737047],[137.259646,36.736987],[137.259719,36.736938],[137.260054,36.736713]],[[137.260054,36.736713],[137.260148,36.736649],[137.260747,36.736318],[137.261113,36.736182],[137.261505,36.736036],[137.261706,36.73596],[137.26188,36.7359],[137.262759,36.735596],[137.263606,36.735307],[137.264055,36.735154],[137.264679,36.734942],[137.265559,36.734627],[137.265961,36.73449],[137.266081,36.734441],[137.266745,36.734218],[137.267129,36.734089],[137.267253,36.734041],[137.268172,36.733702],[137.268501,36.733583],[137.268845,36.733475],[137.269082,36.733419],[137.269361,36.733358],[137.269735,36.733306],[137.269998,36.733278],[137.27012,36.733269],[137.270712,36.733211],[137.271289,36.733163],[137.271585,36.73314],[137.271802,36.733114],[137.271991,36.733051],[137.272116,36.732956],[137.272164,36.732898],[137.272243,36.732791]],[[137.228056,36.74613],[137.228573,36.746128],[137.228795,36.746132],[137.23011,36.746155],[137.230998,36.746167],[137.231366,36.746172],[137.231906,36.746166],[137.232455,36.746136],[137.232829,36.746111],[137.233218,36.746082],[137.233836,36.746036],[137.234013,36.746024],[137.234094,36.746018],[137.234184,36.746012],[137.235539,36.745912],[137.235617,36.745907],[137.236508,36.745841],[137.236602,36.745834],[137.237444,36.745766],[137.238759,36.745671],[137.239516,36.745616],[137.240087,36.745589],[137.240271,36.745581],[137.240543,36.745573],[137.241151,36.745597],[137.241951,36.745648],[137.242031,36.745653],[137.243207,36.745742],[137.244063,36.745819],[137.24488,36.745872],[137.245172,36.745891],[137.245275,36.745907]],[[137.201572,36.749157],[137.201871,36.749078],[137.201929,36.749062],[137.202053,36.749028],[137.20314,36.748656],[137.205472,36.747802]],[[137.245275,36.745907],[137.245566,36.745923],[137.245947,36.745943],[137.246413,36.745961],[137.246502,36.745961],[137.246774,36.745961],[137.247023,36.745946],[137.24732,36.745909],[137.247725,36.745827],[137.247981,36.745776]],[[137.251339,36.74358],[137.24954,36.744851],[137.249208,36.745079]],[[137.249208,36.745079],[137.248984,36.745221],[137.248755,36.745347],[137.248456,36.745496],[137.248249,36.745578],[137.248158,36.745606],[137.247915,36.745681]],[[137.252629,36.742556],[137.252541,36.742634],[137.252486,36.742683]],[[137.252486,36.742683],[137.252339,36.74279],[137.252289,36.742826],[137.251895,36.743134],[137.251579,36.743397],[137.251339,36.74358]],[[137.252803,36.742415],[137.252629,36.742556]],[[137.252555,36.742736],[137.252705,36.742617]],[[137.252705,36.742617],[137.252895,36.74247]],[[137.272243,36.732791],[137.272393,36.732854],[137.272666,36.732965],[137.27303,36.733089],[137.273533,36.733207],[137.273645,36.733233],[137.274007,36.733287],[137.274486,36.733333],[137.275058,36.733344],[137.275596,36.733303],[137.275619,36.733301],[137.27595,36.733258],[137.276211,36.733207],[137.276666,36.733098],[137.277036,36.732977],[137.277622,36.732726],[137.278453,36.732324],[137.27868,36.732211],[137.28047,36.731318],[137.280621,36.731248]],[[137.256769,36.739295],[137.256962,36.739118]],[[137.19783,36.755489],[137.197635,36.755751],[137.197419,36.75609],[137.197056,36.756609],[137.196937,36.756773],[137.196661,36.757151]],[[137.28969,36.726588],[137.289677,36.726513],[137.28975,36.726455],[137.289993,36.726376],[137.290564,36.726227],[137.290806,36.72616]]]}},{"type":"Feature","properties":{"name":"県道4号(富山上市線)","cls":"緊急輸送道路","w_m":3.2,"t_t":36,"h_m":4.1},"geometry":{"type":"MultiLineString","coordinates":[[[137.260008,36.70281],[137.260319,36.702831],[137.260847,36.702868],[137.261423,36.702899],[137.261815,36.702908],[137.262359,36.70292],[137.262903,36.702946],[137.263368,36.70298],[137.263637,36.702993],[137.263928,36.703014],[137.264179,36.70303],[137.264345,36.703043],[137.264533,36.703052],[137.264689,36.703053],[137.264957,36.703046],[137.265307,36.703005],[137.265774,36.702918],[137.266562,36.70276],[137.267671,36.702523],[137.268534,36.702322],[137.268753,36.702282],[137.269017,36.702261],[137.269158,36.702253],[137.269265,36.702255],[137.269464,36.70226],[137.269739,36.702291],[137.270297,36.702389],[137.272101,36.702728],[137.272171,36.702742]],[[137.260008,36.70281],[137.259865,36.702799]],[[137.259865,36.702799],[137.259325,36.702766],[137.259132,36.702754]],[[137.282346,36.70489],[137.282402,36.704907],[137.282564,36.704936],[137.282756,36.704955],[137.282913,36.704952],[137.283104,36.704929],[137.283269,36.704901],[137.283488,36.704849],[137.283736,36.704772],[137.284266,36.704599],[137.284751,36.704428],[137.28553,36.704168],[137.285548,36.704162]],[[137.282255,36.704869],[137.282346,36.70489]],[[137.272171,36.702742],[137.277534,36.703745]],[[137.277534,36.703745],[137.277704,36.703772],[137.278408,36.703881],[137.279247,36.704013],[137.279429,36.704043],[137.279617,36.704098],[137.280166,36.704257],[137.280239,36.704281],[137.28062,36.704427],[137.281268,36.704618],[137.28145,36.704665],[137.282228,36.704862],[137.282255,36.704869]],[[137.285548,36.704162],[137.28563,36.704135]],[[137.28563,36.704135],[137.28608,36.703993],[137.286337,36.703923],[137.286493,36.703901],[137.286699,36.703897],[137.286806,36.703907],[137.286924,36.703931],[137.287071,36.70397],[137.287234,36.704027],[137.287263,36.704036],[137.287437,36.704074],[137.287616,36.704099],[137.28788,36.704124],[137.288042,36.704139],[137.288662,36.704188],[137.288773,36.704196]],[[137.288773,36.704196],[137.288979,36.704217],[137.289325,36.704255],[137.289567,36.704293],[137.289749,36.704324],[137.290308,36.7044],[137.290746,36.704456]],[[137.290746,36.704456],[137.291054,36.704542],[137.291259,36.704596],[137.291638,36.704711],[137.292197,36.704858],[137.292841,36.705033],[137.293545,36.705226],[137.293929,36.705334],[137.294305,36.705439],[137.29503,36.705639],[137.295585,36.705781],[137.295862,36.705859],[137.295975,36.70589],[137.296575,36.706052],[137.297479,36.706292],[137.297586,36.706322],[137.298502,36.706583],[137.298667,36.70663],[137.298911,36.706699],[137.299427,36.70684],[137.299687,36.706919],[137.29985,36.706965],[137.300236,36.707001],[137.300591,36.70703],[137.301454,36.706994],[137.301619,36.706986],[137.301911,36.706977],[137.302215,36.706969],[137.30254,36.70696],[137.302829,36.706942],[137.303322,36.706916],[137.30345,36.706911],[137.303567,36.706907],[137.303972,36.706918],[137.304493,36.706935],[137.304884,36.706952],[137.305618,36.706991],[137.30564,36.706992],[137.306401,36.707019],[137.306515,36.707017],[137.306753,36.706998],[137.306997,36.706953],[137.307245,36.706879],[137.307585,36.706761],[137.308362,36.706461],[137.308558,36.706382],[137.3087,36.70632],[137.308827,36.706261],[137.309169,36.706085],[137.309263,36.706025],[137.309587,36.705852]]]}},{"type":"Feature","properties":{"name":"県道7号(富山八尾線)","cls":"緊急輸送道路","w_m":3,"t_t":30,"h_m":3.8},"geometry":{"type":"MultiLineString","coordinates":[[[137.201298,36.712373],[137.201279,36.712297],[137.201255,36.712195],[137.20113,36.711695],[137.200968,36.711107],[137.200623,36.709692],[137.20058,36.70954]],[[137.199405,36.707369],[137.199214,36.707023]],[[137.199214,36.707023],[137.198175,36.705109],[137.198128,36.70501],[137.198096,36.704948],[137.19784,36.704452],[137.197459,36.703768],[137.197387,36.70364]],[[137.193917,36.689455],[137.193969,36.689358],[137.194012,36.689309],[137.194204,36.689148],[137.19425,36.689051],[137.194284,36.688946],[137.194335,36.688231],[137.194368,36.687799],[137.19437,36.687622],[137.194372,36.687479],[137.19438,36.686791],[137.194366,36.686518],[137.19431,36.68598],[137.194245,36.685599],[137.194207,36.685375],[137.194181,36.685221],[137.194113,36.684858],[137.193879,36.683887],[137.193782,36.683543],[137.193678,36.683174],[137.193532,36.682667],[137.193356,36.682096],[137.19322,36.681637],[137.193073,36.68127],[137.192833,36.680787],[137.192763,36.680662]],[[137.193476,36.690627],[137.193917,36.689455]],[[137.193476,36.690627],[137.193446,36.690794],[137.193473,36.690888],[137.193577,36.691036],[137.193968,36.691308],[137.194331,36.691524],[137.194649,36.691728],[137.194841,36.691887],[137.195015,36.692035],[137.195165,36.692186],[137.195403,36.692489],[137.195657,36.692845],[137.195797,36.693069],[137.196058,36.693503],[137.196136,36.693636],[137.196222,36.693803],[137.196259,36.693912],[137.196325,36.6941],[137.196396,36.6943],[137.196499,36.69454],[137.19653,36.6946]],[[137.204596,36.728852],[137.204567,36.728699],[137.204339,36.727481],[137.204323,36.727397],[137.203913,36.725303],[137.203884,36.725157],[137.203855,36.72501],[137.203841,36.72494],[137.203516,36.723295],[137.203481,36.722992],[137.203458,36.722675],[137.203416,36.722045],[137.203413,36.722],[137.203406,36.721782],[137.203376,36.721235],[137.203373,36.721189],[137.20331,36.720475],[137.203203,36.719844],[137.203068,36.719284],[137.203041,36.719169]],[[137.198833,36.706095],[137.198878,36.706064],[137.198971,36.705851],[137.199206,36.705316],[137.199553,36.704529],[137.199762,36.704086],[137.19979,36.704026],[137.199855,36.703892],[137.199895,36.703809]],[[137.204442,36.734019],[137.204462,36.733891],[137.204528,36.733306],[137.204687,36.731982],[137.204693,36.731929],[137.204769,36.731284],[137.204796,36.730864],[137.204811,36.730409],[137.204778,36.730008],[137.204737,36.729641],[137.204634,36.729065],[137.204596,36.728852]],[[137.199744,36.708807],[137.199827,36.708528],[137.199835,36.708501]],[[137.201369,36.712667],[137.201318,36.712458],[137.201298,36.712373]],[[137.200474,36.709569],[137.200514,36.709712],[137.200556,36.709878],[137.200814,36.710884],[137.201015,36.711696],[137.201166,36.712317],[137.201181,36.71238],[137.201206,36.712472],[137.201264,36.712692],[137.201295,36.712823],[137.201539,36.713733],[137.201564,36.713828],[137.20178,36.714662],[137.201802,36.714746],[137.201804,36.714756],[137.201965,36.715411],[137.202035,36.715683],[137.202118,36.716006],[137.202164,36.716195],[137.20219,36.7163],[137.20222,36.716417],[137.202535,36.717629]],[[137.198915,36.711726],[137.199088,36.711132],[137.199158,36.71092],[137.199334,36.710277],[137.19934,36.710256],[137.199376,36.710104],[137.199403,36.710018],[137.199411,36.709988],[137.19945,36.709851]],[[137.199384,36.729316],[137.199281,36.729576],[137.19884,36.730748],[137.198773,36.730969],[137.198735,36.731192],[137.198763,36.731381],[137.198818,36.731539],[137.198857,36.731652],[137.198892,36.731791],[137.198877,36.731941],[137.198825,36.732148]],[[137.199513,36.728608],[137.199539,36.728501],[137.199554,36.728372],[137.199571,36.728265],[137.199626,36.728125],[137.199747,36.727845],[137.200512,36.726248],[137.200948,36.725297],[137.201213,36.724746],[137.201281,36.724527],[137.201321,36.724359],[137.201337,36.724203],[137.201367,36.723871],[137.201378,36.723498],[137.201348,36.723088],[137.201364,36.722627],[137.201383,36.722443],[137.20139,36.722389],[137.201451,36.722187],[137.201519,36.722006],[137.201562,36.721904],[137.201627,36.721751],[137.201725,36.721463],[137.20177,36.721199],[137.20177,36.721184],[137.201798,36.720619],[137.201909,36.719704],[137.201975,36.719356],[137.201979,36.719335],[137.202014,36.719141],[137.201996,36.719008],[137.201923,36.718864],[137.201831,36.718774],[137.20161,36.718618]],[[137.198825,36.732148],[137.19864,36.732711]],[[137.202535,36.717629],[137.202585,36.717826]],[[137.202682,36.717812],[137.202632,36.717614]],[[137.203041,36.719169],[137.203006,36.719037],[137.202682,36.717812]],[[137.202585,36.717826],[137.20289,36.719057],[137.202922,36.719185]],[[137.20058,36.70954],[137.200518,36.709404],[137.20033,36.709066],[137.200134,36.708721],[137.199405,36.707369]],[[137.202632,36.717614],[137.202314,36.716401],[137.20228,36.71627],[137.202257,36.71618],[137.20221,36.71599],[137.202061,36.715386],[137.201899,36.714757],[137.201871,36.714646],[137.201744,36.714145],[137.201666,36.713836],[137.201409,36.712806],[137.201369,36.712667]],[[137.197056,36.695585],[137.197165,36.695952],[137.197338,36.696534],[137.197442,36.696955],[137.197575,36.697518],[137.19764,36.697721],[137.197774,36.698249],[137.198003,36.699102],[137.198231,36.699824],[137.198579,36.700839],[137.199188,36.702009],[137.199404,36.702414],[137.199522,36.702684],[137.199551,36.70281]],[[137.196411,36.694863],[137.196263,36.694558]],[[137.196263,36.694558],[137.196191,36.694436],[137.195988,36.694007],[137.195958,36.693914],[137.195969,36.693827],[137.196019,36.693753],[137.196078,36.693718],[137.196136,36.693636]],[[137.2045,36.728917],[137.204526,36.729079],[137.20462,36.729655],[137.204669,36.729998],[137.20469,36.730402],[137.204685,36.730875],[137.204672,36.731266],[137.204591,36.731909],[137.204583,36.731978],[137.204429,36.733271],[137.204349,36.733868],[137.204332,36.733997]],[[137.197056,36.695585],[137.196967,36.695583],[137.196918,36.695577],[137.196866,36.695563],[137.196828,36.695548],[137.196788,36.695522],[137.196745,36.695495],[137.196704,36.695445],[137.19645,36.694941],[137.196411,36.694863]],[[137.198543,36.733003],[137.198304,36.733757],[137.19825,36.733848],[137.197957,36.734203],[137.197894,36.734345]],[[137.192632,36.680398],[137.192454,36.679863],[137.19232,36.679521],[137.192225,36.679217],[137.192164,36.678971],[137.191918,36.678364],[137.191687,36.677832],[137.191491,36.677372],[137.191257,36.676855],[137.190808,36.675938],[137.190605,36.675534],[137.190391,36.67524],[137.18973,36.674476],[137.189495,36.674193],[137.189405,36.673974],[137.189352,36.673652],[137.189324,36.673329],[137.189282,36.67303],[137.189094,36.672662],[137.18882,36.672207],[137.188745,36.671998],[137.188675,36.671625],[137.188662,36.671455],[137.188682,36.670952],[137.188677,36.670549],[137.188681,36.669947],[137.188675,36.669723],[137.188615,36.669301],[137.188601,36.669257],[137.188343,36.668615],[137.188144,36.668046],[137.187985,36.667592],[137.187818,36.666942],[137.187804,36.666903],[137.187718,36.666671],[137.187397,36.666146],[137.187105,36.665609],[137.186976,36.665093],[137.18697,36.664808],[137.186958,36.664261],[137.186955,36.664103],[137.186937,36.663947],[137.186878,36.663731],[137.1868,36.663406],[137.186638,36.662849],[137.186429,36.662175],[137.186275,36.661744],[137.185655,36.660364],[137.18528,36.659466],[137.184935,36.658567],[137.18483,36.65825],[137.184475,36.657307],[137.184409,36.657145],[137.184198,36.65655],[137.184171,36.656436],[137.18406,36.655967],[137.184002,36.655579],[137.183965,36.654509],[137.183947,36.653832],[137.183924,36.653601],[137.183878,36.653413],[137.183732,36.652996],[137.183564,36.652647],[137.183388,36.652307],[137.183092,36.651902],[137.182633,36.651384],[137.182148,36.650891],[137.181953,36.65062],[137.181845,36.65047],[137.181674,36.650149],[137.181441,36.649396],[137.181276,36.648865],[137.180922,36.647993],[137.180712,36.647428],[137.180539,36.646708],[137.180365,36.645927],[137.180206,36.645038],[137.180174,36.644908],[137.180133,36.643992],[137.180133,36.643108],[137.180117,36.642228],[137.180062,36.641857],[137.179863,36.640818],[137.179759,36.640403],[137.179472,36.639652],[137.179279,36.639212],[137.178967,36.638614],[137.178561,36.637925],[137.178348,36.637565],[137.178046,36.637032],[137.177852,36.63661],[137.177789,36.636409],[137.177658,36.635958],[137.177549,36.635512],[137.177494,36.6352],[137.177422,36.635052],[137.176971,36.634762],[137.176419,36.634451],[137.176278,36.634377],[137.175825,36.634138],[137.175543,36.634002],[137.175225,36.633891]],[[137.192763,36.680662],[137.192732,36.6806],[137.192677,36.680489],[137.192632,36.680398]],[[137.201191,36.718175],[137.200758,36.717592],[137.200639,36.717397],[137.200509,36.717113],[137.200448,36.716909],[137.200388,36.716617],[137.200263,36.716136],[137.200206,36.715915],[137.200119,36.715613],[137.19987,36.715142],[137.19961,36.714714],[137.19929,36.714182],[137.199234,36.71405],[137.199151,36.713629],[137.199132,36.713505],[137.199086,36.713206],[137.199055,36.713015],[137.199012,36.712736],[137.198966,36.712429],[137.198963,36.712405],[137.198955,36.712315],[137.198915,36.711726]],[[137.20131,36.718334],[137.201191,36.718175]],[[137.202922,36.719185],[137.202951,36.719305],[137.203083,36.71985],[137.203201,36.720478],[137.203263,36.721191],[137.203267,36.721241],[137.203293,36.721994],[137.203296,36.722047],[137.203333,36.722653],[137.20335,36.722959],[137.20341,36.72332],[137.203456,36.723562],[137.203733,36.725022],[137.20376,36.725168],[137.203789,36.725317],[137.204195,36.727385],[137.204217,36.727496],[137.204459,36.728713],[137.2045,36.728917]],[[137.19864,36.732711],[137.198543,36.733003]],[[137.199322,36.707392],[137.200414,36.709442],[137.200474,36.709569]],[[137.199125,36.707063],[137.199322,36.707392]],[[137.197286,36.703672],[137.197355,36.7038],[137.197609,36.704274],[137.197734,36.704493],[137.19797,36.704923],[137.197999,36.704983],[137.198076,36.705149],[137.199125,36.707063]],[[137.19945,36.709851],[137.199481,36.709741],[137.199521,36.709598],[137.199744,36.708807]],[[137.199923,36.703748],[137.19993,36.703705],[137.199925,36.703621],[137.1999,36.703531],[137.199748,36.703209],[137.199665,36.703043],[137.19961,36.70293],[137.199551,36.70281]],[[137.199895,36.703809],[137.199923,36.703748]],[[137.196607,36.694707],[137.196633,36.694755],[137.19681,36.695075],[137.197056,36.695585]],[[137.20161,36.718618],[137.20142,36.718483],[137.20131,36.718334]],[[137.199513,36.728608],[137.199476,36.728887],[137.19944,36.729104],[137.199408,36.729226],[137.199384,36.729316]]]}},{"type":"Feature","properties":{"name":"県道9号(富山戸出小矢部線)","cls":"緊急輸送道路","w_m":3.2,"t_t":36,"h_m":4.1},"geometry":{"type":"MultiLineString","coordinates":[[[137.11483,36.702115],[137.115556,36.702076],[137.116506,36.70202],[137.11766,36.70198],[137.118816,36.701971],[137.119786,36.701943],[137.120753,36.701939],[137.121609,36.701894],[137.12223,36.70184],[137.122483,36.701828],[137.122849,36.701779],[137.123227,36.701751],[137.123547,36.701722],[137.124044,36.701681],[137.124262,36.70166],[137.126029,36.701503],[137.126651,36.701453],[137.128162,36.701333],[137.129841,36.701182],[137.130958,36.701076],[137.131728,36.701034],[137.133509,36.700907],[137.135806,36.700725],[137.136195,36.700765],[137.136468,36.700827],[137.136699,36.700897],[137.136947,36.700989],[137.137027,36.701007],[137.137348,36.701058],[137.13762,36.70108],[137.137919,36.701086],[137.138296,36.701098],[137.138588,36.701084],[137.139048,36.70102],[137.139576,36.700909],[137.140287,36.700773],[137.140764,36.700701],[137.141042,36.700674],[137.141535,36.70065],[137.141609,36.700646],[137.141691,36.700644],[137.143663,36.700596],[137.144523,36.700584],[137.144803,36.700594],[137.144977,36.700606],[137.145195,36.70062],[137.145505,36.70066],[137.145648,36.700679],[137.145796,36.700698],[137.14628,36.700762],[137.146705,36.700845],[137.146846,36.700876],[137.147246,36.701001],[137.147757,36.701188],[137.147803,36.701206],[137.147985,36.70127],[137.148119,36.701309],[137.148339,36.701344],[137.148587,36.701377],[137.148901,36.701415],[137.148994,36.701427],[137.149058,36.701436],[137.149424,36.701486],[137.149625,36.701511],[137.150269,36.7016],[137.150787,36.70166],[137.151199,36.701736],[137.15153,36.701826],[137.151808,36.70194],[137.152103,36.702082],[137.152513,36.702271],[137.152581,36.702303],[137.152867,36.702428],[137.153551,36.702743],[137.153883,36.702906],[137.154036,36.703003],[137.154271,36.703138],[137.154352,36.703198],[137.154794,36.70353],[137.155158,36.703817],[137.155786,36.704287],[137.15725,36.705312],[137.15756,36.705532],[137.157709,36.70564],[137.157884,36.705738],[137.15808,36.705821],[137.158212,36.705864],[137.158489,36.705933],[137.159126,36.706083],[137.159251,36.706109],[137.15943,36.706139],[137.159529,36.706156],[137.160001,36.706216],[137.160133,36.706224],[137.160255,36.706232],[137.16034,36.706238],[137.160435,36.706245],[137.160914,36.706277],[137.161306,36.706326],[137.161781,36.706405],[137.162208,36.706471],[137.162809,36.706582],[137.163358,36.706662],[137.163672,36.706702],[137.163762,36.706713],[137.164335,36.706775],[137.164998,36.706851],[137.16539,36.706913],[137.165554,36.706937],[137.165822,36.707021],[137.166058,36.707109],[137.166523,36.707303],[137.166764,36.707416],[137.166936,36.707479],[137.166982,36.707496],[137.167266,36.707539],[137.16763,36.707542],[137.16795,36.707526],[137.168123,36.707518],[137.168426,36.707514],[137.168734,36.707532],[137.169495,36.707609],[137.169731,36.70763],[137.169828,36.707638],[137.169876,36.707643],[137.170581,36.707641],[137.170981,36.707607],[137.171156,36.707588],[137.171277,36.707576],[137.172212,36.707476],[137.172514,36.707476],[137.172775,36.707508],[137.17295,36.707557],[137.173059,36.707588],[137.17334,36.707716],[137.17359,36.707878],[137.173715,36.70799],[137.173791,36.708077],[137.174173,36.708605],[137.174351,36.708903],[137.174406,36.708984]]]}},{"type":"Feature","properties":{"name":"県道22号","cls":"重要物流道路","w_m":3.5,"t_t":40,"h_m":4.5},"geometry":{"type":"MultiLineString","coordinates":[[[137.215757,36.691766],[137.21577,36.691969],[137.215783,36.692343],[137.215825,36.693085],[137.215841,36.693457],[137.21588,36.694335],[137.215887,36.694535],[137.215909,36.694908],[137.215944,36.695483],[137.215947,36.695582],[137.215949,36.695612]],[[137.215962,36.69587],[137.215977,36.696061],[137.216013,36.696912],[137.216014,36.696945],[137.216022,36.697089],[137.216033,36.69723],[137.216034,36.697246],[137.216046,36.697707],[137.216048,36.697973],[137.216052,36.698388],[137.216044,36.698765],[137.216044,36.698794],[137.216048,36.698987]],[[137.216061,36.695798],[137.216052,36.695648]],[[137.216052,36.695648],[137.21605,36.69557],[137.216044,36.695439],[137.216026,36.695047],[137.216026,36.69502],[137.216016,36.694854],[137.215989,36.694359],[137.215952,36.693635],[137.215933,36.693159],[137.2159,36.692464],[137.215874,36.691999],[137.215873,36.691969],[137.215862,36.691774]],[[137.213198,36.700327],[137.213321,36.700266]],[[137.213321,36.700266],[137.213353,36.700251],[137.213487,36.700192],[137.213986,36.699987],[137.214192,36.699891],[137.214233,36.699872],[137.214309,36.699837],[137.21441,36.699794],[137.215121,36.699495]],[[137.216104,36.699086],[137.216148,36.699026],[137.216163,36.698991],[137.216172,36.698951],[137.216172,36.698933],[137.216177,36.698796],[137.216173,36.698155],[137.216165,36.697304],[137.216162,36.697241],[137.216138,36.697075],[137.216131,36.696943],[137.21608,36.696088],[137.216078,36.696062],[137.216069,36.695902]],[[137.215121,36.699495],[137.215489,36.699346],[137.215908,36.699175],[137.215944,36.69916],[137.216104,36.699086]],[[137.215949,36.695612],[137.215955,36.695728],[137.215957,36.695765]],[[137.213233,36.700153],[137.213208,36.700164],[137.21316,36.700185],[137.213116,36.700204]],[[137.216048,36.698987],[137.215887,36.699063],[137.215553,36.699201],[137.215076,36.699393],[137.214373,36.699677],[137.214347,36.699688],[137.214262,36.699722],[137.214163,36.699762],[137.213455,36.700052],[137.213404,36.700073],[137.213233,36.700153]],[[137.215957,36.695765],[137.215958,36.695775]],[[137.216062,36.695812],[137.216061,36.695798]],[[137.215958,36.695775],[137.215962,36.69587]],[[137.216069,36.695902],[137.216062,36.695812]]]}},{"type":"Feature","properties":{"name":"県道44号","cls":"一般道","w_m":2.7,"t_t":20,"h_m":4},"geometry":{"type":"MultiLineString","coordinates":[[[137.209,36.692187],[137.209057,36.692185],[137.209143,36.692181],[137.209159,36.692181],[137.21123,36.691985],[137.211429,36.69197],[137.211513,36.691966],[137.21235,36.691928],[137.212431,36.691924],[137.212565,36.691891]],[[137.212565,36.691891],[137.212423,36.691857],[137.212347,36.69186],[137.211511,36.691895],[137.211482,36.691897],[137.211333,36.691902],[137.211264,36.691905],[137.211221,36.691907],[137.210595,36.691954],[137.209768,36.692043],[137.209138,36.692086],[137.2091,36.692088],[137.208976,36.692091],[137.208869,36.692095],[137.20867,36.692105],[137.208611,36.692109],[137.208384,36.692124],[137.20774,36.692173],[137.207388,36.692198],[137.207279,36.692206],[137.207167,36.692214],[137.206815,36.692242],[137.206318,36.692272],[137.2061,36.692287],[137.205791,36.69231],[137.205313,36.692334],[137.204146,36.692436]],[[137.190488,36.699241],[137.190638,36.699125],[137.190979,36.698816],[137.191387,36.698417],[137.192242,36.697561],[137.192318,36.69749],[137.192848,36.697024],[137.192912,36.696968],[137.193224,36.69671],[137.193953,36.696129],[137.193977,36.696111],[137.194134,36.696015],[137.194226,36.695959],[137.194353,36.695862],[137.194656,36.695633],[137.194678,36.695621],[137.194804,36.695536],[137.195448,36.695155],[137.195894,36.69495],[137.196288,36.694804],[137.196607,36.694707]],[[137.190146,36.699588],[137.190488,36.699241]],[[137.154712,36.717825],[137.157142,36.71663]],[[137.187306,36.702343],[137.187418,36.702245]],[[137.183434,36.704445],[137.183705,36.704307]],[[137.163499,36.713517],[137.163586,36.713474],[137.164941,36.712812],[137.16624,36.712179],[137.166362,36.712117],[137.166414,36.712094],[137.167229,36.711691],[137.167246,36.711682],[137.167986,36.711336],[137.168433,36.711149],[137.168992,36.710935],[137.169217,36.710856],[137.169301,36.710824],[137.170632,36.710355],[137.171161,36.710182],[137.171234,36.710156],[137.171319,36.710126],[137.171834,36.709939],[137.17279,36.709592],[137.173852,36.709211],[137.174304,36.709026],[137.174406,36.708984],[137.174556,36.708928],[137.174652,36.708888],[137.174915,36.70878],[137.175139,36.708672],[137.175637,36.708431],[137.176527,36.707966],[137.176553,36.707953],[137.177267,36.707585],[137.177872,36.707275],[137.178101,36.707164],[137.178233,36.707104],[137.178312,36.707064],[137.179455,36.70648],[137.181011,36.705687],[137.181887,36.705236]],[[137.187418,36.702245],[137.187449,36.702216],[137.187913,36.70178],[137.188027,36.701673],[137.188998,36.700713],[137.189098,36.700614],[137.189194,36.70052],[137.189806,36.699922],[137.189853,36.699876],[137.189869,36.69986],[137.190088,36.699646],[137.190146,36.699588]],[[137.183705,36.704307],[137.184502,36.703903],[137.184762,36.703771],[137.185382,36.703456],[137.185528,36.703382],[137.186264,36.70301],[137.186546,36.702849],[137.18673,36.702745],[137.186804,36.702703],[137.187091,36.702514],[137.187201,36.702426],[137.187306,36.702343]],[[137.141737,36.719622],[137.141889,36.719638],[137.142754,36.719727],[137.143401,36.719791],[137.144265,36.71987],[137.145254,36.719961],[137.145317,36.719966],[137.145439,36.719978],[137.14626,36.720055],[137.146998,36.720089],[137.147537,36.720066],[137.148035,36.720014],[137.148758,36.71989],[137.148977,36.719852],[137.14937,36.719784],[137.149554,36.719752],[137.149678,36.719727],[137.151093,36.719446],[137.151928,36.719173],[137.152687,36.718815],[137.153435,36.718446],[137.153538,36.718396],[137.153936,36.718201],[137.154712,36.717825]],[[137.19653,36.6946],[137.196166,36.694713],[137.196039,36.694757],[137.195824,36.694836],[137.195455,36.694997],[137.195079,36.695192],[137.19457,36.695485],[137.194292,36.695661],[137.194204,36.695723],[137.194087,36.695805],[137.193999,36.69587],[137.193811,36.696008],[137.193668,36.696114],[137.193386,36.696369],[137.193091,36.696624],[137.192779,36.696892],[137.192726,36.696945],[137.191473,36.698199],[137.190906,36.698766],[137.190628,36.699056],[137.190601,36.699095],[137.190488,36.699241]],[[137.196652,36.694696],[137.201617,36.693196]],[[137.201578,36.693077],[137.19659,36.694585]],[[137.201617,36.693196],[137.201654,36.693183],[137.202389,36.692994],[137.202807,36.692838],[137.203056,36.692773],[137.203284,36.692729],[137.203355,36.692715],[137.20384,36.692636]],[[137.136325,36.719126],[137.138613,36.719345],[137.140211,36.719495],[137.140337,36.719507]],[[137.157607,36.716417],[137.157726,36.716357],[137.158483,36.71598],[137.160806,36.714834],[137.161786,36.714363],[137.162302,36.714116],[137.162373,36.714081],[137.162481,36.714027],[137.162557,36.713989],[137.163433,36.71355],[137.163499,36.713517]],[[137.196607,36.694707],[137.196652,36.694696]],[[137.19659,36.694585],[137.19653,36.6946]],[[137.204146,36.692436],[137.203984,36.692458],[137.203789,36.692486]],[[137.203789,36.692486],[137.203194,36.692602],[137.20317,36.692608],[137.203078,36.692629],[137.202638,36.692752],[137.202423,36.69282],[137.202257,36.69287],[137.201578,36.693077]],[[137.20384,36.692636],[137.204035,36.692608],[137.204196,36.692585]],[[137.204196,36.692585],[137.204634,36.692529],[137.20532,36.692437],[137.205815,36.692397],[137.206122,36.692376],[137.206317,36.692363],[137.206815,36.69233],[137.207174,36.692308],[137.207294,36.692301],[137.207392,36.692293],[137.208011,36.692245],[137.208615,36.692203],[137.20866,36.6922],[137.208763,36.692195],[137.208843,36.692192],[137.208873,36.692191],[137.209,36.692187]],[[137.181887,36.705236],[137.182198,36.705077],[137.182942,36.704697],[137.183057,36.704638],[137.183434,36.704445]],[[137.140337,36.719507],[137.140473,36.719518],[137.141603,36.719611],[137.141737,36.719622]],[[137.157142,36.71663],[137.157607,36.716417]]]}},{"type":"Feature","properties":{"name":"県道208号(小竹諏訪川原線)","cls":"一般道","w_m":2.7,"t_t":20,"h_m":4},"geometry":{"type":"MultiLineString","coordinates":[[[137.210296,36.706922],[137.210253,36.706799],[137.210234,36.706756],[137.209913,36.706027],[137.209857,36.705888],[137.209562,36.705192],[137.20947,36.704974],[137.209357,36.704699],[137.209305,36.704566],[137.209231,36.704411],[137.209184,36.704326],[137.20907,36.70409],[137.208902,36.703744]],[[137.19707,36.710567],[137.197687,36.710366],[137.198196,36.710203],[137.198733,36.710049],[137.199359,36.709876],[137.19945,36.709851]],[[137.198915,36.711726],[137.199088,36.711132],[137.199158,36.71092],[137.199334,36.710277],[137.19934,36.710256],[137.199376,36.710104],[137.199403,36.710018],[137.199411,36.709988],[137.19945,36.709851]],[[137.195804,36.715282],[137.195616,36.715374],[137.19552,36.715409],[137.195248,36.715415],[137.193842,36.715088],[137.193662,36.715088],[137.19333,36.715173],[137.192993,36.715266],[137.192625,36.71541],[137.192424,36.715489],[137.191864,36.715747],[137.19111,36.716076],[137.190857,36.716223],[137.19072,36.71636],[137.190622,36.716472],[137.190525,36.71658],[137.190165,36.716932],[137.190051,36.71701],[137.189936,36.717098],[137.189581,36.717312],[137.189231,36.717476],[137.189016,36.717577],[137.188757,36.717689],[137.188145,36.717921],[137.187652,36.718072],[137.187185,36.718229],[137.185635,36.718586],[137.185192,36.718686],[137.184524,36.718843],[137.184253,36.718963],[137.183884,36.719277],[137.183745,36.719435],[137.18363,36.71959],[137.183502,36.719698],[137.183427,36.719723],[137.183311,36.719763],[137.183186,36.719808],[137.182767,36.719838],[137.181958,36.719822],[137.181514,36.719868],[137.181208,36.71988],[137.181139,36.719883],[137.180548,36.719903],[137.180334,36.719924],[137.18008,36.719921],[137.179562,36.719955],[137.179508,36.719963],[137.179023,36.72003],[137.178769,36.720046],[137.178338,36.72007],[137.177971,36.720121],[137.177954,36.720127],[137.177857,36.720154],[137.177525,36.720268],[137.177461,36.720294],[137.177307,36.720363],[137.177136,36.72038],[137.176922,36.720374],[137.176697,36.720363],[137.176604,36.720348],[137.176533,36.72034],[137.176329,36.720316],[137.17614,36.720287],[137.175179,36.720164],[137.17505,36.720147],[137.17487,36.720123],[137.174232,36.720046],[137.174008,36.720018]],[[137.19833,36.712452],[137.198276,36.7125],[137.197635,36.713297],[137.197522,36.713451],[137.197425,36.713583],[137.197236,36.713799],[137.196995,36.714081],[137.196961,36.71412],[137.196918,36.714166],[137.196321,36.714802],[137.196012,36.715148],[137.195974,36.71518]],[[137.195804,36.715282],[137.195974,36.71518]],[[137.201948,36.709175],[137.201146,36.709393],[137.200716,36.709504],[137.20058,36.70954],[137.200474,36.709569],[137.200315,36.709613],[137.199796,36.709759],[137.199542,36.709826],[137.19945,36.709851]],[[137.19833,36.712452],[137.198456,36.712295],[137.198645,36.712053],[137.198915,36.711726]],[[137.210296,36.706922],[137.210127,36.706971],[137.20991,36.707031],[137.208906,36.707303]],[[137.201948,36.709175],[137.204375,36.708529],[137.206221,36.708024],[137.208906,36.707303]],[[137.207279,36.692206],[137.207283,36.692233],[137.207287,36.692257],[137.207294,36.692301],[137.207302,36.692347],[137.207379,36.692882],[137.207414,36.693085],[137.207426,36.693149],[137.207455,36.69332],[137.20748,36.693464],[137.207508,36.693615],[137.207532,36.693804],[137.20759,36.694142],[137.207601,36.69418]],[[137.207646,36.694385],[137.207601,36.69418]],[[137.206553,36.700189],[137.20688,36.700079],[137.207122,36.699992],[137.208453,36.699531],[137.208506,36.699513],[137.209382,36.699216],[137.209485,36.699185]],[[137.20724,36.701156],[137.206914,36.700697],[137.206553,36.700189]],[[137.208902,36.703744],[137.208727,36.703416],[137.208618,36.703236]],[[137.208436,36.697494],[137.208299,36.696969],[137.208212,36.696639],[137.208186,36.696539],[137.208104,36.696226],[137.20799,36.695788],[137.207955,36.695654],[137.207878,36.69536],[137.207836,36.695191],[137.207775,36.694951],[137.207716,36.694691],[137.207679,36.694529],[137.207664,36.694466],[137.207651,36.694409],[137.207646,36.694385]],[[137.208618,36.703236],[137.208519,36.703049],[137.208265,36.702655],[137.2081,36.702435],[137.208031,36.702337],[137.207942,36.702202],[137.207699,36.701834]],[[137.207699,36.701834],[137.207531,36.701586],[137.207352,36.701322],[137.207268,36.701197],[137.20724,36.701156]],[[137.209485,36.699185],[137.209421,36.699105],[137.209284,36.698909],[137.209241,36.698845],[137.209047,36.698553],[137.208881,36.698323],[137.208746,36.698117],[137.208651,36.697932],[137.208539,36.697717],[137.208436,36.697494]],[[137.173947,36.72001],[137.173792,36.719988],[137.173711,36.719985],[137.173642,36.719996],[137.173579,36.720018],[137.173519,36.72004],[137.173457,36.720046],[137.173399,36.720048],[137.173338,36.720042],[137.173284,36.72003],[137.173242,36.720013],[137.173206,36.719995],[137.173176,36.719977],[137.173149,36.719946],[137.173125,36.71991],[137.173099,36.719863],[137.173079,36.719828],[137.173008,36.719715],[137.172912,36.719651],[137.172809,36.719598],[137.172609,36.719484],[137.172034,36.719182],[137.171844,36.719077],[137.171652,36.718982],[137.171622,36.718968],[137.171045,36.718698],[137.170911,36.718637],[137.170802,36.718573],[137.170721,36.718506],[137.170612,36.718401],[137.170494,36.718276],[137.170346,36.718116],[137.170256,36.718018],[137.170215,36.717982],[137.170155,36.717951],[137.170082,36.717922],[137.169991,36.7179],[137.1697,36.717885],[137.169691,36.717883],[137.169312,36.717867],[137.168894,36.717853],[137.168822,36.717837]],[[137.174008,36.720018],[137.173947,36.72001]]]}},{"type":"Feature","properties":{"name":"城址大通り","cls":"一般道","w_m":2.6,"t_t":14,"h_m":3.5},"geometry":{"type":"MultiLineString","coordinates":[[[137.210054,36.666804],[137.210116,36.667416],[137.210203,36.668491],[137.21021,36.668614],[137.210216,36.668727],[137.210316,36.669811],[137.21033,36.66996],[137.210337,36.670066],[137.210375,36.67066],[137.210417,36.671148],[137.21043,36.671296],[137.210436,36.671389],[137.21051,36.672471],[137.210516,36.672606],[137.21055,36.673078],[137.21058,36.673563],[137.210625,36.674136],[137.21064,36.674289],[137.210767,36.675557],[137.21084,36.676551],[137.210852,36.676713],[137.211026,36.678999]],[[137.213233,36.700153],[137.213214,36.700126],[137.213164,36.70004],[137.213139,36.699992],[137.213132,36.699956],[137.213191,36.699266],[137.213203,36.699127],[137.21324,36.698881],[137.213298,36.698114],[137.213304,36.697923],[137.213296,36.697744],[137.213293,36.697695],[137.213275,36.697424],[137.21327,36.69732],[137.213233,36.697009],[137.213176,36.696507],[137.213164,36.696402],[137.213147,36.696229],[137.213082,36.69555],[137.213021,36.694975],[137.213009,36.694869],[137.212999,36.694811]],[[137.211718,36.682699],[137.211715,36.682683],[137.211711,36.68265],[137.211642,36.682212],[137.211374,36.681575],[137.211361,36.681545],[137.211247,36.681289],[137.211224,36.681238],[137.211211,36.681211],[137.211103,36.680954],[137.211039,36.680812],[137.210998,36.680602],[137.211016,36.680182],[137.211055,36.679479],[137.211094,36.679138],[137.21111,36.678995],[137.211049,36.678175],[137.21094,36.676711],[137.210925,36.676547],[137.21083,36.675481],[137.210751,36.674285],[137.210742,36.674138],[137.210621,36.672637],[137.210601,36.672456],[137.210542,36.671382],[137.210533,36.671224],[137.210525,36.671131],[137.210475,36.670513],[137.210446,36.67006],[137.21044,36.669961],[137.210427,36.669806],[137.210331,36.668719],[137.210322,36.668611],[137.210226,36.667489],[137.210205,36.667298],[137.21017,36.666798]],[[137.212861,36.69477],[137.212861,36.694829],[137.212873,36.694926],[137.21296,36.695671],[137.213022,36.696235],[137.213037,36.696364]],[[137.21163,36.68276],[137.211683,36.683087],[137.211716,36.683377],[137.211716,36.683387],[137.211717,36.68352],[137.211724,36.683654],[137.211725,36.683681],[137.211756,36.684036],[137.211772,36.684363],[137.211794,36.684621],[137.211857,36.685245],[137.211895,36.685598],[137.211941,36.6861],[137.211953,36.686234],[137.211965,36.686351],[137.211988,36.686568],[137.212056,36.68732],[137.212067,36.687437],[137.212073,36.687489],[137.212133,36.687994],[137.212145,36.688096],[137.212154,36.688197],[137.212207,36.68878],[137.212221,36.688925],[137.212227,36.688988],[137.212233,36.689049],[137.212251,36.689203],[137.212318,36.689782],[137.212373,36.690265],[137.212424,36.690711],[137.212494,36.691311],[137.212544,36.691715],[137.212565,36.691891]],[[137.213037,36.696364],[137.21305,36.696509],[137.213077,36.696818],[137.21314,36.697539],[137.213168,36.697785],[137.21317,36.697965]],[[137.212708,36.691882],[137.212687,36.691708],[137.21265,36.691395],[137.212504,36.69015],[137.21247,36.68977],[137.212409,36.689192],[137.212392,36.689036],[137.212383,36.688978],[137.212373,36.688918],[137.212357,36.688771],[137.212295,36.688191],[137.212283,36.688074],[137.212274,36.687984],[137.212259,36.687819],[137.212227,36.687479],[137.212221,36.687422],[137.212213,36.687312],[137.212146,36.686406],[137.21214,36.686342],[137.212127,36.686211],[137.212114,36.686091],[137.212093,36.685888],[137.212074,36.685728],[137.212033,36.685342],[137.211989,36.684804],[137.211951,36.68447],[137.211863,36.683681],[137.211857,36.683643],[137.211835,36.683509],[137.211813,36.68338],[137.211771,36.68308],[137.211726,36.682761],[137.211723,36.682741]],[[137.211723,36.682741],[137.211718,36.682699]],[[137.211026,36.678999],[137.211005,36.67914],[137.21097,36.679386],[137.210956,36.679545],[137.210916,36.680048],[137.210887,36.680494],[137.210889,36.680598],[137.210921,36.680746],[137.210965,36.680857],[137.211082,36.681124],[137.211132,36.681268],[137.211227,36.681469],[137.211269,36.68157],[137.211277,36.681591],[137.211397,36.681881],[137.21153,36.682212],[137.211549,36.682282],[137.211623,36.682722]],[[137.211623,36.682722],[137.21163,36.68276]],[[137.213321,36.700266],[137.213294,36.700231],[137.21328,36.700214],[137.21326,36.700187],[137.213233,36.700153]]]}},{"type":"Feature","properties":{"name":"けやき通り","cls":"一般道","w_m":2.6,"t_t":14,"h_m":3.8},"geometry":{"type":"MultiLineString","coordinates":[[[137.201489,36.666941],[137.201493,36.667081],[137.201521,36.667931],[137.201559,36.669104],[137.201569,36.669409],[137.201587,36.669964],[137.201625,36.67112],[137.201637,36.671484],[137.201655,36.672046],[137.201672,36.672564],[137.201677,36.67273],[137.201698,36.673369],[137.201708,36.67367],[137.20172,36.674042],[137.201724,36.674172],[137.201728,36.674281],[137.201741,36.674692],[137.201785,36.676047],[137.201797,36.676406],[137.201812,36.676869],[137.201816,36.676965],[137.20182,36.677099],[137.201831,36.67744]],[[137.202101,36.684775],[137.202115,36.684827],[137.202236,36.685271],[137.202286,36.685479],[137.202318,36.685588],[137.202344,36.685679],[137.202489,36.686279],[137.202606,36.686732],[137.202695,36.68706],[137.202764,36.687316],[137.202796,36.687439],[137.202829,36.687562],[137.202928,36.687944],[137.203025,36.688297],[137.203116,36.688634],[137.203287,36.689257],[137.203378,36.689588],[137.203388,36.689625],[137.203428,36.689768]],[[137.201972,36.682284],[137.201978,36.682491]],[[137.201978,36.682491],[137.201984,36.682734],[137.201998,36.683264],[137.202,36.683331],[137.202003,36.683409],[137.202023,36.683985],[137.202029,36.684124]],[[137.201831,36.67744],[137.201841,36.677801],[137.201847,36.677981],[137.201875,36.67895],[137.201885,36.679302],[137.201889,36.679432],[137.201894,36.679594],[137.201906,36.68003],[137.20191,36.680162],[137.20192,36.680492],[137.201925,36.680682],[137.201929,36.680824],[137.201944,36.68131],[137.201945,36.681349],[137.201972,36.682284]]]}},{"type":"Feature","properties":{"name":"小竹東富山線","cls":"一般道","w_m":2.6,"t_t":14,"h_m":3.8},"geometry":{"type":"MultiLineString","coordinates":[[[137.214731,36.70422],[137.215028,36.704155],[137.215225,36.70409],[137.215891,36.703857],[137.216406,36.7037],[137.216806,36.703557],[137.216915,36.70351],[137.216977,36.70348],[137.217224,36.70339],[137.21744,36.703295],[137.218328,36.702981],[137.218405,36.702962],[137.218449,36.702958],[137.218505,36.702958],[137.218617,36.702967],[137.219219,36.703003]],[[137.213476,36.705145],[137.213347,36.705308],[137.212935,36.705826],[137.212737,36.706039],[137.212474,36.706238],[137.212172,36.706392],[137.211947,36.706486],[137.211382,36.706643],[137.210465,36.706879],[137.210296,36.706922]],[[137.219277,36.702912],[137.219209,36.702909],[137.218621,36.702882],[137.218571,36.70288],[137.218505,36.702878],[137.218475,36.702878],[137.218371,36.702901],[137.218343,36.702912],[137.2183,36.702928],[137.217388,36.703256],[137.217211,36.703333],[137.216978,36.703417],[137.216906,36.703437],[137.216783,36.703468],[137.216721,36.703484],[137.216361,36.70361],[137.215859,36.703803],[137.215197,36.704038],[137.215074,36.704082],[137.215003,36.704105],[137.214731,36.70422]]]}}]};
+
+const CLASS_COLOR={"重要物流道路":"#ff8a00","緊急輸送道路":"#3aa0ff","一般道":"#9aa7b3"};
+const MARKER_META={jam:{label:'渋滞', color:'#ff9f1c'},closed:{label:'通行止め', color:'#ff4d57'},work:{label:'工事', color:'#ffd400'},narrow:{label:'狭い', color:'#b784ff'},other:{label:'その他', color:'#9aa7b3'}};
+const PUBLIC_TRAFFIC_META={
+  jarticTrafficVolume:{label:'JARTIC/国交省 交通量API',kind:'traffic-volume'},
+  jarticRegulationOpenData:{label:'JARTIC 交通規制オープンデータ',kind:'regulation'}
+};
+let pb = null;
+let state = {
+  veh:null, vehClass:null, custom:false, hidden:new Set(), pin:null, pinMarker:null, currentMarker:null, room:null, displayName:'',
+  presenceId:null, share:false, watchId:null, locationWatchId:null, lastSent:null, lastGps:null, pendingMode:'idle',
+  presences:new Map(), presenceMarkers:new Map(), markers:new Map(), markerLayers:new Map(), meetMarker:null,
+  localTrack:[], passedRoads:new Map(), tripStart:null, arrived:false, roundTrips:0, manualOnly:true,
+  routeLayer:null, routeActive:false, destination:null, routeCandidates:[], selectedRoute:0, routeSteps:[], currentStep:0,
+  voice:false, guiding:false, guideWatchId:null, lastSpokenStep:-1,
+  viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
+};
+const ROAD_CACHE_KEY='routeRoadFeatureCache.v1';
+const ROAD_CACHE_MAX=650;
+let roadFeatureCache=new Map();
+const ALPHA_MODE=true;
+
+const THEME_KEY='routeTheme';
+const themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
+function resolvedTheme(mode){
+  return mode==='system'?(themeMedia.matches?'dark':'light'):mode;
+}
+function applyTheme(mode,save=true){
+  const next=['system','light','dark'].includes(mode)?mode:'system';
+  document.documentElement.dataset.themeMode=next;
+  document.documentElement.dataset.theme=resolvedTheme(next);
+  if(save) localStorage.setItem(THEME_KEY,next);
+  document.querySelectorAll('button[data-theme-mode]').forEach(btn=>{
+    const on=btn.dataset.themeMode===next;
+    btn.classList.toggle('on',on);
+    btn.setAttribute('aria-pressed',String(on));
+  });
+}
+document.querySelectorAll('button[data-theme-mode]').forEach(btn=>btn.onclick=()=>applyTheme(btn.dataset.themeMode));
+themeMedia.addEventListener?.('change',()=>{if((localStorage.getItem(THEME_KEY)||'system')==='system')applyTheme('system',false)});
+applyTheme(document.documentElement.dataset.themeMode||localStorage.getItem(THEME_KEY)||'system',false);
+
+const VIEW_LABELS={route:'ルート選定',drive:'運転時',admin:'管理画面'};
+let activeView='route';
+viewMenuBtn.onclick=()=>{
+  const open=!viewMenu.classList.contains('open');
+  viewMenu.classList.toggle('open',open);
+  viewMenuBtn.setAttribute('aria-expanded',String(open));
+};
+document.querySelectorAll('[data-view-switch]').forEach(btn=>{
+  btn.onclick=()=>switchView(btn.dataset.viewSwitch);
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.menu-wrap')){
+    viewMenu.classList.remove('open');
+    viewMenuBtn.setAttribute('aria-expanded','false');
+  }
+});
+function switchView(view){
+  activeView=VIEW_LABELS[view]?view:'route';
+  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===activeView));
+  document.querySelectorAll('[data-view-switch]').forEach(btn=>btn.classList.toggle('on',btn.dataset.viewSwitch===activeView));
+  viewTitle.textContent=VIEW_LABELS[activeView];
+  viewMenu.classList.remove('open');
+  viewMenuBtn.setAttribute('aria-expanded','false');
+  updateDriveSummary();
+  setTimeout(()=>map.invalidateSize(),120);
+}
+function initAlphaPreview(){
+  if(!ALPHA_MODE) return;
+  document.querySelectorAll('[data-alpha-disabled]').forEach(el=>{
+    const label=el.dataset.alphaDisabled||'α版では準備中';
+    el.classList.add('alpha-disabled');
+    el.title=label;
+    el.setAttribute('aria-disabled','true');
+    el.querySelectorAll('button,input,textarea,select').forEach(ctrl=>{
+      ctrl.disabled=true;
+      ctrl.title=label;
+    });
+  });
+  document.querySelectorAll('[data-alpha-single-disabled]').forEach(ctrl=>{
+    const label=ctrl.dataset.alphaSingleDisabled||'α版では準備中';
+    ctrl.disabled=true;
+    ctrl.title=label;
+    ctrl.classList.add('alpha-disabled');
+  });
+}
+
+const map=L.map('map',{zoomControl:false}).setView([36.708,137.225],13);
+L.control.zoom({position:'topleft'}).addTo(map);
+const gpsSiteBtn=document.getElementById('gpsSite');
+const gpsStatus=document.getElementById('gpsStatus');
+const followCurrentBtn=document.getElementById('followCurrent');
+const roadLoading=document.getElementById('roadLoading');
+L.DomEvent.disableClickPropagation(gpsSiteBtn);
+L.DomEvent.disableScrollPropagation(gpsSiteBtn);
+L.DomEvent.disableClickPropagation(followCurrentBtn);
+L.DomEvent.disableScrollPropagation(followCurrentBtn);
+let swapped=false, tileFail=0;
+const baseGSI=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',{attribution:"地理院タイル（国土地理院）",maxZoom:18});
+const baseOSM=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:"© OpenStreetMap contributors",maxZoom:19});
+baseGSI.addTo(map);
+baseGSI.on('tileerror',()=>{if(!swapped){swapped=true;map.removeLayer(baseGSI);baseOSM.addTo(map)}});
+baseOSM.on('tileerror',()=>{if(++tileFail>4) showTileBanner()});
+function showTileBanner(){
+  if(document.getElementById('tbn'))return;
+  const d=document.createElement('div'); d.id='tbn'; d.className='tile-banner';
+  d.innerHTML='<b>基盤地図はこのプレビューでは表示されません</b><br>HTTPS環境で配信すると地理院地図が表示されます。ルート判定機能はそのまま動作します。';
+  document.getElementById('map').appendChild(d);
+}
+restoreRoadCache();
+mergeRoadFeatures(ROADS.features,{persist:false});
+ROADS=augmentRoadNetwork({type:'FeatureCollection',features:[...roadFeatureCache.values()]});
+let roadLayer=makeRoadLayer(ROADS);
+map.fitBounds(roadLayer.getBounds().pad(0.12));
+
+function makeRoadLayer(data){
+  return L.geoJSON(data,{style:styleFor,onEachFeature:(feat,lyr)=>{
+  lyr.on('click',()=>lyr.bindPopup(popupHTML(feat)).openPopup());
+  lyr.on('mouseover',()=>lyr.setStyle({weight:styleFor(feat).weight+3}));
+  lyr.on('mouseout',()=>roadLayer.resetStyle(lyr));
+  }}).addTo(map);
+}
+
+function activeVeh(){
+  if(state.vehClass) return state.vehClass;
+  if(state.custom) return {id:null,name:'カスタム車両',w:+cw.value||0,h:+ch.value||0,t:+ct.value||0};
+  return state.veh;
+}
+function verdict(p,v){
+  if(!v) return {ok:null};
+  const fails=[];
+  if(v.w>p.w_m) fails.push(`幅 ${v.w}m > 可能${p.w_m}m`);
+  if(v.h>p.h_m) fails.push(`高さ ${v.h}m > 制限${p.h_m}m`);
+  if(v.t>p.t_t) fails.push(`重量 ${v.t}t > 制限${p.t_t}t`);
+  if(fails.length) return {ok:false,fails};
+  const margin=Math.min((p.w_m-v.w)/p.w_m,(p.h_m-v.h)/p.h_m,(p.t_t-v.t)/p.t_t);
+  return {ok:true,tight:margin<0.10};
+}
+function roadHasWarning(feat){
+  for(const m of state.markers.values()){
+    if(distanceToFeature({lat:m.lat,lng:m.lng}, feat) < 45) return true;
+  }
+  return false;
+}
+function styleFor(feat){
+  const p=feat.properties;
+  if(state.hidden.has(p.cls)) return {opacity:0,weight:0};
+  if(p.inferred){
+    const v=activeVeh(), r=verdict(p,v);
+    return {color:r.ok===false?'#ff9f1c':'#34d27b',weight:4,opacity:.62,dashArray:'5,6',lineCap:'round',lineJoin:'round'};
+  }
+  if(state.routeActive) return {color:CLASS_COLOR[p.cls],weight:3,opacity:.16,dashArray:null,lineCap:'round',lineJoin:'round'};
+  const v=activeVeh(), r=verdict(p,v);
+  let color=CLASS_COLOR[p.cls], weight=5, dash=null, op=.92;
+  if(r.ok===false){color="#ff4d57";weight=3;dash="2,7";op=.8}
+  else if(roadHasWarning(feat)){color="#ff9f1c";weight=6;dash="8,6"}
+  else if(r.ok===true && r.tight){color="#ff9f1c";weight=6}
+  else if(r.ok===true){color="#34d27b";weight=6}
+  return {color,weight,opacity:op,dashArray:dash,lineCap:'round',lineJoin:'round'};
+}
+function vehicleClass(v){
+  if(!v) return {label:'-', note:''};
+  if(state.vehClass) return {label:state.vehClass.label, note:'区分ボタンで選択'};
+  if(v.w>3.0 || v.h>3.8 || v.t>30) return {label:'特車級', note:'通行可否確認を前提に扱う車両'};
+  if(v.w>2.5 || v.h>3.5 || v.t>20) return {label:'大型', note:'大型車向け道路を優先'};
+  if(v.t>8) return {label:'中型', note:'重量制限に注意'};
+  return {label:'普通/小型', note:'一般的な道路条件で通行しやすい'};
+}
+function roadSuitabilityLabel(p,v){
+  if(!v) return '';
+  const r=verdict(p,v);
+  if(r.ok===false) return 'この車両は通行不可';
+  if(p.cls==='重要物流道路') return '大型車通行向き';
+  if(r.tight) return '通行可・余裕少';
+  return '通行可';
+}
+function popupHTML(feat){
+  const p=feat.properties, v=activeVeh(), r=verdict(p,v);
+  let vh='';
+  if(r.ok===true) vh=`<div class="pop-verdict pop-ok">${v.name}：通行可${r.tight?'（余裕僅か）':''}</div>`;
+  else if(r.ok===false) vh=`<div class="pop-verdict pop-ng">${v.name}：通行不可<br><span style="font-weight:400;font-size:11px">${r.fails.join(' / ')}</span></div>`;
+  const inferred=p.inferred?'<div class="pop-row"><span>補完</span><b>地図上の推定接続</b></div>':'';
+  return `<div class="pop-name">${p.name}</div>${inferred}<div class="pop-row"><span>道路評価</span><b>${roadSuitabilityLabel(p,v)}</b></div><div class="pop-row"><span>区分</span><b>${p.cls}</b></div><div class="pop-row"><span>通行可能幅</span><b>${p.w_m} m</b></div><div class="pop-row"><span>高さ制限</span><b>${p.h_m} m</b></div><div class="pop-row"><span>重量制限</span><b>${p.t_t} t</b></div>${vh}`;
+}
+
+const classGrid=document.getElementById('classGrid');
+const classNotes=document.getElementById('classNotes');
+VEHICLE_CLASSES.forEach(c=>{
+  const el=document.createElement('button');
+  el.type='button';
+  el.className='class-btn';
+  el.dataset.id=c.id;
+  el.textContent=c.label;
+  el.onclick=()=>selectVehClass(c,true);
+  classGrid.appendChild(el);
+  const note=document.createElement('div');
+  note.className='class-note';
+  note.dataset.id=c.id;
+  note.innerHTML=`<b>${c.label}</b>${c.note}`;
+  classNotes.appendChild(note);
+});
+function selectVehClass(c,syncRoom){
+  state.vehClass={...c};
+  state.veh=null;
+  state.custom=false;
+  document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
+  document.querySelectorAll('.class-note').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
+  document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on'));
+  custom.classList.remove('on');
+  refresh();
+  maybeRecalculateRoute();
+  if(syncRoom) saveRoomVehicle();
+}
+function inferredClassForVehicle(v){
+  if(!v) return null;
+  if(v.w>3.0 || v.h>3.8 || v.t>30) return VEHICLE_CLASSES.find(c=>c.id==='special');
+  if(v.w>2.5 || v.h>3.5 || v.t>20) return VEHICLE_CLASSES.find(c=>c.id==='large');
+  if(v.t>8) return VEHICLE_CLASSES.find(c=>c.id==='medium');
+  return VEHICLE_CLASSES.find(c=>c.id==='normal');
+}
+const grid=document.getElementById('vehGrid');
+VEHICLES.forEach(v=>{
+  const el=document.createElement('div');
+  el.className='veh'; el.dataset.id=v.id;
+  el.innerHTML=`<div class="veh-name">${v.name}</div><div class="veh-specs"><span>幅<b>${v.w}</b></span><span>高<b>${v.h}</b></span><span>重<b>${v.t}</b></span></div>`;
+  el.onclick=()=>selectVeh(v,true);
+  grid.appendChild(el);
+});
+function selectVeh(v,syncRoom){
+  state.veh=v; state.vehClass=null; state.custom=false;
+  document.querySelectorAll('.veh').forEach(e=>e.classList.toggle('on',e.dataset.id===v.id));
+  const c=inferredClassForVehicle(v);
+  document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c?.id));
+  document.querySelectorAll('.class-note').forEach(e=>e.classList.toggle('on',e.dataset.id===c?.id));
+  custom.classList.remove('on');
+  refresh();
+  maybeRecalculateRoute();
+  if(syncRoom) saveRoomVehicle();
+}
+customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
+['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
+document.querySelectorAll('.tog').forEach(t=>{t.onclick=()=>{const c=t.dataset.class;if(state.hidden.has(c)){state.hidden.delete(c);t.classList.add('on')}else{state.hidden.add(c);t.classList.remove('on')}refresh()}});
+
+function initPB(){
+  try{
+    pb = new PocketBase(CONFIG.pocketBaseUrl);
+    setPbStatus(false,'PocketBase未確認。未接続でも通行可否表示は動きます。');
+  }catch(e){setPbStatus(false,'PocketBase SDKを読み込めませんでした。')}
+}
+function setPbStatus(ok,msg){
+  pbLamp.className='lamp '+(ok?'ok':'ng');
+  roomStatus.textContent=msg;
+}
+async function createOrJoin(create){
+  if(!pb) return alert('PocketBase SDKが読み込まれていません。');
+  const rid=normalizeRoomId(roomId.value||randomRoomId());
+  const name=(displayName.value||'参加者').trim();
+  state.displayName=name;
+  try{
+    let room;
+    if(create){
+      room = await pb.collection('rooms').create({id:rid,name:(roomName.value||rid).trim(),vehicle_id:activeVeh()?.id||'',custom_w:null,custom_h:null,custom_t:null});
+    }else{
+      room = await pb.collection('rooms').getOne(rid);
+    }
+    await enterRoom(room);
+  }catch(e){
+    console.error(e);
+    alert('ルーム接続に失敗しました。PocketBaseの起動、コレクション、URL設定を確認してください。');
+  }
+}
+async function enterRoom(room){
+  state.room=room;
+  roomFold.open=true;
+  joinBox.style.display='none'; activeRoom.style.display='block';
+  setPbStatus(true,`${room.name || room.id} / ${state.displayName}`);
+  const params=new URLSearchParams(location.search); params.set('room',room.id);
+  history.replaceState(null,'',`${location.pathname}?${params.toString()}`);
+  applyRoomVehicle(room);
+  renderMeet(room);
+  await ensurePresence();
+  await loadRoomData();
+  await subscribeRoom();
+  refresh();
+}
+async function ensurePresence(){
+  const list=await pb.collection('presences').getFullList({filter:`room_id="${state.room.id}" && display_name="${escapeFilter(state.displayName)}"`});
+  const data={room_id:state.room.id,display_name:state.displayName,lat:null,lng:null};
+  const rec=list[0] ? await pb.collection('presences').update(list[0].id,data) : await pb.collection('presences').create(data);
+  state.presenceId=rec.id;
+}
+async function loadRoomData(){
+  const [pres,marks]=await Promise.all([
+    pb.collection('presences').getFullList({filter:`room_id="${state.room.id}"`}),
+    pb.collection('markers').getFullList({filter:`room_id="${state.room.id}"`,sort:'-created'})
+  ]);
+  state.presences=new Map(pres.map(x=>[x.id,x]));
+  state.markers=new Map(marks.map(x=>[x.id,x]));
+  renderPresences(); renderMarkers(); drawSharedMarkers();
+}
+async function subscribeRoom(){
+  await pb.collection('presences').unsubscribe('*').catch(()=>{});
+  await pb.collection('markers').unsubscribe('*').catch(()=>{});
+  await pb.collection('rooms').unsubscribe('*').catch(()=>{});
+  pb.collection('presences').subscribe('*',e=>{if(e.record.room_id!==state.room.id)return; if(e.action==='delete') state.presences.delete(e.record.id); else state.presences.set(e.record.id,e.record); renderPresences();});
+  pb.collection('markers').subscribe('*',e=>{if(e.record.room_id!==state.room.id)return; if(e.action==='delete') state.markers.delete(e.record.id); else state.markers.set(e.record.id,e.record); renderMarkers(); drawSharedMarkers(); refresh();});
+  pb.collection('rooms').subscribe(state.room.id,e=>{state.room=e.record; applyRoomVehicle(e.record); renderMeet(e.record); renderPresences(); refresh();});
+}
+function applyRoomVehicle(room){
+  if(room.vehicle_id?.startsWith('class:')){
+    const c=VEHICLE_CLASSES.find(x=>x.id===room.vehicle_id.slice(6));
+    if(c) selectVehClass(c,false);
+  }else if(room.custom_w || room.custom_h || room.custom_t){
+    state.custom=true; state.veh=null; cw.value=room.custom_w||2.5; ch.value=room.custom_h||3.8; ct.value=room.custom_t||36;
+    state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn,.class-note').forEach(e=>e.classList.remove('on')); custom.classList.add('on');
+  }else if(room.vehicle_id){
+    const v=VEHICLES.find(x=>x.id===room.vehicle_id); if(v) selectVeh(v,false);
+  }
+}
+async function saveRoomVehicle(){
+  if(!state.room || !pb) return;
+  const v=activeVeh();
+  const data=state.custom ? {vehicle_id:'',custom_w:v.w,custom_h:v.h,custom_t:v.t} :
+    state.vehClass ? {vehicle_id:`class:${state.vehClass.id}`,custom_w:null,custom_h:null,custom_t:null} :
+    {vehicle_id:v?.id||'',custom_w:null,custom_h:null,custom_t:null};
+  pb.collection('rooms').update(state.room.id,data).catch(()=>{});
+}
+function normalizeRoomId(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15) || randomRoomId()}
+function randomRoomId(){return 'room'+Math.random().toString(36).slice(2,8)}
+function escapeFilter(s){return String(s).replace(/"/g,'\\"')}
+
+joinRoom.onclick=()=>createOrJoin(false);
+createRoom.onclick=()=>createOrJoin(true);
+copyLink.onclick=async()=>{await navigator.clipboard?.writeText(location.href).catch(()=>{}); copyLink.textContent='コピー済み'; setTimeout(()=>copyLink.textContent='URLコピー',1200)};
+leaveRoom.onclick=leaveRoomNow;
+async function leaveRoomNow(){
+  await finishTripLogs();
+  stopSharing(false);
+  if(pb && state.presenceId) await pb.collection('presences').delete(state.presenceId).catch(()=>{});
+  if(pb){await pb.collection('presences').unsubscribe('*').catch(()=>{}); await pb.collection('markers').unsubscribe('*').catch(()=>{}); await pb.collection('rooms').unsubscribe('*').catch(()=>{})}
+  state.room=null; state.presenceId=null; state.presences.clear(); state.markers.clear();
+  joinBox.style.display='block'; activeRoom.style.display='none'; renderPresences(); renderMarkers(); drawSharedMarkers();
+}
+
+shareToggle.onclick=()=> state.share ? stopSharing(true) : startSharing();
+function startSharing(){
+  if(!state.room) return alert('先にルームへ参加してください。');
+  state.share=true; state.manualOnly=true; state.tripStart=new Date(); state.localTrack=[]; state.passedRoads.clear(); state.roundTrips=0; state.arrived=false;
+  shareToggle.classList.add('on'); shareToggle.querySelector('.title').textContent='位置共有 ON';
+  if(!navigator.geolocation){modeNotice.innerHTML='位置を取得できません。地図タップで現在地を手動設置できます。'; state.pendingMode='self'; updateTapMode(); return}
+  state.watchId=navigator.geolocation.watchPosition(pos=>{
+    state.manualOnly=false;
+    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    handlePosition(latlng,true);
+  },()=>{
+    modeNotice.innerHTML='位置を取得できません。地図タップで現在地を手動設置できます。';
+    state.pendingMode='self'; updateTapMode();
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:9000});
+}
+function stopSharing(saveLogs){
+  if(saveLogs) finishTripLogs();
+  if(state.watchId!==null) navigator.geolocation.clearWatch(state.watchId);
+  state.watchId=null; state.share=false;
+  shareToggle.classList.remove('on'); shareToggle.querySelector('.title').textContent='位置共有 OFF';
+}
+async function handlePosition(latlng,fromGps){
+  const now=new Date();
+  if(fromGps){
+    if(state.lastGps){
+      const d=haversine(state.lastGps,latlng);
+      if(d<CONFIG.minMoveMeters && Date.now()-state.lastSent?.time<CONFIG.locationIntervalMs) return;
+      if(d<CONFIG.maxGpsJumpMeters) state.localTrack.push({lat:latlng.lat,lng:latlng.lng,time:now.toISOString(),d});
+    }else state.localTrack.push({lat:latlng.lat,lng:latlng.lng,time:now.toISOString(),d:0});
+    state.lastGps=latlng;
+    updateRoadPassages(latlng,now);
+    updateRoundTrips(latlng);
+  }
+  state.lastSent={...latlng,time:Date.now()};
+  if(state.guiding) setCurrentLocation(latlng,true);
+  if(pb && state.presenceId) await pb.collection('presences').update(state.presenceId,{lat:latlng.lat,lng:latlng.lng}).catch(()=>{});
+}
+function updateRoadPassages(latlng,now){
+  ROADS.features.forEach(feat=>{
+    const d=distanceToFeature(latlng,feat);
+    const key=feat.properties.name;
+    const entry=state.passedRoads.get(key);
+    if(d<=CONFIG.roadNearMeters && !entry) state.passedRoads.set(key,{feat,entered_at:now,latest:now});
+    else if(d<=CONFIG.roadNearMeters && entry) entry.latest=now;
+  });
+}
+function updateRoundTrips(latlng){
+  if(!state.room?.meet_lat || !state.room?.meet_lng) return;
+  const d=haversine(latlng,{lat:state.room.meet_lat,lng:state.room.meet_lng});
+  if(!state.arrived && d<=CONFIG.meetArriveMeters) state.arrived=true;
+  if(state.arrived && d>=CONFIG.meetLeaveMeters){state.roundTrips++; state.arrived=false}
+}
+async function finishTripLogs(){
+  if(!pb || !state.room || !state.tripStart || state.manualOnly) return;
+  const v=activeVeh(); if(!v) return;
+  const weight=weightInfo(v.t);
+  const now=new Date();
+  const roomName=state.room.name || state.room.id;
+  for(const entry of state.passedRoads.values()){
+    const p=entry.feat.properties;
+    await pb.collection('passages').create({
+      room_id:state.room.id, room_name:roomName, road_name:p.name, road_class:p.cls,
+      vehicle_id:v.id||'', vehicle_name:v.name, total_weight:v.t, weight_class:weight.cls, load_factor:weight.factor,
+      traverse_sec:Math.max(0,Math.round((entry.latest-entry.entered_at)/1000)),
+      entered_at:entry.entered_at.toISOString(), passed_at:now.toISOString()
+    }).catch(console.error);
+  }
+  await pb.collection('trip_logs').create({
+    room_id:state.room.id, room_name:roomName, display_name:state.displayName, vehicle_id:v.id||'', vehicle_name:v.name,
+    distance_km:+(state.localTrack.reduce((s,p)=>s+(p.d||0),0)/1000).toFixed(3),
+    round_trips:state.room.meet_lat ? state.roundTrips : 0,
+    duration_sec:Math.round((now-state.tripStart)/1000), started_at:state.tripStart.toISOString(), ended_at:now.toISOString()
+  }).catch(console.error);
+  state.tripStart=null; state.passedRoads.clear(); state.localTrack=[];
+}
+function weightInfo(t){return CONFIG.weightRules.find(r=>t<=r.max)||CONFIG.weightRules.at(-1)}
+
+setMeet.onclick=()=>{state.pendingMode='meet'; updateTapMode()};
+manualSelf.onclick=()=>{state.pendingMode='self'; updateTapMode()};
+mapRefreshBtn.onclick=()=>loadVisibleRoads(true);
+gpsSiteBtn.addEventListener('click',e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  setSitePinFromGps();
+});
+followCurrentBtn.addEventListener('click',e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  returnToCurrentPosition();
+});
+document.querySelectorAll('[data-marker]').forEach(b=>b.onclick=()=>{state.pendingMode='marker:'+b.dataset.marker; updateTapMode()});
+sitePickBtn.onclick=()=>{
+  state.pendingMode='sitePick';
+  updateTapMode();
+  siteHint.textContent='地図上で出発地点にしたい場所をタップしてください。この時だけ出発地点ピンを変更できます。';
+  siteHint.className='hint warn';
+};
+siteSearchBtn.onclick=()=>setSiteFromInput();
+siteInput.addEventListener('keydown',e=>{if(e.key==='Enter') setSiteFromInput()});
+async function setSiteFromInput(){
+  const q=siteInput.value.trim();
+  if(!q){
+    siteHint.textContent='出発地点の住所・名称・座標を入力してください。';
+    siteHint.className='hint ng';
+    return;
+  }
+  siteSearchBtn.disabled=true;
+  siteSearchBtn.textContent='検索中';
+  try{
+    const site=await geocodeDestination(q);
+    setSitePin({lat:site.lat,lng:site.lng},true);
+    areaLabel.textContent='出発地点周辺を読み込み中';
+    await loadRoadsAround({lat:site.lat,lng:site.lng});
+    maybeRecalculateRoute();
+  }catch(e){
+    siteHint.textContent=`出発地点の設定に失敗しました: ${e?.message || '原因不明'}`;
+    siteHint.className='hint ng';
+  }finally{
+    siteSearchBtn.disabled=false;
+    siteSearchBtn.textContent='出発地設定';
+  }
+}
+function updateTapMode(){
+  const labels={idle:'地点情報',sitePick:'出発地点',self:'自分の現在地',meet:'集合地'};
+  tapMode.textContent=labels[state.pendingMode] || MARKER_META[state.pendingMode.split(':')[1]]?.label || 'マーカー';
+}
+function setSitePinFromGps(opts={}){
+  const auto=!!opts.auto;
+  setGpsStatus(auto?'現在地を確認しています...':'GPS現在地を取得しています...', 'warn', false);
+  modeNotice.innerHTML=auto?'GPS現在地を優先して出発地点に設定します。':'GPS現在地を取得しています。ブラウザの位置情報許可が必要です。';
+  if(!navigator.geolocation){
+    const msg='このブラウザではGPSを利用できません。現在地ボタンは使えません。出発地点はURLまたは初回GPS取得で設定してください。';
+    setGpsStatus(msg, 'ng', false);
+    modeNotice.innerHTML=msg;
+    state.pendingMode='idle'; updateTapMode();
+    return;
+  }
+  if(!window.isSecureContext){
+    const msg=auto?'GPS自動取得はHTTPSまたはlocalhost系URLで有効です。現在は共有リンクまたは地図上の出発地点を使っています。':'GPSはHTTPSまたはlocalhost系URLでのみ使えます。HTTPS配信に切り替えるか、地図タップで設置してください。';
+    setGpsStatus(msg, auto?'warn':'ng', false);
+    modeNotice.innerHTML=msg;
+    state.pendingMode='idle'; updateTapMode();
+    return;
+  }
+  setGpsButtonLoading(true);
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    setSitePin(latlng,true);
+    setCurrentLocation(latlng,false);
+    startLiveLocationWatch();
+    areaLabel.textContent='現在地周辺を読み込み中';
+    setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}。周辺道路を読み込んでいます...`, 'ok', false);
+    modeNotice.innerHTML='GPS現在地に出発地点を設定しました。周辺道路を読み込んでいます。';
+    await loadRoadsAround(latlng);
+    maybeRecalculateRoute();
+    setGpsButtonLoading(false);
+  },err=>{
+    const msg=gpsErrorMessage(err);
+    setGpsStatus(msg, 'ng', false);
+    modeNotice.innerHTML=msg;
+    state.pendingMode='idle'; updateTapMode();
+    setGpsButtonLoading(false);
+  },{enableHighAccuracy:true,maximumAge:auto?15000:5000,timeout:auto?8000:10000});
+}
+function setGpsButtonLoading(on){
+  gpsSiteBtn.disabled=!!on;
+  gpsSiteBtn.classList.toggle('loading',!!on);
+  gpsSiteBtn.setAttribute('aria-busy',String(!!on));
+}
+function startLiveLocationWatch(){
+  if(state.locationWatchId!==null || !navigator.geolocation || !window.isSecureContext) return;
+  state.locationWatchId=navigator.geolocation.watchPosition(pos=>{
+    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    handlePosition(latlng,true);
+    setCurrentLocation(latlng,state.guiding);
+  },err=>{
+    setGpsStatus(gpsErrorMessage(err),'ng',false);
+    if(state.locationWatchId!==null) navigator.geolocation.clearWatch(state.locationWatchId);
+    state.locationWatchId=null;
+  },{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
+}
+async function autoLoadGpsSite(){
+  if(!navigator.geolocation){
+    setGpsStatus('このブラウザではGPSを利用できません。共有リンクまたは地図上の出発地点を使っています。','ng',false);
+    return;
+  }
+  if(!window.isSecureContext){
+    setGpsStatus('GPS自動取得はHTTPSまたはlocalhost系URLで有効です。現在は共有リンクまたは地図上の出発地点を使っています。','warn',false);
+    return;
+  }
+  try{
+    const perm=await navigator.permissions?.query?.({name:'geolocation'});
+    if(perm?.state==='denied'){
+      setGpsStatus('GPS自動取得は拒否されています。ブラウザの権限設定で位置情報を許可してください。','ng',false);
+      return;
+    }
+  }catch(e){}
+  setSitePinFromGps({auto:true});
+}
+function setGpsStatus(message,type='warn',autoHide=true){
+  gpsStatus.textContent=message;
+  gpsStatus.className=`map-status ${type}`;
+  gpsStatus.style.display='block';
+  if(autoHide) setTimeout(()=>{gpsStatus.style.display='none'},5000);
+}
+function gpsErrorMessage(err){
+  const code=err?.code;
+  if(code===1) return 'GPS取得失敗: 位置情報の許可が拒否されています。ブラウザの権限設定でこのサイトの位置情報を許可してください。';
+  if(code===2) return 'GPS取得失敗: 端末が現在地を特定できませんでした。屋外や電波の良い場所で再試行してください。';
+  if(code===3) return 'GPS取得失敗: 取得がタイムアウトしました。もう一度押してください。';
+  return `GPS取得失敗: ${err?.message || '原因不明です。もう一度押してください。'}`;
+}
+function setSitePin(latlng,focus){
+  state.pin=latlng;
+  if(state.pinMarker) state.pinMarker.setLatLng(latlng);
+  else state.pinMarker=L.marker(latlng,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
+  if(focus) map.setView(latlng,16);
+  siteHint.textContent=`出発地点: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+  siteHint.className='hint ok';
+  updateReadout();
+}
+function setCurrentLocation(latlng,follow=false){
+  if(state.currentMarker) state.currentMarker.setLatLng(latlng);
+  else state.currentMarker=L.marker(latlng,{icon:pinIcon('現在地','me'),title:'現在地'}).addTo(map);
+  if(follow) map.panTo(latlng,{animate:true,duration:.35});
+  updateFollowCurrentButton();
+  updateGuidance(latlng);
+}
+function updateFollowCurrentButton(){
+  const visible=state.guiding || !!state.currentMarker;
+  followCurrentBtn.style.display=visible?'flex':'none';
+}
+function returnToCurrentPosition(){
+  if(state.currentMarker){
+    map.panTo(state.currentMarker.getLatLng(),{animate:true,duration:.35});
+    setGpsStatus('現在地へ戻りました。','ok',true);
+    return;
+  }
+  if(state.lastGps){
+    setCurrentLocation(state.lastGps,true);
+    setGpsStatus('最後に取得した現在地へ戻りました。','ok',true);
+    return;
+  }
+  if(!navigator.geolocation) return setGpsStatus('このブラウザではGPSを利用できません。','ng',false);
+  if(!window.isSecureContext) return setGpsStatus('現在地への復帰はHTTPSまたはlocalhost系URLで利用できます。','ng',false);
+  followCurrentBtn.disabled=true;
+  followCurrentBtn.textContent='取得中';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    setCurrentLocation(latlng,true);
+    setGpsStatus('現在地へ戻りました。','ok',true);
+    followCurrentBtn.disabled=false;
+    followCurrentBtn.textContent='現在地へ';
+  },err=>{
+    setGpsStatus(gpsErrorMessage(err),'ng',false);
+    followCurrentBtn.disabled=false;
+    followCurrentBtn.textContent='現在地へ';
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:9000});
+}
+function showTapInfo(latlng){
+  const v=activeVeh();
+  let nearest=null;
+  for(const feat of ROADS.features){
+    const d=distanceToFeature(latlng,feat);
+    if(!nearest || d<nearest.d) nearest={feat,d};
+  }
+  if(!nearest){
+    setGpsStatus(`タップ地点: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`,'warn',true);
+    return;
+  }
+  const p=nearest.feat.properties;
+  const r=verdict(p,v);
+  const verdictText=r.ok===false?'通行不可判定':r.ok===true?'通行可判定':'車両未選択';
+  setGpsStatus(`タップ地点: 最寄り ${p.name}（${fmtDist(nearest.d)}） / ${verdictText}` , r.ok===false?'ng':'warn', true);
+}
+async function loadRoadsAround(latlng){
+  const radiusDeg=0.045;
+  const south=latlng.lat-radiusDeg, north=latlng.lat+radiusDeg;
+  const west=latlng.lng-radiusDeg, east=latlng.lng+radiusDeg;
+  return loadRoadsForBounds({south,west,north,east},{
+    label:'現在地周辺・OSM試作路線',
+    statusLabel:'現在地周辺',
+    failLabel:'現在地周辺・道路取得失敗',
+    announce:true
+  });
+}
+function currentRoadQueryBounds(){
+  const b=map.getBounds();
+  const center=map.getCenter();
+  const maxSpan=0.12;
+  let south=b.getSouth(), north=b.getNorth(), west=b.getWest(), east=b.getEast();
+  if((north-south)>maxSpan || (east-west)>maxSpan){
+    const half=maxSpan/2;
+    south=center.lat-half; north=center.lat+half; west=center.lng-half; east=center.lng+half;
+  }
+  return {south,west,north,east};
+}
+function roadBoundsKey(box){
+  return [box.south,box.west,box.north,box.east].map(v=>v.toFixed(3)).join(',');
+}
+function scheduleViewportRoadRefresh(){
+  clearTimeout(state.viewportRoadTimer);
+  state.viewportRoadTimer=setTimeout(()=>loadVisibleRoads(),650);
+  refresh();
+}
+async function loadVisibleRoads(force=false){
+  if(state.loadingRoads) return;
+  const box=currentRoadQueryBounds();
+  const key=roadBoundsKey(box);
+  if(!force && key===state.roadBoundsKey) return;
+  const ok=await loadRoadsForBounds(box,{
+    label:'表示範囲・OSM試作路線',
+    statusLabel:'表示範囲',
+    failLabel:'表示範囲・道路取得失敗',
+    announce:false
+  });
+  if(ok) state.roadBoundsKey=key;
+}
+async function loadRoadsForBounds(box,opts={}){
+  const {south,west,north,east}=box;
+  const query=`[out:json][timeout:20];way[highway~"^(trunk|primary|secondary|tertiary)$"](${south},${west},${north},${east});out tags geom;`;
+  const endpoints=[
+    'https://overpass-api.de/api/interpreter?data=',
+    'https://overpass.kumi.systems/api/interpreter?data='
+  ];
+  state.loadingRoads=true;
+  setRoadLoading(true,`${opts.statusLabel||'表示範囲'}を読み込み中`);
+  areaLabel.textContent=`${opts.statusLabel||'表示範囲'}を更新中`;
+  try{
+    let data=null;
+    for(const endpoint of endpoints){
+      try{
+        const res=await fetchWithTimeout(endpoint+encodeURIComponent(query),8000);
+        if(!res.ok) continue;
+        data=await res.json();
+        if(data.elements) break;
+      }catch(e){}
+    }
+    if(!data?.elements?.length) throw new Error('no roads');
+    const next=roadsFromOverpass(data);
+    if(!next.features.length) throw new Error('no usable roads');
+    const added=mergeRoadFeatures(next.features);
+    ROADS=augmentRoadNetwork({type:'FeatureCollection',features:[...roadFeatureCache.values()]});
+    map.removeLayer(roadLayer);
+    roadLayer=makeRoadLayer(ROADS);
+    roadLayer.bringToFront();
+    areaLabel.textContent=opts.label || '表示範囲・OSM試作路線';
+    const msg=`${opts.statusLabel||'表示範囲'}の道路を更新しました。新規 ${added} 件 / 保存済み ${roadFeatureCache.size} 件。幅・高さ・重量は道路種別ごとの仮属性です。`;
+    if(opts.announce) {
+      setGpsStatus(msg, 'ok', true);
+      modeNotice.innerHTML=msg;
+    }
+    state.loadingRoads=false;
+    refresh();
+    return true;
+  }catch(e){
+    console.warn(e);
+    const msg=`${opts.statusLabel||'表示範囲'}の道路を取得できませんでした: ${e?.message || '通信エラー'}`;
+    if(opts.announce) {
+      areaLabel.textContent=opts.failLabel || '道路取得失敗';
+      setGpsStatus(msg, 'ng', false);
+      modeNotice.innerHTML=msg;
+    }else{
+      state.loadingRoads=false;
+      refresh();
+      areaLabel.textContent='表示範囲・既存データで更新';
+    }
+    return false;
+  }finally{
+    state.loadingRoads=false;
+    setRoadLoading(false);
+  }
+}
+function setRoadLoading(on,label='道路データ読込中'){
+  roadLoading.classList.toggle('on',!!on);
+  roadLoading.querySelector('span:last-child').textContent=label;
+}
+function fetchWithTimeout(url,timeoutMs){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
+  return fetch(url,{signal:ctrl.signal}).finally(()=>clearTimeout(timer));
+}
+function roadFeatureKey(feat){
+  const p=feat.properties||{};
+  if(p.osmId) return `osm:${p.osmId}`;
+  const coords=featureSegments(feat).flat();
+  const first=coords[0]||[0,0], last=coords[coords.length-1]||[0,0];
+  return ['local',p.name||'',p.cls||'',coords.length,first.join(','),last.join(',')].join('|');
+}
+function mergeRoadFeatures(features,opts={}){
+  let added=0;
+  for(const feat of features){
+    if(!feat?.geometry || feat.properties?.inferred) continue;
+    const key=roadFeatureKey(feat);
+    if(!roadFeatureCache.has(key)){
+      roadFeatureCache.set(key,feat);
+      added++;
+    }
+  }
+  trimRoadCache();
+  if(opts.persist!==false && added) persistRoadCache();
+  return added;
+}
+function trimRoadCache(){
+  while(roadFeatureCache.size>ROAD_CACHE_MAX){
+    const first=roadFeatureCache.keys().next().value;
+    roadFeatureCache.delete(first);
+  }
+}
+function persistRoadCache(){
+  try{
+    const entries=[...roadFeatureCache.entries()].filter(([,feat])=>feat?.properties?.osmId);
+    localStorage.setItem(ROAD_CACHE_KEY,JSON.stringify(entries));
+  }catch(e){}
+}
+function restoreRoadCache(){
+  try{
+    const raw=localStorage.getItem(ROAD_CACHE_KEY);
+    if(!raw) return;
+    const entries=JSON.parse(raw);
+    if(!Array.isArray(entries)) return;
+    roadFeatureCache=new Map(entries.filter(e=>Array.isArray(e)&&e.length===2&&e[1]?.geometry));
+    trimRoadCache();
+  }catch(e){
+    roadFeatureCache=new Map();
+  }
+}
+function roadsFromOverpass(data){
+  const ways=data.elements.filter(e=>e.type==='way' && e.geometry?.length>1).sort((a,b)=>(a.id||0)-(b.id||0));
+  const features=ways.slice(0,650).map((way,i)=>{
+    const cls=classForHighway(way.tags?.highway);
+    const lim=limitsForClass(cls);
+    const name=way.tags?.name || (way.tags?.ref ? `路線 ${way.tags.ref}` : `周辺道路 ${i+1}`);
+    return {
+      type:'Feature',
+      properties:{name,cls,w_m:lim.w,t_t:lim.t,h_m:lim.h,osmId:way.id,highway:way.tags?.highway||''},
+      geometry:{type:'LineString',coordinates:way.geometry.map(p=>[+p.lon.toFixed(6),+p.lat.toFixed(6)])}
+    };
+  });
+  return {type:'FeatureCollection',features};
+}
+function augmentRoadNetwork(collection){
+  const base=collection.features;
+  const endpoints=[];
+  base.forEach((feat,fi)=>{
+    featureSegments(feat).forEach((coords,si)=>{
+      if(coords.length<2) return;
+      endpoints.push({feat,fi,si,end:'a',coord:coords[0]});
+      endpoints.push({feat,fi,si,end:'b',coord:coords[coords.length-1]});
+    });
+  });
+  const connectors=[], used=new Set();
+  for(const ep of endpoints){
+    const point={lat:ep.coord[1],lng:ep.coord[0]};
+    const nearEndpoint=endpoints.some(other=>other!==ep && haversine(point,{lat:other.coord[1],lng:other.coord[0]})<12);
+    if(nearEndpoint) continue;
+    let best=null;
+    base.forEach((feat,fi)=>{
+      if(fi===ep.fi) return;
+      featureSegments(feat).forEach((coords,si)=>{
+        for(let i=1;i<coords.length;i++){
+          const a={lat:coords[i-1][1],lng:coords[i-1][0]};
+          const b={lat:coords[i][1],lng:coords[i][0]};
+          const snap=projectPointToSegment(point,a,b);
+          if(snap.t<.03 || snap.t>.97) continue;
+          if(!best || snap.d<best.d) best={...snap,feat,fi,si};
+        }
+      });
+    });
+    if(!best || best.d<8 || best.d>85) continue;
+    const a=[+point.lng.toFixed(6),+point.lat.toFixed(6)];
+    const b=[+best.lng.toFixed(6),+best.lat.toFixed(6)];
+    const key=[a,b].map(c=>c.map(v=>v.toFixed(5)).join(',')).sort().join('|');
+    if(used.has(key)) continue;
+    used.add(key);
+    const limA=ep.feat.properties, limB=best.feat.properties;
+    connectors.push({
+      type:'Feature',
+      properties:{
+        name:'推定接続',
+        cls:limA.cls,
+        w_m:Math.min(limA.w_m,limB.w_m),
+        t_t:Math.min(limA.t_t,limB.t_t),
+        h_m:Math.min(limA.h_m,limB.h_m),
+        inferred:true,
+        inferred_m:Math.round(best.d)
+      },
+      geometry:{type:'LineString',coordinates:[a,b]}
+    });
+  }
+  return {type:'FeatureCollection',features:[...base,...connectors.slice(0,80)]};
+}
+function classForHighway(highway){
+  if(highway==='trunk' || highway==='primary') return '重要物流道路';
+  if(highway==='secondary') return '緊急輸送道路';
+  return '一般道';
+}
+function limitsForClass(cls){
+  if(cls==='重要物流道路') return {w:3.5,t:40,h:4.5};
+  if(cls==='緊急輸送道路') return {w:3.2,t:36,h:4.1};
+  return {w:2.7,t:20,h:3.8};
+}
+window.routeViewer={
+  loadRoadsAround,
+  loadVisibleRoads,
+  roadStats:()=>({
+    total:ROADS.features.length,
+    saved:roadFeatureCache.size,
+    inferred:ROADS.features.filter(f=>f.properties.inferred).length
+  })
+};
+routeBtn.onclick=()=>showRouteToDestination();
+clearRouteBtn.onclick=clearRoute;
+shareLineBtn.onclick=shareLineLink;
+destInput.addEventListener('keydown',e=>{if(e.key==='Enter') showRouteToDestination()});
+async function showRouteToDestination(){
+  const q=destInput.value.trim();
+  if(!state.pin){
+    setRouteHint('先に右下の現在地ボタン、または地図タップで出発地点を置いてください。','ng');
+    return;
+  }
+  if(!q){
+    setRouteHint('行き先を入力してください。','ng');
+    return;
+  }
+  routeBtn.disabled=true;
+  routeBtn.textContent='検索中';
+  setRouteHint('行き先を検索しています...','warn');
+  try{
+    const dest=await geocodeDestination(q);
+    state.destination=dest;
+    setRouteHint('ルートを取得しています...','warn');
+    const routes=await fetchRoutes(state.pin,dest);
+    const ranked=rankRouteCandidates(routes,dest);
+    state.routeCandidates=ranked.filter(c=>c.passable);
+    state.selectedRoute=0;
+    renderRouteCandidates();
+    const selected=state.routeCandidates[0];
+    if(!selected){
+      clearRoute(false);
+      routeCandidates.style.display='none';
+      const blocked=ranked.filter(c=>!c.passable);
+      setRouteHint(`この車両で通行可能と判定できる候補がありません。赤区間を含む候補 ${blocked.length}件は除外しました。車両区分か行き先を見直してください。`,'ng');
+      return;
+    }
+    drawRouteCandidate(0);
+    setRouteHint(routeCandidateMessage(dest,selected), routeAuditType(selected.audit));
+  }catch(e){
+    setRouteHint(`ルート表示に失敗しました: ${e?.message || '原因不明'}`,'ng');
+  }finally{
+    routeBtn.disabled=false;
+    routeBtn.textContent='ルート表示';
+  }
+}
+async function geocodeDestination(q){
+  const isCoord=q.match(/^\s*([0-9.]+)\s*,\s*([0-9.]+)\s*$/);
+  if(isCoord) return {lat:+isCoord[1],lng:+isCoord[2],label:q};
+  const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q='+encodeURIComponent(q);
+  const res=await fetch(url,{headers:{'Accept':'application/json'}});
+  if(!res.ok) throw new Error('行き先検索の通信に失敗しました');
+  const data=await res.json();
+  if(!data.length) throw new Error('行き先が見つかりませんでした');
+  return {lat:+data[0].lat,lng:+data[0].lon,label:data[0].display_name?.split(',').slice(0,2).join(', ') || q};
+}
+async function fetchRoutes(from,to){
+  const url=`https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=true`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error('ルート取得の通信に失敗しました');
+  const data=await res.json();
+  if(data.code!=='Ok' || !data.routes?.length) throw new Error('車両ルートが見つかりませんでした');
+  const routes=[...data.routes];
+  if(routes.length<3) routes.push(...await fetchDetourRoutes(from,to,routes,3-routes.length));
+  return routes.slice(0,3);
+}
+async function fetchDetourRoutes(from,to,existing,need){
+  const mid={lat:(from.lat+to.lat)/2,lng:(from.lng+to.lng)/2};
+  const dLat=to.lat-from.lat, dLng=to.lng-from.lng;
+  const base=Math.max(Math.hypot(dLat,dLng)*0.55,0.006);
+  const candidates=[
+    {lat:mid.lat+dLng*base/Math.max(Math.hypot(dLat,dLng),.001),lng:mid.lng-dLat*base/Math.max(Math.hypot(dLat,dLng),.001)},
+    {lat:mid.lat-dLng*base/Math.max(Math.hypot(dLat,dLng),.001),lng:mid.lng+dLat*base/Math.max(Math.hypot(dLat,dLng),.001)},
+    {lat:mid.lat+0.012,lng:mid.lng},
+    {lat:mid.lat-0.012,lng:mid.lng},
+    {lat:mid.lat,lng:mid.lng+0.012},
+    {lat:mid.lat,lng:mid.lng-0.012}
+  ];
+  const out=[];
+  for(const via of candidates){
+    if(out.length>=need) break;
+    const route=await fetchRouteVia(from,via,to).catch(()=>null);
+    if(!route || isDuplicateRoute(route,[...existing,...out])) continue;
+    out.push(route);
+  }
+  return out;
+}
+async function fetchRouteVia(from,via,to){
+  const url=`https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${via.lng},${via.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true`;
+  const res=await fetch(url);
+  if(!res.ok) return null;
+  const data=await res.json();
+  return data.code==='Ok' && data.routes?.[0] ? data.routes[0] : null;
+}
+function isDuplicateRoute(route,routes){
+  return routes.some(r=>{
+    const distDiff=Math.abs((r.distance||0)-(route.distance||0))/Math.max(route.distance||1,1);
+    const durDiff=Math.abs((r.duration||0)-(route.duration||0))/Math.max(route.duration||1,1);
+    return distDiff<.04 && durDiff<.06;
+  });
+}
+function rankRouteCandidates(routes,dest){
+  return routes.map((route,i)=>{
+    const coords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
+    const audit=auditRouteCoords(coords);
+    const traffic=routeTrafficImpact(coords);
+    const min=route.duration/60;
+    const km=route.distance/1000;
+    const riskPenalty=audit.blocked*1.8 + audit.unknownRate*8;
+    const adjustedMin=min + traffic.delayMin + riskPenalty;
+    return {idx:i,route,dest,coords,audit,traffic,min,km,adjustedMin,passable:audit.blocked===0};
+  }).sort((a,b)=>a.adjustedMin-b.adjustedMin);
+}
+function renderRouteCandidates(){
+  routeCandidates.style.display=state.routeCandidates.length?'flex':'none';
+  routeCandidates.innerHTML='';
+  state.routeCandidates.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='route-candidate'+(i===state.selectedRoute?' on':'');
+    const timeText=c.traffic.delayMin?`遅延込み 約${Math.round(c.min+c.traffic.delayMin)}分（+${Math.round(c.traffic.delayMin)}分）`:`通常 約${Math.round(c.min)}分`;
+    const risk=c.audit.unknown?`未照合 ${Math.round(c.audit.unknownRate*100)}%`:'整合';
+    btn.innerHTML=`<div class="main"><span>候補${i+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分</span>${i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${timeText} / <span class="risk">${risk}</span></div>`;
+    btn.onclick=()=>{state.selectedRoute=i; drawRouteCandidate(i); renderRouteCandidates(); setRouteHint(routeCandidateMessage(c.dest,c),routeAuditType(c.audit))};
+    routeCandidates.appendChild(btn);
+  });
+}
+function drawRouteCandidate(index){
+  const c=state.routeCandidates[index];
+  if(!c) return;
+  drawRoute(c.route,c.dest,c.audit,c.coords);
+}
+function drawRoute(route,dest,audit=null,coords=null){
+  removeRouteLayer();
+  coords=coords||route.geometry.coordinates.map(c=>[c[1],c[0]]);
+  audit=audit||auditRouteCoords(coords);
+  state.routeSteps=routeStepsFromOsrm(route,dest);
+  state.currentStep=0;
+  state.lastSpokenStep=-1;
+  const layers=[
+    L.polyline(coords,{color:'#111827',weight:10,opacity:.78,lineCap:'round',lineJoin:'round'}),
+    L.polyline(coords,{color:'#3aa0ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round'})
+  ];
+  for(let i=1;i<coords.length;i++){
+    const status=audit.segments[i-1]?.status||'unknown';
+    if(status==='pass' || status==='blocked') continue;
+    const color='#ff9f1c';
+    const dash='8,6';
+    layers.push(L.polyline([coords[i-1],coords[i]],{color,weight:8,opacity:1,dashArray:dash,lineCap:'round',lineJoin:'round'}));
+  }
+  layers.push(L.marker([dest.lat,dest.lng],{icon:sitePinIcon('dest'),title:'行き先'}));
+  state.routeLayer=L.layerGroup(layers).addTo(map);
+  state.routeActive=true;
+  roadLayer.setStyle(styleFor);
+  map.fitBounds(L.latLngBounds(coords).pad(0.12));
+  renderGuideList();
+  updateDriveSummary();
+  return audit;
+}
+function removeRouteLayer(){
+  if(state.routeLayer){map.removeLayer(state.routeLayer);state.routeLayer=null}
+  stopGuidance(false);
+}
+function clearRoute(updateHint=true){
+  removeRouteLayer();
+  state.routeActive=false;
+  state.destination=null; state.routeCandidates=[]; state.selectedRoute=0; state.routeSteps=[]; state.currentStep=0; state.lastSpokenStep=-1;
+  renderRouteCandidates();
+  renderGuideList();
+  updateDriveSummary();
+  roadLayer.setStyle(styleFor);
+  if(updateHint) setRouteHint('現在地ボタンで出発地点を置いてから、行き先を入力してください。','');
+}
+function auditRouteCoords(coords){
+  const v=activeVeh();
+  const segments=[];
+  let pass=0, blocked=0, unknown=0;
+  for(let i=1;i<coords.length;i++){
+    const mid={lat:(coords[i-1][0]+coords[i][0])/2,lng:(coords[i-1][1]+coords[i][1])/2};
+    const status=routePointStatus(mid,v);
+    segments.push({status});
+    if(status==='pass') pass++;
+    else if(status==='blocked') blocked++;
+    else unknown++;
+  }
+  const total=Math.max(segments.length,1);
+  return {segments,total,pass,blocked,unknown,passRate:pass/total,blockedRate:blocked/total,unknownRate:unknown/total};
+}
+function routePointStatus(point,v){
+  let nearest=null;
+  for(const feat of ROADS.features){
+    const p=feat.properties;
+    if(state.hidden.has(p.cls)) continue;
+    const d=distanceToFeature(point,feat);
+    if(!nearest || d<nearest.d) nearest={d,feat};
+  }
+  if(!nearest || nearest.d>CONFIG.routeMatchMeters) return 'unknown';
+  const r=verdict(nearest.feat.properties,v);
+  return r.ok===false?'blocked':'pass';
+}
+function routeTrafficImpact(coords){
+  let delayMin=0;
+  const hits=[];
+  for(const m of state.markers.values()){
+    const d=distanceToRouteLatLng({lat:m.lat,lng:m.lng},coords);
+    if(d>90) continue;
+    const add={jam:8,work:5,narrow:3,closed:60}[m.kind]||2;
+    delayMin+=add;
+    hits.push(MARKER_META[m.kind]?.label||'マーカー');
+  }
+  const publicTraffic=publicTrafficImpact(coords);
+  delayMin+=publicTraffic.delayMin;
+  hits.push(...publicTraffic.hits);
+  return {delayMin,hits};
+}
+function publicTrafficImpact(coords){
+  if(!CONFIG.publicTraffic.enabled) return {delayMin:0,hits:[]};
+  const hits=[];
+  let delayMin=0;
+  // 公的データ連携はここへ差し込む。JARTIC交通量APIは観測点ベース、
+  // 交通規制オープンデータはダウンロード/整形後のGeoJSONを想定する。
+  return {delayMin,hits};
+}
+async function loadPublicTrafficSources(){
+  if(!CONFIG.publicTraffic.sourcesPath) return null;
+  try{
+    const res=await fetch(CONFIG.publicTraffic.sourcesPath);
+    return res.ok ? await res.json() : null;
+  }catch{
+    return null;
+  }
+}
+function distanceToRouteLatLng(point,coords){
+  let best=Infinity;
+  for(let i=1;i<coords.length;i++) best=Math.min(best,distanceToSegmentMeters(point,{lat:coords[i-1][0],lng:coords[i-1][1]},{lat:coords[i][0],lng:coords[i][1]}));
+  return best;
+}
+function routeAuditType(audit){
+  if(audit.unknownRate>.25) return 'warn';
+  return 'ok';
+}
+function routeCandidateMessage(dest,c){
+  const base=`${dest.label} まで候補${state.selectedRoute+1}: 約${c.km.toFixed(1)}km / 通常約${Math.round(c.min)}分。`;
+  const traffic=c.traffic.delayMin?`共有マーカー反映後は約${Math.round(c.min+c.traffic.delayMin)}分見込みです。`:'共有マーカーによる遅れは未検出です。';
+  if(c.audit.unknownRate>.25){
+    const pct=Math.round(c.audit.unknownRate*100);
+    return `${base} ${traffic} 通行可能道路データと一致しない区間があります（オレンジ 約${pct}%）。`;
+  }
+  return `${base} ${traffic} 通行可能道路データと概ね整合しています。`;
+}
+function routeStepsFromOsrm(route,dest){
+  const steps=route.legs?.flatMap(leg=>leg.steps||[])||[];
+  const mapped=steps.map((step,i)=>{
+    const m=step.maneuver||{};
+    const loc=m.location||[];
+    return {
+      idx:i,
+      lat:loc[1],
+      lng:loc[0],
+      distance:step.distance||0,
+      approachDistance:i>0 ? (steps[i-1].distance||0) : (step.distance||0),
+      name:step.name||'道路',
+      place:stepPlaceName(step),
+      instruction:instructionText(step,i,steps.length,dest),
+      announcedNear:false,
+      announcedFar:false
+    };
+  }).filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lng));
+  if(mapped.length) mapped[mapped.length-1].instruction=`まもなく目的地です。${dest.label} に到着します。`;
+  return mapped;
+}
+function stepPlaceName(step){
+  return step.name || '';
+}
+function instructionText(step,i,total,dest){
+  const m=step.maneuver||{}, type=m.type||'', mod=m.modifier||'';
+  if(type==='depart') return `${step.name||'道路'}を進みます。`;
+  if(type==='arrive') return `目的地 ${dest.label} に到着します。`;
+  if(type==='roundabout') return `${step.name||'環状交差点'}で案内方向へ進みます。`;
+  const dir={left:'左折',right:'右折','slight left':'斜め左方向','slight right':'斜め右方向','sharp left':'大きく左折','sharp right':'大きく右折',straight:'直進',uturn:'Uターン'}[mod]||'案内方向へ進む';
+  const road=step.name?`、${step.name}へ`:'';
+  if(type==='turn' || type==='end of road' || type==='new name') return `${dir}${road}。`;
+  if(type==='merge') return `${road || 'この先'}合流します。`;
+  if(type==='fork') return `${dir}${road}。`;
+  if(i===total-1) return `目的地 ${dest.label} に到着します。`;
+  return `${dir}${road}。`;
+}
+function renderGuideList(){
+  guideBox.style.display=state.routeSteps.length?'block':'none';
+  guideList.innerHTML='';
+  state.routeSteps.forEach((step,i)=>{
+    const row=document.createElement('div');
+    row.className='guide-step'+(i===state.currentStep?' current':'');
+    row.innerHTML=`<div class="idx">${i+1}</div><div><div class="txt"><span>${step.instruction}</span>${step.place?`<span class="place">${step.place}</span>`:''}</div><div class="dist">次の区間 約${fmtDist(step.distance)}</div></div>`;
+    guideList.appendChild(row);
+  });
+  guideBtn.textContent=state.guiding?'案内停止':'案内開始';
+  const speakable=canSpeakGuide();
+  voiceBtn.disabled=!speakable;
+  voiceBtn.textContent=speakable?(state.voice?'音声ON':'音声OFF'):'音声不可';
+  updateDriveSummary();
+}
+function updateDriveSummary(){
+  if(!document.getElementById('driveSummary')) return;
+  const primary=driveSummary.querySelector('.primary');
+  const secondary=driveSummary.querySelector('.secondary');
+  if(!state.routeSteps.length){
+    primary.textContent='ルート未選択';
+    secondary.textContent='ルート選定で行き先を指定すると、案内と現在地追従をここに表示します。';
+    return;
+  }
+  const step=state.routeSteps[state.currentStep] || state.routeSteps[0];
+  primary.textContent=step?.instruction || 'ルート案内中';
+  const dest=state.destination?.label || destInput.value.trim() || '行き先';
+  secondary.textContent=`${dest} までの案内${state.guiding?'を実行中':'を待機中'}。必要な共有は下のボタンから登録できます。`;
+}
+guideBtn.onclick=()=> state.guiding ? stopGuidance(true) : startGuidance();
+voiceBtn.onclick=()=>{
+  if(!canSpeakGuide()) return setRouteHint('このブラウザでは音声読み上げを利用できません。ChromeなどWeb Speech API対応ブラウザで利用できます。','warn');
+  state.voice=!state.voice; renderGuideList(); if(state.voice) speakGuide('音声案内を開始します。')
+};
+function startGuidance(){
+  if(!state.routeSteps.length) return setRouteHint('先にルート表示してください。','ng');
+  if(!navigator.geolocation) return setRouteHint('このブラウザではGPS案内を利用できません。地図タップで現在地を動かすと案内確認できます。','ng');
+  if(!window.isSecureContext) return setRouteHint('GPS案内はHTTPSまたはlocalhost系URLで利用できます。','ng');
+  if(!canSpeakGuide()) setRouteHint('このブラウザでは音声読み上げを利用できません。画面案内のみ表示します。','warn');
+  else state.voice=true;
+  state.guiding=true;
+  updateFollowCurrentButton();
+  switchView('drive');
+  renderGuideList();
+  if(state.voice) speakGuide('音声案内を開始します。');
+  state.guideWatchId=navigator.geolocation.watchPosition(pos=>{
+    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    handlePosition(latlng,true);
+  },err=>{
+    setRouteHint(gpsErrorMessage(err),'ng');
+    stopGuidance(false);
+  },{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
+}
+function stopGuidance(showMsg=true){
+  if(state.guideWatchId!==null) navigator.geolocation.clearWatch(state.guideWatchId);
+  state.guideWatchId=null; state.guiding=false;
+  updateFollowCurrentButton();
+  renderGuideList();
+  if(showMsg) setRouteHint('案内を停止しました。','');
+}
+function updateGuidance(latlng){
+  if(!state.routeSteps.length) return;
+  let next=state.routeSteps[state.currentStep];
+  while(next && haversine(latlng,next)<30 && state.currentStep<state.routeSteps.length-1){
+    state.currentStep++;
+    next=state.routeSteps[state.currentStep];
+  }
+  if(!next) return;
+  const d=haversine(latlng,next);
+  renderGuideList();
+  if(next.approachDistance>=3000 && d<=1000 && !next.announcedFar){
+    next.announcedFar=true;
+    speakGuide(`およそ1キロ先、${guideSpeakText(next)}`);
+  }
+  if(d<=300 && !next.announcedNear){
+    next.announcedNear=true;
+    const prefix=d>40?`およそ${Math.round(d/10)*10}メートル先、`:'まもなく、';
+    speakGuide(prefix+guideSpeakText(next));
+  }
+}
+function guideSpeakText(step){
+  const place=step.place ? `${step.place}で、` : '';
+  return place+step.instruction;
+}
+function speakGuide(text){
+  if(!state.voice || !canSpeakGuide()) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP'; u.rate=.95; u.pitch=1;
+  speechSynthesis.speak(u);
+}
+function canSpeakGuide(){
+  return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+}
+function setRouteHint(msg,type=''){
+  routeHint.textContent=msg;
+  routeHint.className=`hint ${type}`;
+}
+let routeRecalcTimer=null;
+function maybeRecalculateRoute(){
+  if(!state.pin || !destInput.value.trim()) return;
+  clearTimeout(routeRecalcTimer);
+  setRouteHint('車両条件を変更しました。ルートを再計算しています...','warn');
+  routeRecalcTimer=setTimeout(()=>showRouteToDestination(),450);
+}
+async function shareLineLink(){
+  const url=buildShareUrl();
+  await navigator.clipboard?.writeText(url).catch(()=>{});
+  const lineUrl='https://line.me/R/msg/text/?'+encodeURIComponent(url);
+  setRouteHint('共有リンクを作成しました。クリップボードにもコピーしました。LINEを開きます。','ok');
+  window.open(lineUrl,'_blank','noopener');
+}
+function buildShareUrl(){
+  const params=new URLSearchParams();
+  const site=siteInput.value.trim();
+  const dest=destInput.value.trim();
+  if(site) params.set('site',site);
+  if(dest) params.set('dest',dest);
+  if(state.vehClass) params.set('vclass',state.vehClass.id);
+  else if(state.veh) params.set('vehicle',state.veh.id);
+  else if(state.custom){
+    params.set('cw',cw.value); params.set('ch',ch.value); params.set('ct',ct.value);
+  }
+  if(state.room?.id) params.set('room',state.room.id);
+  if(state.pin){params.set('lat',state.pin.lat.toFixed(6)); params.set('lng',state.pin.lng.toFixed(6));}
+  return `${location.origin}${location.pathname}?${params.toString()}`;
+}
+function applyUrlParams(){
+  const params=new URLSearchParams(location.search);
+  const site=params.get('site');
+  if(site) siteInput.value=site;
+  const dest=params.get('dest');
+  if(dest) destInput.value=dest;
+  const vclass=params.get('vclass');
+  if(vclass){
+    const c=VEHICLE_CLASSES.find(x=>x.id===vclass);
+    if(c) selectVehClass(c,false);
+  }
+  const vehicle=params.get('vehicle');
+  if(vehicle){
+    const v=VEHICLES.find(x=>x.id===vehicle);
+    if(v) selectVeh(v,false);
+  }
+  if(params.has('cw')||params.has('ch')||params.has('ct')){
+    cw.value=params.get('cw')||cw.value; ch.value=params.get('ch')||ch.value; ct.value=params.get('ct')||ct.value;
+    state.custom=true; state.veh=null; state.vehClass=null;
+    document.querySelectorAll('.veh,.class-btn,.class-note').forEach(e=>e.classList.remove('on'));
+    custom.classList.add('on');
+    refresh();
+  }
+  const lat=+params.get('lat'), lng=+params.get('lng');
+  if(Number.isFinite(lat)&&Number.isFinite(lng)){
+    setSitePin({lat,lng},true);
+  }
+  const room=params.get('room');
+  if(room) roomId.value=room;
+}
+map.on('click',async e=>{
+  if(state.pendingMode==='sitePick'){
+    setSitePin(e.latlng,true);
+    state.pendingMode='idle'; updateTapMode();
+    await loadRoadsAround(e.latlng);
+    maybeRecalculateRoute();
+    return;
+  }
+  if(state.pendingMode==='self'){
+    await handlePosition(e.latlng,false);
+    setCurrentLocation(e.latlng,true);
+    state.pendingMode='idle'; updateTapMode(); return;
+  }
+  if(state.pendingMode==='meet'){
+    if(!state.room) return alert('先にルームへ参加してください。');
+    const label=prompt('集合地メモ', state.room.meet_label || 'ゲート前') || '';
+    await pb.collection('rooms').update(state.room.id,{meet_lat:e.latlng.lat,meet_lng:e.latlng.lng,meet_label:label}).catch(()=>{});
+    state.pendingMode='idle'; updateTapMode(); return;
+  }
+  if(state.pendingMode.startsWith('marker:')){
+    if(!state.room) return alert('先にルームへ参加してください。');
+    const kind=state.pendingMode.split(':')[1];
+    const note=prompt(`${MARKER_META[kind].label}メモ`, '') || '';
+    await pb.collection('markers').create({room_id:state.room.id,kind,lat:e.latlng.lat,lng:e.latlng.lng,note,author:state.displayName}).catch(()=>{});
+    state.pendingMode='idle'; updateTapMode(); return;
+  }
+  showTapInfo(e.latlng);
+});
+function sitePinIcon(kind='site'){
+  const cls=kind==='dest'?'site-pin dest':'site-pin';
+  return L.divIcon({className:'site-pin-icon',html:`<div class="${cls}"></div>`,iconSize:[28,28],iconAnchor:[14,28]});
+}
+function pinIcon(label,cls){return L.divIcon({className:'label-icon',html:`<div class="label-chip ${cls}">${label}</div>`,iconSize:[0,0]})}
+function renderMeet(room){
+  if(state.meetMarker){map.removeLayer(state.meetMarker); state.meetMarker=null}
+  if(room.meet_lat && room.meet_lng) state.meetMarker=L.marker([room.meet_lat,room.meet_lng],{icon:pinIcon(room.meet_label||'集合地','meet')}).addTo(map);
+}
+function renderPresences(){
+  for(const m of state.presenceMarkers.values()) map.removeLayer(m);
+  state.presenceMarkers.clear();
+  const now=Date.now();
+  const live=[...state.presences.values()].filter(p=>p.lat&&p.lng&&(now-new Date(p.updated).getTime())<CONFIG.stalePresenceMs);
+  presenceSection.style.display=live.length?'block':'none';
+  presenceList.innerHTML='';
+  live.forEach(p=>{
+    const isMe=p.id===state.presenceId;
+    const icon=pinIcon(p.display_name+(isMe?'（自分）':''),isMe?'me':'');
+    const marker=L.marker([p.lat,p.lng],{icon}).addTo(map);
+    state.presenceMarkers.set(p.id,marker);
+    const d=state.room?.meet_lat?haversine({lat:p.lat,lng:p.lng},{lat:state.room.meet_lat,lng:state.room.meet_lng}):null;
+    const row=document.createElement('div'); row.className='person';
+    row.innerHTML=`<div class="name">${p.display_name}${isMe?'（自分）':''}</div><div class="meta">最終更新 ${timeAgo(p.updated)}${d!==null?' / 集合地まで '+fmtDist(d):''}</div>`;
+    row.onclick=()=>map.setView([p.lat,p.lng],15);
+    presenceList.appendChild(row);
+  });
+}
+function renderMarkers(){
+  const list=[...state.markers.values()].sort((a,b)=>new Date(b.created)-new Date(a.created));
+  markerSection.style.display=list.length?'block':'none';
+  markerList.innerHTML='';
+  list.forEach(m=>{
+    const meta=MARKER_META[m.kind]||MARKER_META.other;
+    const row=document.createElement('div'); row.className='marker-row';
+    row.innerHTML=`<div class="name" style="color:${meta.color}">${meta.label}</div><div class="meta">${m.note||'メモなし'} / ${m.author||'不明'} / ${timeAgo(m.created)}</div>`;
+    row.onclick=()=>map.setView([m.lat,m.lng],15);
+    markerList.appendChild(row);
+  });
+}
+function drawSharedMarkers(){
+  for(const m of state.markerLayers.values()) map.removeLayer(m);
+  state.markerLayers.clear();
+  for(const m of state.markers.values()){
+    const meta=MARKER_META[m.kind]||MARKER_META.other;
+    const layer=L.marker([m.lat,m.lng],{icon:pinIcon(meta.label,'alert')}).addTo(map).bindPopup(`<b>${meta.label}</b><br>${m.note||''}<br>${m.author||''}`);
+    state.markerLayers.set(m.id,layer);
+  }
+}
+
+function haversine(a,b){
+  const R=6371000,toR=x=>x*Math.PI/180;
+  const dLat=toR(b.lat-a.lat),dLng=toR(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function featureSegments(feat){
+  if(feat.geometry.type==='MultiLineString') return feat.geometry.coordinates;
+  return [feat.geometry.coordinates];
+}
+function distanceToFeature(point,feat){
+  return Math.min(...featureSegments(feat).map(coords=>distanceToLine(point,coords)));
+}
+function distanceToLine(point,coords){
+  let best=Infinity;
+  for(let i=1;i<coords.length;i++) best=Math.min(best, distanceToSegmentMeters(point,{lat:coords[i-1][1],lng:coords[i-1][0]},{lat:coords[i][1],lng:coords[i][0]}));
+  return best;
+}
+function distanceToSegmentMeters(p,a,b){
+  const meanLat=(a.lat+b.lat+p.lat)/3*Math.PI/180;
+  const mx=111320*Math.cos(meanLat), my=110540;
+  const px=p.lng*mx, py=p.lat*my, ax=a.lng*mx, ay=a.lat*my, bx=b.lng*mx, by=b.lat*my;
+  const dx=bx-ax, dy=by-ay, t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function projectPointToSegment(p,a,b){
+  const meanLat=(a.lat+b.lat+p.lat)/3*Math.PI/180;
+  const mx=111320*Math.cos(meanLat), my=110540;
+  const px=p.lng*mx, py=p.lat*my, ax=a.lng*mx, ay=a.lat*my, bx=b.lng*mx, by=b.lat*my;
+  const dx=bx-ax, dy=by-ay;
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));
+  const x=ax+t*dx, y=ay+t*dy;
+  return {lat:y/my,lng:x/mx,t,d:Math.hypot(px-x,py-y)};
+}
+function featureBounds(feat){
+  let south=Infinity, west=Infinity, north=-Infinity, east=-Infinity;
+  featureSegments(feat).forEach(coords=>coords.forEach(([lng,lat])=>{
+    south=Math.min(south,lat); north=Math.max(north,lat);
+    west=Math.min(west,lng); east=Math.max(east,lng);
+  }));
+  return {south,west,north,east};
+}
+function featureInBounds(feat,bounds){
+  const b=feat._bounds || (feat._bounds=featureBounds(feat));
+  return b.north>=bounds.getSouth() && b.south<=bounds.getNorth() && b.east>=bounds.getWest() && b.west<=bounds.getEast();
+}
+function visibleRoadFeatures(){
+  const bounds=map.getBounds().pad(0.03);
+  return ROADS.features.filter(feat=>featureInBounds(feat,bounds));
+}
+function updateReadout(){
+  if(!state.pin && siteHint){
+    siteHint.textContent='出発地点は現在地ボタンか地図選択で設定します。';
+    siteHint.className='hint';
+  }
+}
+function refresh(){
+  roadLayer.setStyle(styleFor);
+  const v=activeVeh(); let ok=0,ng=0;
+  const visible=visibleRoadFeatures();
+  visible.forEach(feat=>{if(state.hidden.has(feat.properties.cls)||!v)return; (verdict(feat.properties,v).ok?ok++:ng++)});
+  nOk.textContent=v?ok:'-'; nNg.textContent=v?ng:'-'; updateReadout();
+  const vc=vehicleClass(v);
+  vehClass.innerHTML=v?`車両区分: <b>${vc.label}</b> / ${vc.note}（代表値: 幅${v.w}m・高${v.h}m・重${v.t}t）`:'車両区分: -';
+  if(!state.loadingRoads) areaLabel.textContent='表示範囲・通行可否更新済み';
+}
+function fmtDist(d){return d<1000?`${Math.round(d)} m`:`${(d/1000).toFixed(1)} km`}
+function timeAgo(s){const sec=Math.max(0,Math.round((Date.now()-new Date(s).getTime())/1000)); if(sec<60)return `${sec}秒前`; const m=Math.round(sec/60); return m<60?`${m}分前`:`${Math.round(m/60)}時間前`}
+function togglePanelCollapsed(){
+  document.activeElement?.blur?.();
+  panel.classList.toggle('collapsed');
+  setTimeout(()=>map.invalidateSize(),280);
+}
+handle.onclick=togglePanelCollapsed;
+handle.addEventListener('touchend',e=>{e.preventDefault();togglePanelCollapsed()},{passive:false});
+window.addEventListener('beforeunload',()=>{if(state.share) navigator.sendBeacon?.('',new Blob())});
+
+initPB();
+initAlphaPreview();
+selectVeh(VEHICLES.find(v=>v.id==='trailer'),false);
+applyUrlParams();
+map.on('moveend zoomend', scheduleViewportRoadRefresh);
+scheduleViewportRoadRefresh();
+autoLoadGpsSite();
+</script>
+
+
+</body></html>

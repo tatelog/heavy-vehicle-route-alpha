@@ -1,0 +1,66 @@
+{
+  "policy": {
+    "principle": "無償で利用できる公的・準公的データを優先する",
+    "commercialTrafficApis": "使用しない",
+    "lastReviewed": "2026-06-02"
+  },
+  "sources": [
+    {
+      "id": "jartic_mlit_traffic_volume_api",
+      "name": "JARTIC/国土交通省 交通量API",
+      "status": "review_required",
+      "cost": "free",
+      "requiresActionByOwner": true,
+      "requiredAction": "交通量API利用規約への同意。利用条件、出典表記、再配布可否を確認する。",
+      "endpoint": "https://api.jartic-open-traffic.org/geoserver",
+      "defaultLayer": "t_travospublic_measure_5m",
+      "dataType": "traffic_volume_observation",
+      "routeUse": "ルート周辺の観測交通量から混雑傾向を推定し、候補ルートの遅延リスクに反映する。",
+      "limitations": [
+        "Google Mapsのようなライブ渋滞所要時間そのものではない",
+        "観測点ベースのため、ルート全線を直接カバーしない場合がある",
+        "観測条件や機器要因で精度が変動する"
+      ],
+      "references": [
+        "https://www.jartic-open-traffic.org/",
+        "https://www.xroad.mlit.go.jp/database/233/"
+      ]
+    },
+    {
+      "id": "jartic_regulation_open_data",
+      "name": "JARTIC 交通規制情報オープンデータ",
+      "status": "review_required",
+      "cost": "free_or_open_data_terms",
+      "requiresActionByOwner": true,
+      "requiredAction": "JARTICオープンデータ利用規約、データ形式、更新頻度、出典表記、アプリ内利用可否を確認する。",
+      "endpoint": "https://www.jartic.or.jp/service/opendata/",
+      "dataType": "traffic_regulation",
+      "routeUse": "通行止め、規制、工事等をルート候補上に重ね、通行不可・注意区間として強く反映する。",
+      "limitations": [
+        "APIではなくダウンロードデータの場合、定期取得・整形処理が必要",
+        "リアルタイム性は公開更新頻度に依存する"
+      ],
+      "references": [
+        "https://www.jartic.or.jp/service/opendata/"
+      ]
+    },
+    {
+      "id": "mlit_road_info",
+      "name": "国土交通省 道路情報提供システム",
+      "status": "investigate",
+      "cost": "free_to_view",
+      "requiresActionByOwner": false,
+      "requiredAction": "APIまたは再利用可能なデータ提供形態があるか調査する。",
+      "endpoint": "https://www.road-info-prvs.mlit.go.jp/roadinfo/",
+      "dataType": "road_weather_regulation_surface",
+      "routeUse": "道路気象、路面、規制情報を注意情報として表示する。",
+      "limitations": [
+        "閲覧サイトとしての提供が中心の可能性がある",
+        "スクレイピング前提にはしない"
+      ],
+      "references": [
+        "https://www.road-info-prvs.mlit.go.jp/roadinfo/"
+      ]
+    }
+  ]
+}
