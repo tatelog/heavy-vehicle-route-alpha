@@ -92,9 +92,13 @@
   .fold summary::-webkit-details-marker{display:none}
   .fold summary::after{content:"›";font-size:14px;letter-spacing:0;color:var(--hiviz);transition:.15s}
   .fold[open] summary::after{transform:rotate(90deg)}
-  .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
-  .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 4px;text-align:center;font-weight:900;min-width:0}
+  .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}
+  .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:9px 4px;text-align:center;font-size:13px;font-weight:900;min-width:0}
   .class-btn.on{border-color:var(--hiviz);background:rgba(255,212,0,.08);color:var(--hiviz)}
+  .vehicle-status{font-size:11px;color:var(--muted);line-height:1.4;margin:0 2px 7px}
+  .vehicle-status b{color:var(--text);font-weight:800}
+  .vehicle-status.ok b{color:var(--pass)}
+  .vehicle-status.warn{color:var(--tight)}
   .veh{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 11px;cursor:pointer;transition:.13s;position:relative;overflow:hidden}
   .veh:hover{border-color:var(--faint);background:var(--surface2)}
   .veh.on{border-color:var(--hiviz);background:rgba(255,212,0,.07)}
@@ -725,8 +729,7 @@ function restoreVehiclePreference(){
   return false;
 }
 function afterVehicleSelected(){
-  vehiclePrompt.textContent=state.pin?'車両選択済み。行き先を入力できます。':'車両選択済み。GPSで現在地を確認します。';
-  vehiclePrompt.className='hint ok';
+  updateVehiclePrompt();
   closeVehicleModal();
   if(!state.pin) autoLoadGpsSite();
 }
@@ -1058,6 +1061,7 @@ function setSitePin(latlng,focus,source='manual'){
   if(focus) map.setView(latlng,16);
   siteHint.textContent=`出発地点: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
   siteHint.className='hint ok';
+  updateVehiclePrompt();
   updateReadout();
 }
 function setCurrentLocation(latlng,follow=false){
@@ -2251,6 +2255,18 @@ function refresh(){
   vehClass.innerHTML=v?`車両区分: <b>${vc.label}</b> / ${vc.note}（代表値: 幅${v.w}m・高${v.h}m・重${v.t}t）`:'車両区分: -';
   if(!state.loadingRoads) areaLabel.textContent='表示範囲・通行可否更新済み';
 }
+function updateVehiclePrompt(){
+  const v=activeVeh();
+  if(!v){
+    vehiclePrompt.textContent='管理画面で車両区分を選択';
+    vehiclePrompt.className='vehicle-status warn';
+    return;
+  }
+  const vc=vehicleClass(v);
+  const gpsText=state.pin?'':' / GPS確認中';
+  vehiclePrompt.innerHTML=`選択済み: <b>${escapeHtml(vc.label)}</b>${gpsText}`;
+  vehiclePrompt.className='vehicle-status ok';
+}
 function fmtDist(d){return d<1000?`${Math.round(d)} m`:`${(d/1000).toFixed(1)} km`}
 function timeAgo(s){const sec=Math.max(0,Math.round((Date.now()-new Date(s).getTime())/1000)); if(sec<60)return `${sec}秒前`; const m=Math.round(sec/60); return m<60?`${m}分前`:`${Math.round(m/60)}時間前`}
 function togglePanelCollapsed(){
@@ -2270,12 +2286,10 @@ applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
 scheduleViewportRoadRefresh();
 if(activeVeh()){
-  vehiclePrompt.textContent=state.pin?'車両選択済み。行き先を入力できます。':'車両選択済み。GPSで現在地を確認します。';
-  vehiclePrompt.className='hint ok';
+  updateVehiclePrompt();
   if(!state.pin && state.locationWatchId===null && !gpsSiteBtn.disabled) autoLoadGpsSite();
 }else{
-  vehiclePrompt.textContent='管理画面で車両区分を選択してください。';
-  vehiclePrompt.className='hint warn';
+  updateVehiclePrompt();
   showVehicleModal();
 }
 </script>
