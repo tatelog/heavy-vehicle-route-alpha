@@ -64,6 +64,8 @@
   .menu-wrap{position:relative;display:flex;align-items:center;gap:8px;min-width:0}
   .menu-btn{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:20px;line-height:1;font-weight:900;flex-shrink:0}
   .view-title{font-size:12.5px;color:var(--text);font-weight:900;white-space:nowrap}
+  .bug-report{background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:11px;font-weight:900;padding:7px 9px;line-height:1;white-space:nowrap}
+  .bug-report:hover{border-color:var(--hiviz);color:var(--hiviz)}
   .view-menu{position:absolute;top:38px;left:0;z-index:20;min-width:136px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:none}
   .view-menu.open{display:block}
   .view-menu button{display:block;width:100%;text-align:left;background:transparent;color:var(--muted);font-size:12px;font-weight:800;padding:7px 9px;border-radius:6px;line-height:1.2}
@@ -226,6 +228,7 @@
           <button type="button" data-view-switch="admin">管理画面</button>
         </div>
       </div>
+      <button class="bug-report" id="bugReportBtn" type="button">不具合報告</button>
     </div>
     <div class="sub"><span id="areaLabel">現在地周辺・OSM試作路線</span></div>
     <div class="sub"><span class="alpha-pill">α版</span><span>GPS・ルート・音声案内の検証版</span></div>
@@ -736,6 +739,7 @@ function afterVehicleSelected(){
 customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
 ['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
 document.querySelectorAll('.tog').forEach(t=>{t.onclick=()=>{const c=t.dataset.class;if(state.hidden.has(c)){state.hidden.delete(c);t.classList.add('on')}else{state.hidden.add(c);t.classList.remove('on')}refresh()}});
+bugReportBtn.onclick=reportBugToX;
 
 function initPB(){
   try{
@@ -2055,6 +2059,20 @@ async function shareLineLink(){
   const lineUrl='https://line.me/R/msg/text/?'+encodeURIComponent(url);
   setRouteHint('共有リンクを作成しました。クリップボードにもコピーしました。LINEを開きます。','ok');
   window.open(lineUrl,'_blank','noopener');
+}
+function reportBugToX(){
+  const v=activeVeh();
+  const vc=v?vehicleClass(v):null;
+  const lines=[
+    '大型車両ルートα版 不具合報告',
+    `画面: ${viewTitle.textContent || '-'}`,
+    `状態: ${areaLabel.textContent || '-'}`,
+    `車両: ${vc?.label || '-'}`,
+    `行き先: ${destInput.value.trim() || '-'}`
+  ];
+  const text=lines.join('\n');
+  const url=`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(location.href)}`;
+  window.open(url,'_blank','noopener');
 }
 function buildShareUrl(){
   const params=new URLSearchParams();
