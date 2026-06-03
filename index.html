@@ -349,13 +349,8 @@
     </div>
     </details>
 
-    <div class="sect-label">共有操作</div>
+    <div class="sect-label">地図状態</div>
     <div class="notice" id="modeNotice">現在地周辺の道路 180 件を読み込みました。幅・高さ・重量は道路種別ごとの仮属性です。</div>
-    <div class="room-row">
-      <button class="btn subtle" id="setMeet" data-alpha-single-disabled="集合地共有は準備中">集合地を設定</button>
-      <button class="btn subtle" id="manualSelf">現在地を手動設置</button>
-      <button class="btn subtle" id="mapRefreshBtn">マップ更新</button>
-    </div>
 
     <div id="presenceSection" style="display:none">
       <div class="sect-label">参加者</div>
@@ -929,9 +924,9 @@ async function finishTripLogs(){
 }
 function weightInfo(t){return CONFIG.weightRules.find(r=>t<=r.max)||CONFIG.weightRules.at(-1)}
 
-setMeet.onclick=()=>{state.pendingMode='meet'; updateTapMode()};
-manualSelf.onclick=()=>{state.pendingMode='self'; updateTapMode()};
-mapRefreshBtn.onclick=()=>loadVisibleRoads(true);
+document.getElementById('setMeet')?.addEventListener('click',()=>{state.pendingMode='meet'; updateTapMode()});
+document.getElementById('manualSelf')?.addEventListener('click',()=>{state.pendingMode='self'; updateTapMode()});
+document.getElementById('mapRefreshBtn')?.addEventListener('click',()=>loadVisibleRoads(true));
 gpsSiteBtn.addEventListener('click',e=>{
   e.preventDefault();
   e.stopPropagation();
