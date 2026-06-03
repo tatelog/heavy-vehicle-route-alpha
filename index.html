@@ -1951,6 +1951,7 @@ function routeStepsFromOsrm(route,dest){
   const mapped=steps.map((step,i)=>{
     const m=step.maneuver||{};
     const loc=m.location||[];
+    const approachGeometry=osrmStepCoords(steps[i-1]);
     return {
       idx:i,
       lat:loc[1],
@@ -1962,6 +1963,7 @@ function routeStepsFromOsrm(route,dest){
       turnCheck:isTurnCheckStep(step),
       turnSide:turnSideFromManeuver(m),
       turnAngle:turnEntryAngle(m),
+      approachGeometry,
       distance:step.distance||0,
       approachDistance:i>0 ? (steps[i-1].distance||0) : (step.distance||0),
       name:step.name||'道路',
@@ -1973,6 +1975,11 @@ function routeStepsFromOsrm(route,dest){
   }).filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lng));
   if(mapped.length) mapped[mapped.length-1].instruction=`まもなく目的地です。${dest.label} に到着します。`;
   return mapped;
+}
+function osrmStepCoords(step){
+  const coords=step?.geometry?.coordinates;
+  if(!Array.isArray(coords)) return [];
+  return coords.map(c=>({lat:c[1],lng:c[0]})).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
 }
 function turnEntryAngle(m){
   if(Number.isFinite(m?.bearing_before)) return m.bearing_before;
@@ -2161,15 +2168,18 @@ function showTurnSimulation(step){
   const profile=turnVehicleProfile(v);
   const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size:profile.canvas, step, profile};
   sim.startLocal=turnStartLocal(profile,step.turnSide);
-  const handle=L.marker(turnStartLatLng(sim),{draggable:true,icon:turnHandleIcon(),title:'曲がり始点'}).addTo(map);
+  sim.startAnchor=turnRouteStartLatLng(step,profile);
+  sim.center=centerFromTurnStart(sim.startAnchor,sim);
+  const handle=L.marker(sim.startAnchor,{draggable:true,icon:turnHandleIcon(),title:'曲がり始点'}).addTo(map);
   handle.on('drag',()=>{
-    sim.center=centerFromTurnStart(handle.getLatLng(),sim);
+    sim.startAnchor=handle.getLatLng();
+    sim.center=centerFromTurnStart(sim.startAnchor,sim);
     updateTurnSimulation();
   });
   sim.handle=handle;
   state.turnSim=sim;
   updateTurnSimulation();
-  map.panTo(turnStartLatLng(sim),{animate:true,duration:.25});
+  map.panTo(sim.startAnchor,{animate:true,duration:.25});
   setRouteHint('車両軌跡を表示しました。赤丸を曲がり始点に合わせ、地図上のボタンで回転できます。','warn');
 }
 function updateTurnSimulation(){
@@ -2178,11 +2188,12 @@ function updateTurnSimulation(){
   sim.profile=turnVehicleProfile(activeVeh());
   sim.size=sim.profile.canvas;
   sim.startLocal=turnStartLocal(sim.profile,sim.step?.turnSide);
+  if(sim.startAnchor) sim.center=centerFromTurnStart(sim.startAnchor,sim);
   const svg=turnSweepSvg(sim.angle, sim.profile, sim.step?.turnSide);
   const bounds=boundsFromCenterMeters(sim.center,sim.size);
   if(sim.overlay) map.removeLayer(sim.overlay);
   sim.overlay=L.svgOverlay(svg,bounds,{interactive:false,opacity:1}).addTo(map);
-  const start=turnStartLatLng(sim);
+  const start=sim.startAnchor || turnStartLatLng(sim);
   if(sim.handle) sim.handle.setLatLng(start);
   if(sim.control) sim.control.setLatLng(offsetLatLng(sim.center,0,-sim.size*.58));
   else sim.control=L.marker(offsetLatLng(sim.center,0,-sim.size*.58),{icon:turnControlIcon(),interactive:true}).addTo(map);
@@ -2207,6 +2218,34 @@ function turnStartLocal(profile,side='right'){
 }
 function turnStartLatLng(sim){
   return localMetersToLatLng(sim.center,sim.startLocal.x,sim.startLocal.y,sim.angle);
+}
+function turnRouteStartLatLng(step,profile){
+  const turnPoint={lat:step.lat,lng:step.lng};
+  const backMeters=Math.max(5,Math.min(profile.radius*.72,18));
+  const fromLine=pointBackAlongLine(step.approachGeometry||[],turnPoint,backMeters);
+  if(fromLine) return fromLine;
+  const backBearing=((step.bearingBefore||step.turnAngle||0)+180)%360;
+  return offsetByBearing(turnPoint,backBearing,backMeters);
+}
+function pointBackAlongLine(coords,turnPoint,meters){
+  if(!coords.length) return null;
+  const line=coords.slice();
+  if(haversine(line[line.length-1],turnPoint)>4) line.push(turnPoint);
+  let remain=meters;
+  for(let i=line.length-1;i>0;i--){
+    const a=line[i], b=line[i-1];
+    const d=haversine(a,b);
+    if(d>=remain) return interpolateLatLng(a,b,remain/d);
+    remain-=d;
+  }
+  return line[0] || null;
+}
+function interpolateLatLng(a,b,t){
+  return {lat:a.lat+(b.lat-a.lat)*t,lng:a.lng+(b.lng-a.lng)*t};
+}
+function offsetByBearing(center,bearing,distance){
+  const rad=bearing*Math.PI/180;
+  return offsetLatLng(center,Math.sin(rad)*distance,Math.cos(rad)*distance);
 }
 function centerFromTurnStart(latlng,sim){
   const o=rotatedLocalOffset(sim.startLocal.x,sim.startLocal.y,sim.angle);
