@@ -97,7 +97,7 @@
   .fold summary::-webkit-details-marker{display:none}
   .fold summary::after{content:"›";font-size:14px;letter-spacing:0;color:var(--hiviz);transition:.15s}
   .fold[open] summary::after{transform:rotate(90deg)}
-  .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}
+  .class-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px}
   .fold .class-grid{margin-top:9px}
   .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:9px 4px;text-align:center;font-size:13px;font-weight:900;min-width:0}
   .class-btn.on{border-color:var(--hiviz);background:var(--hiviz-soft);color:var(--hiviz)}
@@ -113,6 +113,9 @@
   .veh-specs{display:flex;gap:9px;font-family:"Oswald",sans-serif;font-size:11px;color:var(--muted)}
   .veh-specs span b{color:var(--text);font-weight:500}
   .custom{border-style:dashed;margin-top:8px}.custom.on{border-style:solid;border-color:var(--hiviz);background:var(--hiviz-soft)}
+  .other-vehicle-panel{display:none;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+  .other-vehicle-panel.open{display:block}
+  .other-vehicle-panel .note{font-size:10.8px;color:var(--muted);line-height:1.5;margin-bottom:8px}
   .custom-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12.5px;margin-bottom:10px;cursor:pointer}
   .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
   .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
@@ -319,12 +322,15 @@
     <details class="fold" id="vehicleFold">
       <summary>車両条件変更</summary>
       <div class="class-grid" id="classGrid"></div>
-      <div class="veh-grid" id="vehGrid"></div>
-      <div class="custom" id="custom">
-        <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
-        <div class="crow"><label>全幅</label><input id="cw" type="number" step="0.1" value="2.5"><span class="unit">m</span></div>
-        <div class="crow"><label>全高</label><input id="ch" type="number" step="0.1" value="3.8"><span class="unit">m</span></div>
-        <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
+      <div class="other-vehicle-panel" id="otherVehiclePanel">
+        <div class="note">ユニック・ミキサー・低床など、区分だけでは不安な場合はこちらから選択します。</div>
+        <div class="veh-grid" id="vehGrid"></div>
+        <div class="custom" id="custom">
+          <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
+          <div class="crow"><label>全幅</label><input id="cw" type="number" step="0.1" value="2.5"><span class="unit">m</span></div>
+          <div class="crow"><label>全高</label><input id="ch" type="number" step="0.1" value="3.8"><span class="unit">m</span></div>
+          <div class="crow"><label>総重量</label><input id="ct" type="number" step="1" value="36"><span class="unit">t</span></div>
+        </div>
       </div>
     </details>
 
@@ -669,6 +675,12 @@ function popupHTML(feat){
 }
 
 const classGrid=document.getElementById('classGrid');
+const otherVehiclePanel=document.getElementById('otherVehiclePanel');
+const custom=document.getElementById('custom');
+const customHead=document.getElementById('customHead');
+const cw=document.getElementById('cw');
+const ch=document.getElementById('ch');
+const ct=document.getElementById('ct');
 const vehicleModal=document.getElementById('vehicleModal');
 const vehicleModalChoices=document.getElementById('vehicleModalChoices');
 VEHICLE_CLASSES.forEach(c=>{
@@ -680,7 +692,28 @@ VEHICLE_CLASSES.forEach(c=>{
   el.onclick=()=>selectVehClass(c,true);
   classGrid.appendChild(el);
 });
+const otherClassBtn=document.createElement('button');
+otherClassBtn.type='button';
+otherClassBtn.className='class-btn';
+otherClassBtn.dataset.id='other';
+otherClassBtn.textContent='その他';
+otherClassBtn.onclick=()=>setOtherVehiclePanel(!otherVehiclePanel.classList.contains('open'),true);
+classGrid.appendChild(otherClassBtn);
 renderVehicleModalChoices();
+function setOtherVehiclePanel(open,focusOther=false){
+  otherVehiclePanel.classList.toggle('open',open);
+  if(focusOther) updateVehicleControlState(true);
+}
+function updateVehicleControlState(forceOther=false){
+  const otherActive=forceOther || state.veh || state.custom;
+  document.querySelectorAll('.class-btn').forEach(e=>{
+    if(e.dataset.id==='other') e.classList.toggle('on',!!otherActive);
+    else e.classList.toggle('on',!otherActive && state.vehClass?.id===e.dataset.id);
+  });
+  document.querySelectorAll('.veh').forEach(e=>e.classList.toggle('on',state.veh?.id===e.dataset.id));
+  custom.classList.toggle('on',!!state.custom);
+  otherVehiclePanel.classList.toggle('open',!!(otherVehiclePanel.classList.contains('open') || state.veh || state.custom));
+}
 function renderVehicleModalChoices(){
   vehicleModalChoices.innerHTML='';
   VEHICLE_CLASSES.forEach(c=>{
@@ -704,10 +737,9 @@ function selectVehClass(c,syncRoom){
   state.vehClass={...c};
   state.veh=null;
   state.custom=false;
-  document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
   document.querySelectorAll('.vehicle-choice').forEach(e=>e.classList.toggle('on',e.dataset.id===c.id));
-  document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on'));
-  custom.classList.remove('on');
+  setOtherVehiclePanel(false);
+  updateVehicleControlState();
   refresh();
   maybeRecalculateRoute();
   saveVehiclePreference();
@@ -731,10 +763,7 @@ VEHICLES.forEach(v=>{
 });
 function selectVeh(v,syncRoom){
   state.veh=v; state.vehClass=null; state.custom=false;
-  document.querySelectorAll('.veh').forEach(e=>e.classList.toggle('on',e.dataset.id===v.id));
-  const c=inferredClassForVehicle(v);
-  document.querySelectorAll('.class-btn').forEach(e=>e.classList.toggle('on',e.dataset.id===c?.id));
-  custom.classList.remove('on');
+  updateVehicleControlState();
   refresh();
   maybeRecalculateRoute();
   saveVehiclePreference();
@@ -761,8 +790,7 @@ function restoreVehiclePreference(){
     if(pref?.type==='custom'){
       cw.value=pref.w||cw.value; ch.value=pref.h||ch.value; ct.value=pref.t||ct.value;
       state.custom=true; state.veh=null; state.vehClass=null;
-      document.querySelectorAll('.veh,.class-btn').forEach(e=>e.classList.remove('on'));
-      custom.classList.add('on');
+      updateVehicleControlState();
       refresh();
       return true;
     }
@@ -774,8 +802,8 @@ function afterVehicleSelected(){
   closeVehicleModal();
   if(!state.pin) autoLoadGpsSite();
 }
-customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
-['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
+customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; updateVehicleControlState(); refresh(); maybeRecalculateRoute(); saveVehiclePreference(); saveRoomVehicle()};
+['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveVehiclePreference(); saveRoomVehicle()}}));
 bugReportBtn.onclick=reportBugToX;
 
 function initPB(){
@@ -849,7 +877,7 @@ function applyRoomVehicle(room){
     if(c) selectVehClass(c,false);
   }else if(room.custom_w || room.custom_h || room.custom_t){
     state.custom=true; state.veh=null; cw.value=room.custom_w||2.5; ch.value=room.custom_h||3.8; ct.value=room.custom_t||36;
-    state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on');
+    state.vehClass=null; updateVehicleControlState();
   }else if(room.vehicle_id){
     const v=VEHICLES.find(x=>x.id===room.vehicle_id); if(v) selectVeh(v,false);
   }
@@ -2329,8 +2357,7 @@ function applyUrlParams(){
   if(params.has('cw')||params.has('ch')||params.has('ct')){
     cw.value=params.get('cw')||cw.value; ch.value=params.get('ch')||ch.value; ct.value=params.get('ct')||ct.value;
     state.custom=true; state.veh=null; state.vehClass=null;
-    document.querySelectorAll('.veh,.class-btn').forEach(e=>e.classList.remove('on'));
-    custom.classList.add('on');
+    updateVehicleControlState();
     refresh();
   }
   const lat=+params.get('lat'), lng=+params.get('lng');
