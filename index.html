@@ -1974,7 +1974,7 @@ function renderGuideList(){
   state.routeSteps.forEach((step,i)=>{
     const row=document.createElement('div');
     row.className='guide-step'+(i===state.currentStep?' current':'')+(step.turnCheck?' check':'');
-    const simBtn=step.turnCheck?`<button class="turn-sim-btn" type="button" data-turn-sim="${i}">軌跡</button>`:'';
+    const simBtn=step.turnCheck?`<button class="turn-sim-btn" type="button" data-turn-sim="${i}">曲がり確認</button>`:'';
     row.innerHTML=`<div class="idx">${i+1}</div><div><div class="txt"><span>${step.instruction}</span>${step.place?`<span class="place">${step.place}</span>`:''}</div><div class="meta-row"><div class="dist">${step.turnCheck?'曲がり角 要確認 / ':''}次の区間 約${fmtDist(step.distance)}</div>${simBtn}</div></div>`;
     guideList.appendChild(row);
   });
@@ -2111,8 +2111,8 @@ function guideSpeakText(step){
 function showTurnSimulation(step){
   clearTurnSimulation();
   const v=activeVeh() || VEHICLE_CLASSES.find(c=>c.id==='large');
-  const size=Math.max(48, Math.min(92, 34 + (v?.w||2.5)*8 + (v?.t||20)*.55));
-  const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size, step};
+  const profile=turnVehicleProfile(v);
+  const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size:profile.canvas, step, profile};
   const handle=L.marker(sim.center,{draggable:true,icon:turnHandleIcon(),title:'軌跡位置'}).addTo(map);
   handle.on('drag',()=>{sim.center=handle.getLatLng(); updateTurnSimulation();});
   sim.handle=handle;
@@ -2124,7 +2124,9 @@ function showTurnSimulation(step){
 function updateTurnSimulation(){
   const sim=state.turnSim;
   if(!sim) return;
-  const svg=turnSweepSvg(sim.angle, activeVeh(), sim.step?.turnSide);
+  sim.profile=turnVehicleProfile(activeVeh());
+  sim.size=sim.profile.canvas;
+  const svg=turnSweepSvg(sim.angle, sim.profile, sim.step?.turnSide);
   const bounds=boundsFromCenterMeters(sim.center,sim.size);
   if(sim.overlay) map.removeLayer(sim.overlay);
   sim.overlay=L.svgOverlay(svg,bounds,{interactive:false,opacity:1}).addTo(map);
@@ -2144,22 +2146,58 @@ function rotateTurnSimulation(delta){
   state.turnSim.angle=(state.turnSim.angle+delta+360)%360;
   updateTurnSimulation();
 }
-function turnSweepSvg(angle,v,side='right'){
+function turnVehicleProfile(v){
+  const vc=vehicleClass(v);
+  const cls=state.vehClass?.id || (vc.label==='特殊'||vc.label==='特車級'?'special':vc.label==='大型'?'large':'medium');
+  const base={
+    medium:{length:7.2,radius:9.5,label:'中型'},
+    large:{length:11.5,radius:13.5,label:'大型'},
+    special:{length:14.5,radius:17.5,label:'特殊'}
+  }[cls] || {length:11.5,radius:13.5,label:'大型'};
+  const width=v?.w || (cls==='special'?3.0:2.5);
+  const height=v?.h || 3.8;
+  const weight=v?.t || 25;
+  const length=Math.max(base.length,width*3.8);
+  const radius=Math.max(base.radius,length*.95);
+  const sweptWidth=Math.max(width*2.6,width+length*.34);
+  const canvas=Math.ceil((radius+sweptWidth+length*.65)*2);
+  return {width,height,weight,length,radius,sweptWidth,canvas,label:vc.label||base.label,name:v?.name||vc.label||base.label};
+}
+function turnSweepSvg(angle,profile,side='right'){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox','0 0 100 100');
-  svg.setAttribute('preserveAspectRatio','none');
-  const width=Math.max(8,Math.min(17,(v?.w||2.5)*4.5));
-  const path=side==='left'
-    ? 'M84 76 C66 76 58 64 58 50 C58 34 46 24 22 24'
-    : 'M16 76 C34 76 42 64 42 50 C42 34 54 24 78 24';
-  const startX=side==='left'?66:12, endX=side==='left'?14:64;
+  const s=profile.canvas, half=s/2, r=profile.radius, w=profile.sweptWidth, vehW=profile.width, vehL=profile.length;
+  svg.setAttribute('viewBox',`${-half} ${-half} ${s} ${s}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  const sweep=side==='left'?0:1;
+  const sign=side==='left'?-1:1;
+  const entryX=-r*sign, entryY=r;
+  const exitX=r*sign, exitY=-r;
+  const path=`M ${entryX} ${entryY} A ${r} ${r} 0 0 ${sweep} ${exitX} ${exitY}`;
+  const startTx=`translate(${entryX} ${entryY+vehL*.18}) rotate(${side==='left'?0:0})`;
+  const endTx=`translate(${exitX+sign*vehL*.18} ${exitY}) rotate(${side==='left'?-90:90})`;
+  const labelX=side==='left'?-half+4:-half+4;
+  const labelY=-half+8;
   svg.innerHTML=`
-    <g transform="rotate(${angle} 50 50)">
-      <path d="${path}" fill="none" stroke="rgba(255,77,87,.22)" stroke-width="${width+10}" stroke-linecap="round"/>
-      <path d="${path}" fill="none" stroke="#ff4d57" stroke-width="${Math.max(3,width*.38)}" stroke-linecap="round" stroke-dasharray="5 4"/>
-      <rect x="${startX}" y="${76-width/2}" width="22" height="${width}" rx="3" fill="rgba(58,160,255,.9)" stroke="white" stroke-width="1.2"/>
-      <rect x="${endX}" y="${24-width/2}" width="22" height="${width}" rx="3" fill="rgba(255,212,0,.9)" stroke="#171717" stroke-width="1.2"/>
-      <circle cx="50" cy="50" r="3.2" fill="#ff4d57" stroke="white" stroke-width="1"/>
+    <g transform="rotate(${angle})">
+      <path d="${path}" fill="none" stroke="rgba(255,77,87,.26)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${path}" fill="none" stroke="rgba(255,77,87,.72)" stroke-width="${Math.max(1.2,vehW)}" stroke-linecap="round" stroke-dasharray="${Math.max(2,vehW)} ${Math.max(2,vehW*.8)}"/>
+      <path d="${path}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width=".7" stroke-linecap="round"/>
+      <g transform="${startTx}">
+        <rect x="${-vehW/2}" y="${-vehL/2}" width="${vehW}" height="${vehL}" rx=".55" fill="rgba(58,160,255,.86)" stroke="#fff" stroke-width=".45"/>
+        <path d="M 0 ${-vehL/2+1.2} L ${-vehW*.32} ${-vehL/2+3.2} L ${vehW*.32} ${-vehL/2+3.2} Z" fill="#fff"/>
+      </g>
+      <g transform="${endTx}">
+        <rect x="${-vehW/2}" y="${-vehL/2}" width="${vehW}" height="${vehL}" rx=".55" fill="rgba(255,212,0,.9)" stroke="#111827" stroke-width=".45"/>
+        <path d="M 0 ${-vehL/2+1.2} L ${-vehW*.32} ${-vehL/2+3.2} L ${vehW*.32} ${-vehL/2+3.2} Z" fill="#111827"/>
+      </g>
+      <circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/>
+      <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">曲がり占有範囲（参考）</text>
+      <text x="${labelX}" y="${labelY+5.5}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">車両: ${profile.label} / 幅${profile.width.toFixed(1)}m・長${profile.length.toFixed(1)}m</text>
+      <text x="${labelX}" y="${labelY+10}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">赤面: 想定占有幅 約${profile.sweptWidth.toFixed(1)}m</text>
+      <text x="${entryX-6*sign}" y="${entryY+vehL*.55}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">進入</text>
+      <text x="${exitX+sign*vehL*.42}" y="${exitY-3}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">退出</text>
+      <line x1="${-half+4}" y1="${half-5}" x2="${-half+14}" y2="${half-5}" stroke="#fff" stroke-width=".9"/>
+      <text x="${-half+4}" y="${half-7}" font-size="3" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">10m</text>
     </g>`;
   return svg;
 }
