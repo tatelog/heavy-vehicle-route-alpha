@@ -1960,8 +1960,8 @@ function routeStepsFromOsrm(route,dest){
       bearingBefore:m.bearing_before,
       bearingAfter:m.bearing_after,
       turnCheck:isTurnCheckStep(step),
-      turnSide:(m.modifier||'').includes('left')?'left':'right',
-      turnAngle:Number.isFinite(m.bearing_after)?m.bearing_after:0,
+      turnSide:turnSideFromManeuver(m),
+      turnAngle:turnEntryAngle(m),
       distance:step.distance||0,
       approachDistance:i>0 ? (steps[i-1].distance||0) : (step.distance||0),
       name:step.name||'道路',
@@ -1973,6 +1973,24 @@ function routeStepsFromOsrm(route,dest){
   }).filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lng));
   if(mapped.length) mapped[mapped.length-1].instruction=`まもなく目的地です。${dest.label} に到着します。`;
   return mapped;
+}
+function turnEntryAngle(m){
+  if(Number.isFinite(m?.bearing_before)) return m.bearing_before;
+  if(Number.isFinite(m?.bearing_after)) return m.bearing_after;
+  return 0;
+}
+function turnSideFromManeuver(m){
+  const mod=(m?.modifier||'').toLowerCase();
+  if(mod.includes('left')) return 'left';
+  if(mod.includes('right')) return 'right';
+  if(Number.isFinite(m?.bearing_before) && Number.isFinite(m?.bearing_after)){
+    const delta=((m.bearing_after-m.bearing_before+540)%360)-180;
+    return delta<0?'left':'right';
+  }
+  return 'right';
+}
+function turnSideLabel(side){
+  return side==='left'?'左折':'右折';
 }
 function isTurnCheckStep(step){
   const m=step.maneuver||{}, type=m.type||'', mod=m.modifier||'';
@@ -2213,7 +2231,7 @@ function updateTurnFitPopup(){
   }
   const fit=turnFitEstimate(sim);
   const cls=fit.level==='ok'?'pop-ok':fit.level==='ng'?'pop-ng':'pop-warn';
-  const html=`<div class="pop-name">曲がり判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div>`;
+  const html=`<div class="pop-name">${turnSideLabel(sim.step?.turnSide)}判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div>`;
   if(!sim.handle.getPopup()) sim.handle.bindPopup(html,{autoClose:false,closeOnClick:false,offset:[0,-10]});
   else sim.handle.setPopupContent(html);
   sim.handle.openPopup();
@@ -2315,6 +2333,7 @@ function turnSweepSvg(angle,profile,side='right'){
   }).join('');
   const labelX=side==='left'?-half+4:-half+4;
   const labelY=-half+8;
+  const sideLabel=turnSideLabel(side);
   svg.innerHTML=`
     <g transform="rotate(${angle})">
       <path d="${centerPath}" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="${w.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2323,7 +2342,7 @@ function turnSweepSvg(angle,profile,side='right'){
       <path d="${centerPath}" fill="none" stroke="#ffffff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/>
       ${ghosts}
       <circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/>
-      <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">車両軌跡（参考）</text>
+      <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">${sideLabel} 車両軌跡（参考）</text>
       <text x="${labelX}" y="${labelY+5.5}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">車両: ${profile.label} / 幅${profile.width.toFixed(1)}m・長${profile.length.toFixed(1)}m</text>
       <text x="${labelX}" y="${labelY+10}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">青線: 前輪側 / 赤破線: 後輪側 / 赤面: 占有目安</text>
       <text x="${entryX-6*sign}" y="${entryStartY-1}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">進入</text>
