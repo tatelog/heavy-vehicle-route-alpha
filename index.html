@@ -120,7 +120,7 @@
   .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
   .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
   .leg{display:flex;flex-direction:column;gap:7px}.leg-item,.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
-  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:22px;height:0;border-top:3px solid;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch{background:var(--hiviz)}.tog.on .switch::after{left:19px}
+  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:26px;height:0;border-top:5px solid;border-radius:999px;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch{background:var(--hiviz)}.tog.on .switch::after{left:19px}
   .share-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:9px;cursor:pointer}.share-toggle.on{border-color:var(--hiviz)}
   .share-toggle .title{font-weight:800;font-size:13px}.share-toggle .desc{font-size:10.8px;color:var(--muted);margin-top:2px}
   .list{display:flex;flex-direction:column;gap:7px}.person,.marker-row{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12px;cursor:pointer}.person .name,.marker-row .name{font-weight:800}.person .meta,.marker-row .meta{color:var(--muted);font-size:11px;margin-top:3px}
@@ -645,17 +645,11 @@ function styleFor(feat){
   const p=feat.properties;
   if(state.hidden.has(p.cls)) return {opacity:0,weight:0};
   if(p.inferred){
-    const v=activeVeh(), r=verdict(p,v);
-    return {color:r.ok===false?'#ff9f1c':'#34d27b',weight:4,opacity:.62,dashArray:'5,6',lineCap:'round',lineJoin:'round'};
+    return {color:CLASS_COLOR[p.cls]||CLASS_COLOR['一般道'],weight:4,opacity:.62,dashArray:'5,6',lineCap:'round',lineJoin:'round'};
   }
   if(state.routeActive) return {color:CLASS_COLOR[p.cls],weight:3,opacity:.16,dashArray:null,lineCap:'round',lineJoin:'round'};
-  const v=activeVeh(), r=verdict(p,v);
-  let color=CLASS_COLOR[p.cls], weight=5, dash=null, op=.92;
-  if(r.ok===false){color="#ff4d57";weight=3;dash="2,7";op=.8}
-  else if(roadHasWarning(feat)){color="#ff9f1c";weight=6;dash="8,6"}
-  else if(r.ok===true && r.tight){color="#ff9f1c";weight=6}
-  else if(r.ok===true){color="#34d27b";weight=6}
-  return {color,weight,opacity:op,dashArray:dash,lineCap:'round',lineJoin:'round'};
+  const weight=p.cls==='一般道'?4:5;
+  return {color:CLASS_COLOR[p.cls]||CLASS_COLOR['一般道'],weight,opacity:.92,dashArray:null,lineCap:'round',lineJoin:'round'};
 }
 function vehicleClass(v){
   if(!v) return {label:'-', note:''};
