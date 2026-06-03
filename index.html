@@ -51,6 +51,7 @@
   .pop-verdict{margin-top:8px;padding:5px 8px;border-radius:6px;font-weight:700;font-size:12px;text-align:center}
   .pop-ok{background:rgba(52,210,123,.16);color:var(--pass)}
   .pop-ng{background:rgba(255,77,87,.16);color:var(--fail)}
+  .pop-warn{background:rgba(255,159,28,.16);color:var(--tight)}
   #panel{width:370px;flex-shrink:0;height:100%;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:1000;position:relative}
   .hiviz-bar{display:none}
   header{padding:10px 18px 9px;border-bottom:1px solid var(--line)}
@@ -2141,25 +2142,33 @@ function showTurnSimulation(step){
   const v=activeVeh() || VEHICLE_CLASSES.find(c=>c.id==='large');
   const profile=turnVehicleProfile(v);
   const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size:profile.canvas, step, profile};
-  const handle=L.marker(sim.center,{draggable:true,icon:turnHandleIcon(),title:'軌跡位置'}).addTo(map);
-  handle.on('drag',()=>{sim.center=handle.getLatLng(); updateTurnSimulation();});
+  sim.startLocal=turnStartLocal(profile,step.turnSide);
+  const handle=L.marker(turnStartLatLng(sim),{draggable:true,icon:turnHandleIcon(),title:'曲がり始点'}).addTo(map);
+  handle.on('drag',()=>{
+    sim.center=centerFromTurnStart(handle.getLatLng(),sim);
+    updateTurnSimulation();
+  });
   sim.handle=handle;
   state.turnSim=sim;
   updateTurnSimulation();
-  map.panTo(sim.center,{animate:true,duration:.25});
-  setRouteHint('曲がり角の軌跡を表示しました。中心点をドラッグ、地図上のボタンで回転できます。','warn');
+  map.panTo(turnStartLatLng(sim),{animate:true,duration:.25});
+  setRouteHint('車両軌跡を表示しました。赤丸を曲がり始点に合わせ、地図上のボタンで回転できます。','warn');
 }
 function updateTurnSimulation(){
   const sim=state.turnSim;
   if(!sim) return;
   sim.profile=turnVehicleProfile(activeVeh());
   sim.size=sim.profile.canvas;
+  sim.startLocal=turnStartLocal(sim.profile,sim.step?.turnSide);
   const svg=turnSweepSvg(sim.angle, sim.profile, sim.step?.turnSide);
   const bounds=boundsFromCenterMeters(sim.center,sim.size);
   if(sim.overlay) map.removeLayer(sim.overlay);
   sim.overlay=L.svgOverlay(svg,bounds,{interactive:false,opacity:1}).addTo(map);
+  const start=turnStartLatLng(sim);
+  if(sim.handle) sim.handle.setLatLng(start);
   if(sim.control) sim.control.setLatLng(offsetLatLng(sim.center,0,-sim.size*.58));
   else sim.control=L.marker(offsetLatLng(sim.center,0,-sim.size*.58),{icon:turnControlIcon(),interactive:true}).addTo(map);
+  updateTurnFitPopup();
 }
 function clearTurnSimulation(){
   const sim=state.turnSim;
@@ -2173,6 +2182,61 @@ function rotateTurnSimulation(delta){
   if(!state.turnSim) return;
   state.turnSim.angle=(state.turnSim.angle+delta+360)%360;
   updateTurnSimulation();
+}
+function turnStartLocal(profile,side='right'){
+  const sign=side==='left'?-1:1;
+  return {x:-sign*profile.radius,y:0};
+}
+function turnStartLatLng(sim){
+  return localMetersToLatLng(sim.center,sim.startLocal.x,sim.startLocal.y,sim.angle);
+}
+function centerFromTurnStart(latlng,sim){
+  const o=rotatedLocalOffset(sim.startLocal.x,sim.startLocal.y,sim.angle);
+  return offsetLatLng(latlng,-o.east,-o.north);
+}
+function rotatedLocalOffset(x,y,angle){
+  const rad=angle*Math.PI/180;
+  const xr=x*Math.cos(rad)-y*Math.sin(rad);
+  const yr=x*Math.sin(rad)+y*Math.cos(rad);
+  return {east:xr,north:-yr};
+}
+function localMetersToLatLng(center,x,y,angle){
+  const o=rotatedLocalOffset(x,y,angle);
+  return offsetLatLng(center,o.east,o.north);
+}
+function updateTurnFitPopup(){
+  const sim=state.turnSim;
+  if(!sim || !sim.handle) return;
+  if(map.getZoom()<18){
+    sim.handle.closePopup();
+    return;
+  }
+  const fit=turnFitEstimate(sim);
+  const cls=fit.level==='ok'?'pop-ok':fit.level==='ng'?'pop-ng':'pop-warn';
+  const html=`<div class="pop-name">曲がり判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div><div class="notice">拡大時のみ表示します。実走前は現地確認・誘導員判断を優先してください。</div>`;
+  if(!sim.handle.getPopup()) sim.handle.bindPopup(html,{autoClose:false,closeOnClick:false,offset:[0,-10]});
+  else sim.handle.setPopupContent(html);
+  sim.handle.openPopup();
+}
+function turnFitEstimate(sim){
+  const start=turnStartLatLng(sim);
+  const near=nearbyRoadWidths(start,45);
+  const available=near.length ? Math.max(...near)*2 : 0;
+  const swept=sim.profile.sweptWidth;
+  if(!available) return {level:'warn',label:'道路幅データ不足',available:0,swept};
+  if(swept<=available*.92) return {level:'ok',label:'曲がれる見込み',available,swept};
+  if(swept<=available*1.08) return {level:'warn',label:'要確認',available,swept};
+  return {level:'ng',label:'厳しい可能性',available,swept};
+}
+function nearbyRoadWidths(point,limitMeters){
+  const widths=[];
+  for(const feat of ROADS.features){
+    const p=feat.properties;
+    if(state.hidden.has(p.cls)) continue;
+    const d=distanceToFeature(point,feat);
+    if(d<=limitMeters && Number.isFinite(+p.w_m)) widths.push(+p.w_m);
+  }
+  return widths;
 }
 function turnVehicleProfile(v){
   const vc=vehicleClass(v);
@@ -2589,6 +2653,7 @@ setScalePreference(localStorage.getItem(SCALE_PREF_KEY)!=='0',false);
 const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
+map.on('zoomend', updateTurnFitPopup);
 scheduleViewportRoadRefresh();
 if(activeVeh()){
   updateVehiclePrompt();
