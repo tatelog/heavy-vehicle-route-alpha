@@ -2187,43 +2187,83 @@ function turnVehicleProfile(v){
   const weight=v?.t || 25;
   const length=Math.max(base.length,width*3.8);
   const radius=Math.max(base.radius,length*.95);
-  const sweptWidth=Math.max(width*2.6,width+length*.34);
-  const canvas=Math.ceil((radius+sweptWidth+length*.65)*2);
-  return {width,height,weight,length,radius,sweptWidth,canvas,label:vc.label||base.label,name:v?.name||vc.label||base.label};
+  const wheelbase=Math.max(length*.58,length-width*1.4);
+  const rearCut=Math.max(width*.9,wheelbase*.34);
+  const sweptWidth=Math.max(width*2.6,width+rearCut);
+  const canvas=Math.ceil((radius+sweptWidth+length*1.15)*2);
+  return {width,height,weight,length,wheelbase,radius,rearCut,sweptWidth,canvas,label:vc.label||base.label,name:v?.name||vc.label||base.label};
 }
 function turnSweepSvg(angle,profile,side='right'){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   const s=profile.canvas, half=s/2, r=profile.radius, w=profile.sweptWidth, vehW=profile.width, vehL=profile.length;
   svg.setAttribute('viewBox',`${-half} ${-half} ${s} ${s}`);
   svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-  const sweep=side==='left'?0:1;
   const sign=side==='left'?-1:1;
-  const entryX=-r*sign, entryY=r;
-  const exitX=r*sign, exitY=-r;
-  const path=`M ${entryX} ${entryY} A ${r} ${r} 0 0 ${sweep} ${exitX} ${exitY}`;
-  const startTx=`translate(${entryX} ${entryY+vehL*.18}) rotate(${side==='left'?0:0})`;
-  const endTx=`translate(${exitX+sign*vehL*.18} ${exitY}) rotate(${side==='left'?-90:90})`;
+  const entryLen=vehL*.98, exitLen=vehL*.98;
+  const entryX=-sign*r;
+  const exitEndX=sign*exitLen;
+  const entryStartY=entryLen;
+  const ghostTs=[0,.16,.32,.48,.64,.8,1];
+  const centerPath=[
+    `M ${entryX} ${entryStartY}`,
+    `L ${entryX} 0`,
+    `A ${r} ${r} 0 0 ${side==='left'?0:1} 0 ${-r}`,
+    `L ${exitEndX} ${-r}`
+  ].join(' ');
+  const innerR=Math.max(1,r-profile.rearCut);
+  const rearPath=[
+    `M ${entryX+sign*profile.rearCut} ${entryStartY}`,
+    `L ${entryX+sign*profile.rearCut} 0`,
+    `A ${innerR} ${innerR} 0 0 ${side==='left'?0:1} 0 ${-innerR}`,
+    `L ${exitEndX} ${-innerR}`
+  ].join(' ');
+  const outerR=r+vehW*.65;
+  const frontPath=[
+    `M ${entryX-sign*vehW*.5} ${entryStartY}`,
+    `L ${entryX-sign*vehW*.5} 0`,
+    `A ${outerR} ${outerR} 0 0 ${side==='left'?0:1} 0 ${-outerR}`,
+    `L ${exitEndX} ${-outerR}`
+  ].join(' ');
+  function pose(t){
+    if(t<.24){
+      const k=t/.24;
+      return {x:entryX,y:entryStartY*(1-k),rot:0};
+    }
+    if(t>.76){
+      const k=(t-.76)/.24;
+      return {x:sign*exitEndX*k,y:-r,rot:sign*90};
+    }
+    const k=(t-.24)/.52;
+    const deg=side==='left'?0-90*k:180+90*k;
+    const rad=deg*Math.PI/180;
+    return {x:Math.cos(rad)*r,y:Math.sin(rad)*r,rot:side==='left'?-90*k:90*k};
+  }
+  const ghosts=ghostTs.map((t,i)=>{
+    const p=pose(t);
+    const opacity=(i===0||i===ghostTs.length-1)?.84:.38;
+    const fill=i===0?'#3aa0ff':i===ghostTs.length-1?'#ffd400':'#8bd3ff';
+    return `<g transform="translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.rot.toFixed(1)})" opacity="${opacity}">
+      <rect x="${(-vehW/2).toFixed(2)}" y="${(-vehL/2).toFixed(2)}" width="${vehW.toFixed(2)}" height="${vehL.toFixed(2)}" rx=".45" fill="${fill}" stroke="#0e151c" stroke-width=".22"/>
+      <rect x="${(-vehW/2+.18).toFixed(2)}" y="${(-vehL/2+.55).toFixed(2)}" width="${(vehW-.36).toFixed(2)}" height="${(vehL*.22).toFixed(2)}" rx=".25" fill="rgba(255,255,255,.7)"/>
+      <line x1="${(-vehW*.62).toFixed(2)}" y1="${(-vehL*.28).toFixed(2)}" x2="${(vehW*.62).toFixed(2)}" y2="${(-vehL*.28).toFixed(2)}" stroke="#111827" stroke-width=".22"/>
+      <line x1="${(-vehW*.62).toFixed(2)}" y1="${(vehL*.28).toFixed(2)}" x2="${(vehW*.62).toFixed(2)}" y2="${(vehL*.28).toFixed(2)}" stroke="#111827" stroke-width=".22"/>
+    </g>`;
+  }).join('');
   const labelX=side==='left'?-half+4:-half+4;
   const labelY=-half+8;
   svg.innerHTML=`
     <g transform="rotate(${angle})">
-      <path d="${path}" fill="none" stroke="rgba(255,77,87,.26)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="${path}" fill="none" stroke="rgba(255,77,87,.72)" stroke-width="${Math.max(1.2,vehW)}" stroke-linecap="round" stroke-dasharray="${Math.max(2,vehW)} ${Math.max(2,vehW*.8)}"/>
-      <path d="${path}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width=".7" stroke-linecap="round"/>
-      <g transform="${startTx}">
-        <rect x="${-vehW/2}" y="${-vehL/2}" width="${vehW}" height="${vehL}" rx=".55" fill="rgba(58,160,255,.86)" stroke="#fff" stroke-width=".45"/>
-        <path d="M 0 ${-vehL/2+1.2} L ${-vehW*.32} ${-vehL/2+3.2} L ${vehW*.32} ${-vehL/2+3.2} Z" fill="#fff"/>
-      </g>
-      <g transform="${endTx}">
-        <rect x="${-vehW/2}" y="${-vehL/2}" width="${vehW}" height="${vehL}" rx=".55" fill="rgba(255,212,0,.9)" stroke="#111827" stroke-width=".45"/>
-        <path d="M 0 ${-vehL/2+1.2} L ${-vehW*.32} ${-vehL/2+3.2} L ${vehW*.32} ${-vehL/2+3.2} Z" fill="#111827"/>
-      </g>
+      <path d="${centerPath}" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="${w.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${frontPath}" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${rearPath}" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/>
+      <path d="${centerPath}" fill="none" stroke="#ffffff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/>
+      ${ghosts}
       <circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/>
-      <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">曲がり占有範囲（参考）</text>
+      <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">車両軌跡（参考）</text>
       <text x="${labelX}" y="${labelY+5.5}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">車両: ${profile.label} / 幅${profile.width.toFixed(1)}m・長${profile.length.toFixed(1)}m</text>
-      <text x="${labelX}" y="${labelY+10}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">赤面: 想定占有幅 約${profile.sweptWidth.toFixed(1)}m</text>
-      <text x="${entryX-6*sign}" y="${entryY+vehL*.55}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">進入</text>
-      <text x="${exitX+sign*vehL*.42}" y="${exitY-3}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">退出</text>
+      <text x="${labelX}" y="${labelY+10}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">青線: 前輪側 / 赤破線: 後輪側 / 赤面: 占有目安</text>
+      <text x="${entryX-6*sign}" y="${entryStartY-1}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">進入</text>
+      <text x="${exitEndX-sign*5}" y="${-r-3}" font-size="3.2" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">退出</text>
       <line x1="${-half+4}" y1="${half-5}" x2="${-half+14}" y2="${half-5}" stroke="#fff" stroke-width=".9"/>
       <text x="${-half+4}" y="${half-7}" font-size="3" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">10m</text>
     </g>`;
