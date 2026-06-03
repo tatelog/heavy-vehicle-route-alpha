@@ -58,15 +58,12 @@
   .eyebrow{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.22em;color:var(--hiviz);text-transform:uppercase;font-weight:600;margin-bottom:5px}
   h1{display:none}
   .sub{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .theme-setting{display:flex;align-items:center;gap:8px}
-  .theme-system{background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:10.5px;font-weight:900;padding:8px 10px;line-height:1;white-space:nowrap}
-  .theme-system.on{background:var(--hiviz);border-color:var(--hiviz);color:#171717}
-  .theme-toggle{flex:1;position:relative;min-height:39px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:3px;overflow:hidden}
-  .theme-toggle::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:8px;background:var(--hiviz);transition:.16s}
-  .theme-toggle.dark::before{left:50%}
-  .theme-toggle .theme-option{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:900;color:var(--muted)}
-  .theme-toggle .theme-option svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none}
-  .theme-toggle.light .theme-option:first-child,.theme-toggle.dark .theme-option:last-child{color:#171717}
+  .theme-switch{background:var(--hiviz)}
+  .theme-switch::after{display:none}
+  .theme-knob{position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s;display:flex;align-items:center;justify-content:center}
+  .theme-switch.dark .theme-knob{left:19px}
+  .theme-knob svg{position:absolute;width:12px;height:12px;stroke:#111827;stroke-width:2.4;fill:none;opacity:0;transition:.15s}
+  .theme-switch.light .sun,.theme-switch.dark .moon{opacity:1}
   .menu-wrap{position:relative;display:flex;align-items:center;gap:8px;min-width:0}
   .menu-btn{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:20px;line-height:1;font-weight:900;flex-shrink:0}
   .view-title{font-size:12.5px;color:var(--text);font-weight:900;white-space:nowrap}
@@ -120,7 +117,7 @@
   .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
   .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
   .leg{display:flex;flex-direction:column;gap:7px}.leg-item,.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
-  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:26px;height:0;border-top:5px solid;border-radius:999px;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch{background:var(--hiviz)}.tog.on .switch::after{left:19px}
+  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:26px;height:0;border-top:5px solid;border-radius:999px;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch,.share-toggle.on .switch{background:var(--hiviz)}.tog.on .switch::after,.share-toggle.on .switch::after{left:19px}
   .share-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:9px;cursor:pointer}.share-toggle.on{border-color:var(--hiviz)}
   .share-toggle .title{font-weight:800;font-size:13px}.share-toggle .desc{font-size:10.8px;color:var(--muted);margin-top:2px}
   .list{display:flex;flex-direction:column;gap:7px}.person,.marker-row{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12px;cursor:pointer}.person .name,.marker-row .name{font-weight:800}.person .meta,.marker-row .meta{color:var(--muted);font-size:11px;margin-top:3px}
@@ -334,18 +331,14 @@
     </details>
 
     <div class="sect-label">表示設定</div>
-    <div class="theme-setting" aria-label="テーマ切替">
-      <button type="button" class="theme-system on" id="themeSystemBtn" data-theme-mode="system" aria-pressed="true">システム</button>
-      <button type="button" class="theme-toggle dark" id="themeToggleBtn" aria-label="ライト・ダーク切替" aria-pressed="false">
-        <span class="theme-option">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
-          ライト
+    <div class="share-toggle" id="themeSettingToggle" role="button" tabindex="0" aria-label="テーマ切替">
+      <div><div class="title" id="themeSettingTitle">表示テーマ</div><div class="desc" id="themeSettingDesc">現在: ダーク</div></div>
+      <span class="switch theme-switch dark" id="themeSettingSwitch">
+        <span class="theme-knob">
+          <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
+          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8 8 0 0 1 9.4 3.5 8.5 8.5 0 1 0 20.5 14.6Z"></path></svg>
         </span>
-        <span class="theme-option">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8 8 0 0 1 9.4 3.5 8.5 8.5 0 1 0 20.5 14.6Z"></path></svg>
-          ダーク
-        </span>
-      </button>
+      </span>
     </div>
     <div class="share-toggle" id="voiceSettingToggle">
       <div><div class="title">音声案内 ON</div><div class="desc">案内開始時に読み上げを有効化します</div></div>
@@ -521,20 +514,21 @@ function resolvedTheme(mode){
   return mode==='system'?(themeMedia.matches?'dark':'light'):mode;
 }
 function applyTheme(mode,save=true){
-  const next=['system','light','dark'].includes(mode)?mode:'system';
-  const actual=resolvedTheme(next);
+  const next=mode==='light'||mode==='dark'?mode:resolvedTheme(mode);
+  const actual=next;
   document.documentElement.dataset.themeMode=next;
   document.documentElement.dataset.theme=actual;
   if(save) localStorage.setItem(THEME_KEY,next);
-  themeSystemBtn.classList.toggle('on',next==='system');
-  themeSystemBtn.setAttribute('aria-pressed',String(next==='system'));
-  themeToggleBtn.classList.toggle('light',actual==='light');
-  themeToggleBtn.classList.toggle('dark',actual==='dark');
-  themeToggleBtn.setAttribute('aria-pressed',String(actual==='dark'));
+  themeSettingToggle.classList.toggle('on',actual==='dark');
+  themeSettingSwitch.classList.toggle('light',actual==='light');
+  themeSettingSwitch.classList.toggle('dark',actual==='dark');
+  themeSettingDesc.textContent=`現在: ${actual==='dark'?'ダーク':'ライト'}`;
+  themeSettingToggle.setAttribute('aria-pressed',String(actual==='dark'));
 }
-themeSystemBtn.onclick=()=>applyTheme('system');
-themeToggleBtn.onclick=()=>applyTheme(resolvedTheme(document.documentElement.dataset.themeMode)==='dark'?'light':'dark');
-themeMedia.addEventListener?.('change',()=>{if((localStorage.getItem(THEME_KEY)||'system')==='system')applyTheme('system',false)});
+themeSettingToggle.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+themeSettingToggle.addEventListener('keydown',e=>{
+  if(e.key==='Enter' || e.key===' '){e.preventDefault();themeSettingToggle.click();}
+});
 applyTheme(document.documentElement.dataset.themeMode||localStorage.getItem(THEME_KEY)||'system',false);
 
 const VIEW_LABELS={route:'ルート選定',drive:'運転時',admin:'管理画面'};
@@ -2018,6 +2012,7 @@ scaleSettingToggle.onclick=()=>setScalePreference(!state.scaleVisible,true);
 function setVoicePreference(on,save=false){
   state.voice=!!on;
   voiceSettingToggle.classList.toggle('on',state.voice);
+  voiceSettingToggle.setAttribute('aria-pressed',String(state.voice));
   voiceSettingToggle.querySelector('.title').textContent=`音声案内 ${state.voice?'ON':'OFF'}`;
   voiceSettingToggle.querySelector('.desc').textContent=state.voice?'案内開始時に読み上げを有効化します':'画面案内のみ表示します';
   if(save) localStorage.setItem(VOICE_PREF_KEY,state.voice?'1':'0');
@@ -2026,6 +2021,7 @@ function setVoicePreference(on,save=false){
 function setScalePreference(on,save=false){
   state.scaleVisible=!!on;
   scaleSettingToggle.classList.toggle('on',state.scaleVisible);
+  scaleSettingToggle.setAttribute('aria-pressed',String(state.scaleVisible));
   scaleSettingToggle.querySelector('.title').textContent=`縮尺表示 ${state.scaleVisible?'ON':'OFF'}`;
   scaleSettingToggle.querySelector('.desc').textContent=state.scaleVisible?'右下に距離スケールを表示します':'地図上の縮尺表示を隠します';
   if(state.scaleVisible && !scaleControl._map) scaleControl.addTo(map);
