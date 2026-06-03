@@ -58,9 +58,15 @@
   .eyebrow{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.22em;color:var(--hiviz);text-transform:uppercase;font-weight:600;margin-bottom:5px}
   h1{display:none}
   .sub{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .theme-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px;flex-shrink:0}
-  .theme-switch button{background:transparent;color:var(--muted);border-radius:6px;padding:5px 7px;font-size:10.5px;font-weight:800;line-height:1}
-  .theme-switch button.on{background:var(--hiviz);color:#171717}
+  .theme-setting{display:flex;align-items:center;gap:8px}
+  .theme-system{background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:10.5px;font-weight:900;padding:8px 10px;line-height:1;white-space:nowrap}
+  .theme-system.on{background:var(--hiviz);border-color:var(--hiviz);color:#171717}
+  .theme-toggle{flex:1;position:relative;min-height:39px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--text);display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:3px;overflow:hidden}
+  .theme-toggle::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:8px;background:var(--hiviz);transition:.16s}
+  .theme-toggle.dark::before{left:50%}
+  .theme-toggle .theme-option{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:900;color:var(--muted)}
+  .theme-toggle .theme-option svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none}
+  .theme-toggle.light .theme-option:first-child,.theme-toggle.dark .theme-option:last-child{color:#171717}
   .menu-wrap{position:relative;display:flex;align-items:center;gap:8px;min-width:0}
   .menu-btn{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:20px;line-height:1;font-weight:900;flex-shrink:0}
   .view-title{font-size:12.5px;color:var(--text);font-weight:900;white-space:nowrap}
@@ -316,10 +322,18 @@
     </details>
 
     <div class="sect-label">表示設定</div>
-    <div class="theme-switch" aria-label="テーマ切替">
-      <button type="button" data-theme-mode="system" class="on" aria-pressed="true">システム</button>
-      <button type="button" data-theme-mode="light" aria-pressed="false">ライト</button>
-      <button type="button" data-theme-mode="dark" aria-pressed="false">ダーク</button>
+    <div class="theme-setting" aria-label="テーマ切替">
+      <button type="button" class="theme-system on" id="themeSystemBtn" data-theme-mode="system" aria-pressed="true">システム</button>
+      <button type="button" class="theme-toggle dark" id="themeToggleBtn" aria-label="ライト・ダーク切替" aria-pressed="false">
+        <span class="theme-option">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
+          ライト
+        </span>
+        <span class="theme-option">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8 8 0 0 1 9.4 3.5 8.5 8.5 0 1 0 20.5 14.6Z"></path></svg>
+          ダーク
+        </span>
+      </button>
     </div>
     <div class="share-toggle" id="voiceSettingToggle">
       <div><div class="title">音声案内 ON</div><div class="desc">案内開始時に読み上げを有効化します</div></div>
@@ -478,16 +492,18 @@ function resolvedTheme(mode){
 }
 function applyTheme(mode,save=true){
   const next=['system','light','dark'].includes(mode)?mode:'system';
+  const actual=resolvedTheme(next);
   document.documentElement.dataset.themeMode=next;
-  document.documentElement.dataset.theme=resolvedTheme(next);
+  document.documentElement.dataset.theme=actual;
   if(save) localStorage.setItem(THEME_KEY,next);
-  document.querySelectorAll('button[data-theme-mode]').forEach(btn=>{
-    const on=btn.dataset.themeMode===next;
-    btn.classList.toggle('on',on);
-    btn.setAttribute('aria-pressed',String(on));
-  });
+  themeSystemBtn.classList.toggle('on',next==='system');
+  themeSystemBtn.setAttribute('aria-pressed',String(next==='system'));
+  themeToggleBtn.classList.toggle('light',actual==='light');
+  themeToggleBtn.classList.toggle('dark',actual==='dark');
+  themeToggleBtn.setAttribute('aria-pressed',String(actual==='dark'));
 }
-document.querySelectorAll('button[data-theme-mode]').forEach(btn=>btn.onclick=()=>applyTheme(btn.dataset.themeMode));
+themeSystemBtn.onclick=()=>applyTheme('system');
+themeToggleBtn.onclick=()=>applyTheme(resolvedTheme(document.documentElement.dataset.themeMode)==='dark'?'light':'dark');
 themeMedia.addEventListener?.('change',()=>{if((localStorage.getItem(THEME_KEY)||'system')==='system')applyTheme('system',false)});
 applyTheme(document.documentElement.dataset.themeMode||localStorage.getItem(THEME_KEY)||'system',false);
 
