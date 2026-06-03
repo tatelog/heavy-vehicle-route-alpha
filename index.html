@@ -116,8 +116,8 @@
   .custom-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12.5px;margin-bottom:10px;cursor:pointer}
   .custom-head .dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--faint)}.custom.on .custom-head .dot{border-color:var(--hiviz);background:var(--hiviz)}
   .crow{display:flex;align-items:center;gap:9px;margin:7px 0}.crow label{font-size:11.5px;color:var(--muted);width:42px;flex-shrink:0}.crow input{font-family:"Oswald",sans-serif;font-size:13px}.crow .unit{font-family:"Oswald",sans-serif;font-size:11px;color:var(--faint);width:18px}
-  .leg{display:flex;flex-direction:column;gap:7px}.leg-item,.tog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
-  .tog{cursor:pointer;padding:7px 0;justify-content:space-between}.tog .lbl{display:flex;align-items:center;gap:10px;color:var(--text);font-size:12.5px}.tog .dash{width:26px;height:0;border-top:5px solid;border-radius:999px;flex-shrink:0}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.tog.on .switch,.share-toggle.on .switch{background:var(--hiviz)}.tog.on .switch::after,.share-toggle.on .switch::after{left:19px}
+  .leg{display:flex;flex-direction:column;gap:7px}.leg-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}.leg-swatch{width:22px;height:4px;border-radius:2px;flex-shrink:0}
+  .layer-legend{margin-top:4px}.layer-legend .leg-swatch{width:26px;height:0;border-top:5px solid;border-radius:999px}.switch{width:38px;height:21px;background:var(--line);border-radius:11px;position:relative;transition:.15s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s}.share-toggle.on .switch{background:var(--hiviz)}.share-toggle.on .switch::after{left:19px}
   .share-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:9px;cursor:pointer}.share-toggle.on{border-color:var(--hiviz)}
   .share-toggle .title{font-weight:800;font-size:13px}.share-toggle .desc{font-size:10.8px;color:var(--muted);margin-top:2px}
   .list{display:flex;flex-direction:column;gap:7px}.person,.marker-row{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12px;cursor:pointer}.person .name,.marker-row .name{font-weight:800}.person .meta,.marker-row .meta{color:var(--muted);font-size:11px;margin-top:3px}
@@ -377,12 +377,12 @@
       <div class="sect-label">規制・渋滞</div>
       <div class="list" id="markerList"></div>
     </div>
-    <details class="fold" id="layerFold">
-      <summary>表示レイヤ</summary>
-      <div class="tog on" data-class="重要物流道路"><span class="lbl"><span class="dash" style="border-color:#ff8a00"></span>重要物流道路</span><span class="switch"></span></div>
-      <div class="tog on" data-class="緊急輸送道路"><span class="lbl"><span class="dash" style="border-color:#3aa0ff"></span>緊急輸送道路</span><span class="switch"></span></div>
-      <div class="tog on" data-class="一般道"><span class="lbl"><span class="dash" style="border-color:#9aa7b3"></span>一般道</span><span class="switch"></span></div>
-    </details>
+    <div class="sect-label">表示レイヤ</div>
+    <div class="leg layer-legend" id="layerLegend">
+      <div class="leg-item"><span class="leg-swatch" style="border-color:#ff8a00"></span>重要物流道路</div>
+      <div class="leg-item"><span class="leg-swatch" style="border-color:#3aa0ff"></span>緊急輸送道路</div>
+      <div class="leg-item"><span class="leg-swatch" style="border-color:#9aa7b3"></span>一般道</div>
+    </div>
 
     <span id="modeNotice" hidden>現在地周辺の道路 180 件を読み込みました。幅・高さ・重量は道路種別ごとの仮属性です。</span>
     <div class="note">
@@ -778,7 +778,6 @@ function afterVehicleSelected(){
 }
 customHead.onclick=()=>{state.custom=true; state.veh=null; state.vehClass=null; document.querySelectorAll('.veh').forEach(e=>e.classList.remove('on')); document.querySelectorAll('.class-btn').forEach(e=>e.classList.remove('on')); custom.classList.add('on'); refresh(); maybeRecalculateRoute(); saveRoomVehicle()};
 ['cw','ch','ct'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(state.custom){refresh(); maybeRecalculateRoute(); saveRoomVehicle()}}));
-document.querySelectorAll('.tog').forEach(t=>{t.onclick=()=>{const c=t.dataset.class;if(state.hidden.has(c)){state.hidden.delete(c);t.classList.add('on')}else{state.hidden.add(c);t.classList.remove('on')}refresh()}});
 bugReportBtn.onclick=reportBugToX;
 
 function initPB(){
