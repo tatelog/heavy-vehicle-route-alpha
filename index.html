@@ -146,6 +146,17 @@
   .route-candidate .tag{font-size:10px;color:#fff;background:var(--blue);border-radius:999px;padding:2px 7px;flex-shrink:0}
   .route-candidate .meta{color:var(--muted);font-size:11px;line-height:1.45;margin-top:4px}
   .route-candidate .risk{color:var(--tight)}.route-candidate.bad .risk{color:var(--fail)}
+  .share-modal{position:fixed;inset:0;z-index:3100;display:none;align-items:flex-end;justify-content:center;background:rgba(4,8,12,.52);backdrop-filter:blur(7px);padding:18px}
+  .share-modal.open{display:flex}
+  .share-dialog{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.42);padding:14px}
+  .share-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .share-head h2{font-size:15px;line-height:1.35;margin:0}
+  .share-close{width:32px;height:32px;border-radius:8px;background:var(--surface);border:1px solid var(--line);color:var(--text);font-size:18px;font-weight:900}
+  .share-options{display:flex;flex-direction:column;gap:8px}
+  .share-option{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px}
+  .share-option b{display:block;font-size:13px}
+  .share-option span{display:block;color:var(--muted);font-size:10.8px;margin-top:2px;line-height:1.45}
+  .share-option::after{content:"›";color:var(--hiviz);font-weight:900}
   .destination-confirm{display:none;margin-top:10px;background:var(--bg);border:1px solid var(--blue);border-radius:10px;padding:10px}
   .destination-confirm.on{display:block}
   .destination-confirm .title{font-size:11px;color:var(--blue);font-weight:900;margin-bottom:4px}
@@ -257,7 +268,7 @@
         <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
         <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
       </div>
-      <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">LINE共有</button></div>
+      <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">共有</button></div>
       <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
       <button class="link-action" id="clearRouteBtn" type="button">条件をクリア</button>
       <div class="candidate-list" id="destinationCandidates" style="display: none;"></div>
@@ -398,6 +409,26 @@
   <div class="map-status warn" id="gpsStatus" style="display:none"></div>
   <button class="map-action secondary" id="followCurrent" type="button" title="運転中の現在地へ戻る">現在地へ</button>
   <button class="map-action icon-only" id="gpsSite" type="button" title="GPS現在地へ移動して周辺道路を読み込み" aria-label="現在地を取得"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
+</div>
+
+<div class="share-modal" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+  <div class="share-dialog">
+    <div class="share-head">
+      <h2 id="shareModalTitle">共有</h2>
+      <button class="share-close" id="shareCloseBtn" type="button" aria-label="閉じる">×</button>
+    </div>
+    <div class="share-options">
+      <button class="share-option" id="copyShareLinkBtn" type="button">
+        <span><b>リンク発行</b><span>現在の行き先・出発地点・車両条件をURLでコピーします</span></span>
+      </button>
+      <button class="share-option" id="openLineShareBtn" type="button">
+        <span><b>LINEで送る</b><span>共有URLを送信画面で開きます</span></span>
+      </button>
+      <button class="share-option" id="copyBusinessShareBtn" type="button">
+        <span><b>ビジネス向け文面をコピー</b><span>公式アカウントや業務チャットへ貼れる文面を作ります</span></span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <div class="vehicle-modal" id="vehicleModal" role="dialog" aria-modal="true" aria-labelledby="vehicleModalTitle">
@@ -1397,7 +1428,12 @@ window.routeViewer={
 };
 routeBtn.onclick=()=>showRouteToDestination();
 clearRouteBtn.onclick=clearRoute;
-shareLineBtn.onclick=shareLineLink;
+shareLineBtn.onclick=openShareModal;
+shareCloseBtn.onclick=closeShareModal;
+shareModal.addEventListener('click',e=>{if(e.target===shareModal) closeShareModal();});
+copyShareLinkBtn.onclick=copyShareLink;
+openLineShareBtn.onclick=openLineShare;
+copyBusinessShareBtn.onclick=copyBusinessShareText;
 destInput.addEventListener('keydown',e=>{if(e.key==='Enter') showRouteToDestination()});
 destInput.addEventListener('input',()=>{
   state.pendingDestination=null;
@@ -2179,12 +2215,47 @@ function maybeRecalculateRoute(){
   setRouteHint('車両条件を変更しました。ルートを再計算しています...','warn');
   routeRecalcTimer=setTimeout(()=>showRouteToDestination(),450);
 }
-async function shareLineLink(){
+function openShareModal(){
+  shareModal.classList.add('open');
+}
+function closeShareModal(){
+  shareModal.classList.remove('open');
+}
+async function copyShareLink(){
+  const url=buildShareUrl();
+  await navigator.clipboard?.writeText(url).catch(()=>{});
+  setRouteHint('共有リンクをコピーしました。','ok');
+  closeShareModal();
+}
+async function openLineShare(){
   const url=buildShareUrl();
   await navigator.clipboard?.writeText(url).catch(()=>{});
   const lineUrl='https://line.me/R/msg/text/?'+encodeURIComponent(url);
-  setRouteHint('共有リンクを作成しました。クリップボードにもコピーしました。LINEを開きます。','ok');
+  setRouteHint('共有リンクをコピーしました。送信画面を開きます。','ok');
+  closeShareModal();
   window.open(lineUrl,'_blank','noopener');
+}
+async function copyBusinessShareText(){
+  const url=buildShareUrl();
+  const text=buildBusinessShareText(url);
+  await navigator.clipboard?.writeText(text).catch(()=>{});
+  setRouteHint('業務用の共有文面をコピーしました。','ok');
+  closeShareModal();
+}
+function buildBusinessShareText(url){
+  const v=activeVeh();
+  const vc=v?vehicleClass(v):null;
+  const dest=destInput.value.trim() || state.confirmedDestination?.label || state.pendingDestination?.label || '行き先未設定';
+  const origin=getRouteOrigin(false);
+  const originText=origin?`${origin.lat.toFixed(6)}, ${origin.lng.toFixed(6)}`:'出発地点未設定';
+  const vehicleText=vc?`${vc.label}${v?` / 幅${v.w}m・高${v.h}m・重${v.t}t`:''}`:'未選択';
+  return [
+    '搬入ルート共有',
+    `行き先: ${dest}`,
+    `出発地点: ${originText}`,
+    `車両: ${vehicleText}`,
+    `URL: ${url}`
+  ].join('\n');
 }
 function reportBugToX(){
   const v=activeVeh();
