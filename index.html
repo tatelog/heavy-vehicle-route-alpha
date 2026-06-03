@@ -169,8 +169,6 @@
   .turn-sweep-controls{position:absolute;left:50%;bottom:-30px;display:flex;gap:4px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:0 8px 18px rgba(0,0,0,.28)}
   .turn-sweep-controls button{width:28px;height:24px;border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:900}
   .turn-sweep-controls .close{color:var(--fail)}
-  .veh-class{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
-  .veh-class b{color:var(--hiviz)}
   .note{font-size:11px;color:var(--faint);line-height:1.65;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.note a{color:var(--hiviz);text-decoration:none;border-bottom:1px dotted var(--hiviz-d)}.note b{color:var(--muted)}
   .alpha-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,212,0,.14);border:1px solid rgba(255,212,0,.35);color:var(--hiviz);border-radius:999px;padding:3px 8px;font-size:10.5px;font-weight:900;line-height:1}
   .alpha-note{margin:8px 0 10px;background:var(--surface);border:1px dashed var(--line);border-radius:9px;padding:9px 10px;color:var(--muted);font-size:11.5px;line-height:1.55}
@@ -368,8 +366,6 @@
       <div class="sect-label">規制・渋滞</div>
       <div class="list" id="markerList"></div>
     </div>
-    <div class="veh-class" id="vehClass">車両区分: <b>特殊</b> / 区分ボタンで選択（代表値: 幅3m・高4.1m・重36t）</div>
-
     <details class="fold" id="layerFold">
       <summary>表示レイヤ</summary>
       <div class="tog on" data-class="重要物流道路"><span class="lbl"><span class="dash" style="border-color:#ff8a00"></span>重要物流道路</span><span class="switch"></span></div>
@@ -2387,8 +2383,7 @@ function refresh(){
   roadLayer.setStyle(styleFor);
   const v=activeVeh();
   updateReadout();
-  const vc=vehicleClass(v);
-  vehClass.innerHTML=v?`車両区分: <b>${vc.label}</b> / ${vc.note}（代表値: 幅${v.w}m・高${v.h}m・重${v.t}t）`:'車両区分: -';
+  updateVehiclePrompt();
   if(!state.loadingRoads) areaLabel.textContent='表示範囲・通行可否更新済み';
 }
 function updateVehiclePrompt(){
@@ -2400,7 +2395,7 @@ function updateVehiclePrompt(){
   }
   const vc=vehicleClass(v);
   const gpsText=state.pin?'':' / GPS確認中';
-  vehiclePrompt.innerHTML=`選択済み: <b>${escapeHtml(vc.label)}</b>${gpsText}`;
+  vehiclePrompt.innerHTML=`選択済み: <b>${escapeHtml(vc.label)}</b> / 幅${v.w}m・高${v.h}m・重${v.t}t${gpsText}`;
   vehiclePrompt.className='vehicle-status ok';
 }
 function fmtDist(d){return d<1000?`${Math.round(d)} m`:`${(d/1000).toFixed(1)} km`}
