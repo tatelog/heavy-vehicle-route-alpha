@@ -162,6 +162,12 @@
   .guide-step .place{color:var(--blue);font-size:10.5px;font-weight:800;text-align:right;max-width:44%;line-height:1.35}
   .guide-step .dist{font-size:10.5px;color:var(--faint);margin-top:2px}
   .guide-step.current{border-color:var(--blue);background:rgba(58,160,255,.09)}.guide-step.current .idx{background:var(--blue);color:white}
+  .guide-step.check{border-color:rgba(255,77,87,.46);background:rgba(255,77,87,.06)}
+  .guide-step .meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:3px}
+  .turn-sim-btn{background:rgba(255,77,87,.16);border:1px solid rgba(255,77,87,.5);color:var(--fail);border-radius:7px;padding:5px 8px;font-size:10.5px;font-weight:900;line-height:1;white-space:nowrap}
+  .turn-sweep-controls{position:absolute;left:50%;bottom:-30px;display:flex;gap:4px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:0 8px 18px rgba(0,0,0,.28)}
+  .turn-sweep-controls button{width:28px;height:24px;border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:900}
+  .turn-sweep-controls .close{color:var(--fail)}
   .veh-class{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
   .veh-class b{color:var(--hiviz)}
   .note{font-size:11px;color:var(--faint);line-height:1.65;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.note a{color:var(--hiviz);text-decoration:none;border-bottom:1px dotted var(--hiviz-d)}.note b{color:var(--muted)}
@@ -198,6 +204,8 @@
   .map-loading.on{display:flex}
   .spinner{width:16px;height:16px;border-radius:50%;border:3px solid rgba(255,212,0,.22);border-top-color:var(--hiviz);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .leaflet-control-scale{margin-right:14px!important;margin-bottom:112px!important}
+  .leaflet-control-scale-line{background:var(--panel);border-color:var(--line);border-top:none;color:var(--text);box-shadow:var(--shadow);font-family:"Oswald",sans-serif;font-weight:700}
   .label-icon,.site-pin-icon{background:transparent;border:0}.label-chip{white-space:nowrap;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:4px 8px;box-shadow:var(--shadow);font-size:12px;font-weight:800;transform:translate(-50%,-100%)}.label-chip.me{border-color:var(--hiviz);color:var(--hiviz)}.label-chip.meet{border-color:var(--pass);color:var(--pass)}.label-chip.alert{border-color:var(--fail);color:var(--fail)}
   .vehicle-icon{background:transparent;border:0}
   .vehicle-dot{width:34px;height:34px;border-radius:50%;background:#1677ff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 5px rgba(22,119,255,.18);display:grid;place-items:center;color:#fff}
@@ -208,7 +216,7 @@
   .site-pin.dest{background:var(--blue)}
   #handle{display:none}
   @media(max-width:760px){
-    body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}
+    body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}.leaflet-control-scale{margin-right:12px!important;margin-bottom:126px!important}
     .vehicle-modal{align-items:flex-end;padding:12px}.vehicle-dialog{border-radius:16px 16px 10px 10px}
   }
 </style>
@@ -316,6 +324,10 @@
     </div>
     <div class="share-toggle" id="voiceSettingToggle">
       <div><div class="title">音声案内 ON</div><div class="desc">案内開始時に読み上げを有効化します</div></div>
+      <span class="switch"></span>
+    </div>
+    <div class="share-toggle" id="scaleSettingToggle">
+      <div><div class="title">縮尺表示 ON</div><div class="desc">右下に距離スケールを表示します</div></div>
       <span class="switch"></span>
     </div>
 
@@ -456,12 +468,13 @@ let state = {
   routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], pendingDestination:null, pendingDestinationQuery:'',
   confirmedDestination:null, confirmedDestinationQuery:'', destinationPreviewMarker:null,
   routeCandidates:[], selectedRoute:-1, routeConfirmed:false, routeSteps:[], currentStep:0,
-  voice:false, guiding:false, guideWatchId:null, lastSpokenStep:-1,
-  viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false
+  voice:false, scaleVisible:true, guiding:false, guideWatchId:null, lastSpokenStep:-1,
+  viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false, turnSim:null
 };
 const ROAD_CACHE_KEY='routeRoadFeatureCache.v1';
 const VEHICLE_PREF_KEY='routeVehiclePreference.v1';
 const VOICE_PREF_KEY='routeVoicePreference.v1';
+const SCALE_PREF_KEY='routeScalePreference.v1';
 const ROAD_CACHE_MAX=650;
 let roadFeatureCache=new Map();
 const ALPHA_MODE=true;
@@ -534,6 +547,7 @@ function initAlphaPreview(){
 
 const map=L.map('map',{zoomControl:false}).setView([36.708,137.225],13);
 L.control.zoom({position:'topleft'}).addTo(map);
+const scaleControl=L.control.scale({position:'bottomright',metric:true,imperial:false,maxWidth:140});
 const gpsSiteBtn=document.getElementById('gpsSite');
 const gpsStatus=document.getElementById('gpsStatus');
 const followCurrentBtn=document.getElementById('followCurrent');
@@ -1780,6 +1794,7 @@ function drawRoute(route,dest,audit=null,coords=null,options={}){
   return audit;
 }
 function removeRouteLayer(){
+  clearTurnSimulation();
   if(state.routeLayer){map.removeLayer(state.routeLayer);state.routeLayer=null}
   stopGuidance(false);
 }
@@ -1883,6 +1898,13 @@ function routeStepsFromOsrm(route,dest){
       idx:i,
       lat:loc[1],
       lng:loc[0],
+      type:m.type||'',
+      modifier:m.modifier||'',
+      bearingBefore:m.bearing_before,
+      bearingAfter:m.bearing_after,
+      turnCheck:isTurnCheckStep(step),
+      turnSide:(m.modifier||'').includes('left')?'left':'right',
+      turnAngle:Number.isFinite(m.bearing_after)?m.bearing_after:0,
       distance:step.distance||0,
       approachDistance:i>0 ? (steps[i-1].distance||0) : (step.distance||0),
       name:step.name||'道路',
@@ -1894,6 +1916,13 @@ function routeStepsFromOsrm(route,dest){
   }).filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lng));
   if(mapped.length) mapped[mapped.length-1].instruction=`まもなく目的地です。${dest.label} に到着します。`;
   return mapped;
+}
+function isTurnCheckStep(step){
+  const m=step.maneuver||{}, type=m.type||'', mod=m.modifier||'';
+  if(type==='arrive' || type==='depart') return false;
+  if(['sharp left','sharp right','uturn'].includes(mod)) return true;
+  if(['left','right'].includes(mod)) return true;
+  return ['turn','end of road','fork','roundabout'].includes(type);
 }
 function stepPlaceName(step){
   return step.name || '';
@@ -1916,14 +1945,21 @@ function renderGuideList(){
   guideList.innerHTML='';
   state.routeSteps.forEach((step,i)=>{
     const row=document.createElement('div');
-    row.className='guide-step'+(i===state.currentStep?' current':'');
-    row.innerHTML=`<div class="idx">${i+1}</div><div><div class="txt"><span>${step.instruction}</span>${step.place?`<span class="place">${step.place}</span>`:''}</div><div class="dist">次の区間 約${fmtDist(step.distance)}</div></div>`;
+    row.className='guide-step'+(i===state.currentStep?' current':'')+(step.turnCheck?' check':'');
+    const simBtn=step.turnCheck?`<button class="turn-sim-btn" type="button" data-turn-sim="${i}">軌跡</button>`:'';
+    row.innerHTML=`<div class="idx">${i+1}</div><div><div class="txt"><span>${step.instruction}</span>${step.place?`<span class="place">${step.place}</span>`:''}</div><div class="meta-row"><div class="dist">${step.turnCheck?'曲がり角 要確認 / ':''}次の区間 約${fmtDist(step.distance)}</div>${simBtn}</div></div>`;
     guideList.appendChild(row);
   });
   guideBtn.textContent=state.guiding?'案内停止':'案内開始';
   rerouteBtn.disabled=!state.destination;
   updateDriveSummary();
 }
+guideList.onclick=e=>{
+  const btn=e.target.closest('[data-turn-sim]');
+  if(!btn) return;
+  const step=state.routeSteps[+btn.dataset.turnSim];
+  if(step) showTurnSimulation(step);
+};
 function updateDriveSummary(){
   if(!document.getElementById('driveSummary')) return;
   const primary=driveSummary.querySelector('.primary');
@@ -1941,6 +1977,7 @@ function updateDriveSummary(){
 guideBtn.onclick=()=> state.guiding ? stopGuidance(true) : startGuidance();
 rerouteBtn.onclick=()=>recalculateActiveRoute();
 voiceSettingToggle.onclick=()=>setVoicePreference(!state.voice,true);
+scaleSettingToggle.onclick=()=>setScalePreference(!state.scaleVisible,true);
 function setVoicePreference(on,save=false){
   state.voice=!!on;
   voiceSettingToggle.classList.toggle('on',state.voice);
@@ -1948,6 +1985,15 @@ function setVoicePreference(on,save=false){
   voiceSettingToggle.querySelector('.desc').textContent=state.voice?'案内開始時に読み上げを有効化します':'画面案内のみ表示します';
   if(save) localStorage.setItem(VOICE_PREF_KEY,state.voice?'1':'0');
   renderGuideList();
+}
+function setScalePreference(on,save=false){
+  state.scaleVisible=!!on;
+  scaleSettingToggle.classList.toggle('on',state.scaleVisible);
+  scaleSettingToggle.querySelector('.title').textContent=`縮尺表示 ${state.scaleVisible?'ON':'OFF'}`;
+  scaleSettingToggle.querySelector('.desc').textContent=state.scaleVisible?'右下に距離スケールを表示します':'地図上の縮尺表示を隠します';
+  if(state.scaleVisible && !scaleControl._map) scaleControl.addTo(map);
+  if(!state.scaleVisible && scaleControl._map) scaleControl.remove();
+  if(save) localStorage.setItem(SCALE_PREF_KEY,state.scaleVisible?'1':'0');
 }
 async function recalculateActiveRoute(){
   const origin=getRouteOrigin();
@@ -2031,6 +2077,77 @@ function updateGuidance(latlng){
 function guideSpeakText(step){
   const place=step.place ? `${step.place}で、` : '';
   return place+step.instruction;
+}
+function showTurnSimulation(step){
+  clearTurnSimulation();
+  const v=activeVeh() || VEHICLE_CLASSES.find(c=>c.id==='large');
+  const size=Math.max(48, Math.min(92, 34 + (v?.w||2.5)*8 + (v?.t||20)*.55));
+  const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size, step};
+  const handle=L.marker(sim.center,{draggable:true,icon:turnHandleIcon(),title:'軌跡位置'}).addTo(map);
+  handle.on('drag',()=>{sim.center=handle.getLatLng(); updateTurnSimulation();});
+  sim.handle=handle;
+  state.turnSim=sim;
+  updateTurnSimulation();
+  map.panTo(sim.center,{animate:true,duration:.25});
+  setRouteHint('曲がり角の軌跡を表示しました。中心点をドラッグ、地図上のボタンで回転できます。','warn');
+}
+function updateTurnSimulation(){
+  const sim=state.turnSim;
+  if(!sim) return;
+  const svg=turnSweepSvg(sim.angle, activeVeh(), sim.step?.turnSide);
+  const bounds=boundsFromCenterMeters(sim.center,sim.size);
+  if(sim.overlay) map.removeLayer(sim.overlay);
+  sim.overlay=L.svgOverlay(svg,bounds,{interactive:false,opacity:1}).addTo(map);
+  if(sim.control) sim.control.setLatLng(offsetLatLng(sim.center,0,-sim.size*.58));
+  else sim.control=L.marker(offsetLatLng(sim.center,0,-sim.size*.58),{icon:turnControlIcon(),interactive:true}).addTo(map);
+}
+function clearTurnSimulation(){
+  const sim=state.turnSim;
+  if(!sim) return;
+  if(sim.overlay) map.removeLayer(sim.overlay);
+  if(sim.handle) map.removeLayer(sim.handle);
+  if(sim.control) map.removeLayer(sim.control);
+  state.turnSim=null;
+}
+function rotateTurnSimulation(delta){
+  if(!state.turnSim) return;
+  state.turnSim.angle=(state.turnSim.angle+delta+360)%360;
+  updateTurnSimulation();
+}
+function turnSweepSvg(angle,v,side='right'){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 100 100');
+  svg.setAttribute('preserveAspectRatio','none');
+  const width=Math.max(8,Math.min(17,(v?.w||2.5)*4.5));
+  const path=side==='left'
+    ? 'M84 76 C66 76 58 64 58 50 C58 34 46 24 22 24'
+    : 'M16 76 C34 76 42 64 42 50 C42 34 54 24 78 24';
+  const startX=side==='left'?66:12, endX=side==='left'?14:64;
+  svg.innerHTML=`
+    <g transform="rotate(${angle} 50 50)">
+      <path d="${path}" fill="none" stroke="rgba(255,77,87,.22)" stroke-width="${width+10}" stroke-linecap="round"/>
+      <path d="${path}" fill="none" stroke="#ff4d57" stroke-width="${Math.max(3,width*.38)}" stroke-linecap="round" stroke-dasharray="5 4"/>
+      <rect x="${startX}" y="${76-width/2}" width="22" height="${width}" rx="3" fill="rgba(58,160,255,.9)" stroke="white" stroke-width="1.2"/>
+      <rect x="${endX}" y="${24-width/2}" width="22" height="${width}" rx="3" fill="rgba(255,212,0,.9)" stroke="#171717" stroke-width="1.2"/>
+      <circle cx="50" cy="50" r="3.2" fill="#ff4d57" stroke="white" stroke-width="1"/>
+    </g>`;
+  return svg;
+}
+function boundsFromCenterMeters(center,size){
+  const north=offsetLatLng(center,0,size/2), south=offsetLatLng(center,0,-size/2);
+  const east=offsetLatLng(center,size/2,0), west=offsetLatLng(center,-size/2,0);
+  return L.latLngBounds([south.lat,west.lng],[north.lat,east.lng]);
+}
+function offsetLatLng(center,eastMeters,northMeters){
+  const lat=center.lat + northMeters/110540;
+  const lng=center.lng + eastMeters/(111320*Math.cos(center.lat*Math.PI/180));
+  return L.latLng(lat,lng);
+}
+function turnHandleIcon(){
+  return L.divIcon({className:'turn-handle-icon',html:'<div style="width:18px;height:18px;border-radius:50%;background:#ff4d57;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35)"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+}
+function turnControlIcon(){
+  return L.divIcon({className:'turn-control-icon',html:'<div class="turn-sweep-controls"><button type="button" onclick="rotateTurnSimulation(-10)">↺</button><button type="button" onclick="rotateTurnSimulation(10)">↻</button><button class="close" type="button" onclick="clearTurnSimulation()">×</button></div>',iconSize:[100,30],iconAnchor:[50,15]});
 }
 function speakGuide(text){
   if(!state.voice || !canSpeakGuide()) return;
@@ -2299,6 +2416,7 @@ window.addEventListener('beforeunload',()=>{if(state.share) navigator.sendBeacon
 initPB();
 initAlphaPreview();
 setVoicePreference(localStorage.getItem(VOICE_PREF_KEY)!=='0',false);
+setScalePreference(localStorage.getItem(SCALE_PREF_KEY)!=='0',false);
 const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
