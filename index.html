@@ -95,6 +95,7 @@
   .fold summary::after{content:"›";font-size:14px;letter-spacing:0;color:var(--hiviz);transition:.15s}
   .fold[open] summary::after{transform:rotate(90deg)}
   .class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}
+  .fold .class-grid{margin-top:9px}
   .class-btn{background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:9px 4px;text-align:center;font-size:13px;font-weight:900;min-width:0}
   .class-btn.on{border-color:var(--hiviz);background:rgba(255,212,0,.08);color:var(--hiviz)}
   .vehicle-status{font-size:11px;color:var(--muted);line-height:1.4;margin:0 2px 7px}
@@ -304,9 +305,9 @@
     <section class="view" data-view="admin">
     <div class="sect-label">あなたの車両</div>
     <div class="hint" id="vehiclePrompt">車両区分を選択してください。</div>
-    <div class="class-grid" id="classGrid"></div>
     <details class="fold" id="vehicleFold">
       <summary>詳細な車両条件で調整</summary>
+      <div class="class-grid" id="classGrid"></div>
       <div class="veh-grid" id="vehGrid"></div>
       <div class="custom" id="custom">
         <div class="custom-head" id="customHead"><span class="dot"></span>カスタム車両</div>
