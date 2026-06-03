@@ -2213,7 +2213,7 @@ function updateTurnFitPopup(){
   }
   const fit=turnFitEstimate(sim);
   const cls=fit.level==='ok'?'pop-ok':fit.level==='ng'?'pop-ng':'pop-warn';
-  const html=`<div class="pop-name">曲がり判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div><div class="notice">拡大時のみ表示します。実走前は現地確認・誘導員判断を優先してください。</div>`;
+  const html=`<div class="pop-name">曲がり判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div>`;
   if(!sim.handle.getPopup()) sim.handle.bindPopup(html,{autoClose:false,closeOnClick:false,offset:[0,-10]});
   else sim.handle.setPopupContent(html);
   sim.handle.openPopup();
