@@ -2,6 +2,10 @@
 <html lang="ja" data-theme-mode="system" data-theme="dark"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
 <title>大型車両 通行ルート共有ツール</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -351,6 +355,10 @@
       <div><div class="title">縮尺表示 ON</div><div class="desc">右下に距離スケールを表示します</div></div>
       <span class="switch"></span>
     </div>
+    <div class="share-toggle" id="installAppBtn" role="button" tabindex="0">
+      <div><div class="title">ホーム画面に追加</div><div class="desc" id="installAppStatus">スマホのホームからすぐ開けます</div></div>
+      <span class="switch"></span>
+    </div>
 
     <details class="fold" id="roomFold" data-alpha-disabled="チーム共有ルームは準備中" hidden>
       <summary>共有ルームを開く</summary>
@@ -515,6 +523,8 @@ const SCALE_PREF_KEY='routeScalePreference.v1';
 const ROAD_CACHE_MAX=650;
 let roadFeatureCache=new Map();
 const ALPHA_MODE=true;
+const installAppBtn=document.getElementById('installAppBtn');
+const installAppStatus=document.getElementById('installAppStatus');
 
 const THEME_KEY='routeTheme';
 const themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
@@ -538,6 +548,50 @@ themeSettingToggle.addEventListener('keydown',e=>{
   if(e.key==='Enter' || e.key===' '){e.preventDefault();themeSettingToggle.click();}
 });
 applyTheme(document.documentElement.dataset.themeMode||localStorage.getItem(THEME_KEY)||'system',false);
+
+let deferredInstallPrompt=null;
+function updateInstallStatus(text,on=false){
+  if(!installAppBtn || !installAppStatus) return;
+  installAppStatus.textContent=text;
+  installAppBtn.classList.toggle('on',on);
+}
+function installFallbackText(){
+  const ua=navigator.userAgent.toLowerCase();
+  if(location.protocol==='file:') return 'PagesなどHTTPS配信で追加できます';
+  if(/iphone|ipad|ipod/.test(ua)) return '共有ボタンから「ホーム画面に追加」';
+  return 'ブラウザメニューから「アプリをインストール」';
+}
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+}
+async function handleInstallApp(){
+  if(isStandaloneApp()){
+    updateInstallStatus('ホーム画面から起動中です',true);
+    return;
+  }
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice=await deferredInstallPrompt.userChoice.catch(()=>null);
+    deferredInstallPrompt=null;
+    updateInstallStatus(choice?.outcome==='accepted'?'ホーム画面へ追加しました':installFallbackText(),choice?.outcome==='accepted');
+    return;
+  }
+  updateInstallStatus(installFallbackText(),false);
+}
+installAppBtn?.addEventListener('click',handleInstallApp);
+installAppBtn?.addEventListener('keydown',e=>{
+  if(e.key==='Enter' || e.key===' '){e.preventDefault();handleInstallApp();}
+});
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  updateInstallStatus('タップしてホーム画面に追加できます',false);
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  updateInstallStatus('ホーム画面へ追加しました',true);
+});
+updateInstallStatus(isStandaloneApp()?'ホーム画面から起動中です':installFallbackText(),isStandaloneApp());
 
 const VIEW_LABELS={route:'ルート選定',drive:'運転時',admin:'管理画面'};
 let activeView='route';
@@ -2806,6 +2860,11 @@ function togglePanelCollapsed(){
 handle.onclick=togglePanelCollapsed;
 handle.addEventListener('touchend',e=>{e.preventDefault();togglePanelCollapsed()},{passive:false});
 window.addEventListener('beforeunload',()=>{if(state.share) navigator.sendBeacon?.('',new Blob())});
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
 
 initPB();
 initAlphaPreview();
