@@ -218,6 +218,12 @@
   .map-status.ng{border-color:rgba(255,77,87,.65);color:var(--fail)}
   .map-loading{position:absolute;left:14px;bottom:18px;z-index:1000;display:none;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:9px 11px;color:var(--text);font-size:12px;font-weight:800}
   .map-loading.on{display:flex}
+  .turn-scope{position:absolute;right:14px;top:14px;z-index:1000;width:min(280px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px;display:none;pointer-events:none}
+  .turn-scope.on{display:block}
+  .turn-scope .scope-title{font-size:12px;font-weight:900;color:var(--text);margin-bottom:6px}
+  .turn-scope .scope-body{height:220px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;display:grid;place-items:center}
+  .turn-scope svg{width:100%;height:100%;display:block}
+  .turn-scope .scope-note{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:6px}
   .spinner{width:16px;height:16px;border-radius:50%;border:3px solid var(--hiviz-line);border-top-color:var(--hiviz);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .leaflet-control-scale{margin-right:70px!important;margin-bottom:16px!important}
@@ -232,7 +238,7 @@
   .site-pin.dest{background:var(--blue)}
   #handle{display:none}
   @media(max-width:760px){
-    body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}.leaflet-control-scale{margin-right:68px!important;margin-bottom:28px!important}
+    body{flex-direction:column}#map{flex:1;width:100%;order:1}#panel{width:100%;height:52dvh;max-height:52dvh;border-right:none;border-top:1px solid var(--line);order:2;border-radius:18px 18px 0 0;margin-top:-18px;transition:height .25s}#panel.collapsed{height:44px;max-height:44px}.collapsed header,.collapsed .scroll,.collapsed .pin-hint{display:none}#handle{display:block;width:100%;height:28px;position:relative;cursor:pointer;touch-action:manipulation}#handle::after{content:"";position:absolute;left:50%;top:9px;width:48px;height:5px;background:var(--faint);border-radius:3px;transform:translateX(-50%)}header{padding:6px 18px 12px}.veh-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.map-action{right:12px;bottom:24px}.map-action.secondary{right:12px;bottom:72px}.map-status{right:12px;bottom:120px}.map-loading{left:12px;bottom:24px}.turn-scope{top:12px;right:12px;width:210px}.turn-scope .scope-body{height:160px}.leaflet-control-scale{margin-right:68px!important;margin-bottom:28px!important}
     .vehicle-modal{align-items:flex-end;padding:12px}.vehicle-dialog{border-radius:16px 16px 10px 10px}
   }
 </style>
@@ -402,6 +408,11 @@
 
 <div id="map">
   <div class="map-loading" id="roadLoading" aria-live="polite"><span class="spinner"></span><span>道路データ読込中</span></div>
+  <div class="turn-scope" id="turnScope" aria-hidden="true">
+    <div class="scope-title">曲がり角 拡大確認</div>
+    <div class="scope-body" id="turnScopeBody"></div>
+    <div class="scope-note">赤丸が曲がり始点。50m以下相当の拡大時のみ表示します。</div>
+  </div>
   <div class="map-status warn" id="gpsStatus" style="display:none"></div>
   <button class="map-action secondary" id="followCurrent" type="button" title="運転中の現在地へ戻る">現在地へ</button>
   <button class="map-action icon-only" id="gpsSite" type="button" title="GPS現在地へ移動して周辺道路を読み込み" aria-label="現在地を取得"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
@@ -589,6 +600,8 @@ const gpsSiteBtn=document.getElementById('gpsSite');
 const gpsStatus=document.getElementById('gpsStatus');
 const followCurrentBtn=document.getElementById('followCurrent');
 const roadLoading=document.getElementById('roadLoading');
+const turnScope=document.getElementById('turnScope');
+const turnScopeBody=document.getElementById('turnScopeBody');
 L.DomEvent.disableClickPropagation(gpsSiteBtn);
 L.DomEvent.disableScrollPropagation(gpsSiteBtn);
 L.DomEvent.disableClickPropagation(followCurrentBtn);
@@ -2274,6 +2287,7 @@ function updateTurnSimulation(){
   if(sim.control) sim.control.setLatLng(offsetLatLng(sim.center,0,-sim.size*.58));
   else sim.control=L.marker(offsetLatLng(sim.center,0,-sim.size*.58),{icon:turnControlIcon(),interactive:true}).addTo(map);
   updateTurnFitPopup();
+  updateTurnScope();
 }
 function clearTurnSimulation(){
   const sim=state.turnSim;
@@ -2282,6 +2296,7 @@ function clearTurnSimulation(){
   if(sim.handle) map.removeLayer(sim.handle);
   if(sim.control) map.removeLayer(sim.control);
   state.turnSim=null;
+  updateTurnScope();
 }
 function rotateTurnSimulation(delta){
   if(!state.turnSim) return;
@@ -2390,17 +2405,19 @@ function turnVehicleProfile(v){
   const canvas=Math.ceil((radius+sweptWidth+length*1.15)*2);
   return {width,height,weight,length,wheelbase,radius,rearCut,sweptWidth,canvas,label:vc.label||base.label,name:v?.name||vc.label||base.label};
 }
-function turnSweepSvg(angle,profile,side='right'){
+function turnSweepSvg(angle,profile,side='right',options={}){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   const s=profile.canvas, half=s/2, r=profile.radius, w=profile.sweptWidth, vehW=profile.width, vehL=profile.length;
-  svg.setAttribute('viewBox',`${-half} ${-half} ${s} ${s}`);
-  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
   const sign=side==='left'?-1:1;
   const entryLen=vehL*.98, exitLen=vehL*.98;
   const entryX=-sign*r;
   const exitEndX=sign*exitLen;
   const entryStartY=entryLen;
-  const ghostTs=[0,.16,.32,.48,.64,.8,1];
+  const viewCenterX=options.centerOnStart ? entryX : 0;
+  const viewCenterY=options.centerOnStart ? 0 : 0;
+  svg.setAttribute('viewBox',`${viewCenterX-half} ${viewCenterY-half} ${s} ${s}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  const ghostTs=[0,.16,.24,.32,.48,.64,.8,1];
   const centerPath=[
     `M ${entryX} ${entryStartY}`,
     `L ${entryX} 0`,
@@ -2457,7 +2474,7 @@ function turnSweepSvg(angle,profile,side='right'){
       <path d="${rearPath}" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/>
       <path d="${centerPath}" fill="none" stroke="#ffffff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/>
       ${ghosts}
-      <circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/>
+      <circle cx="${entryX}" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/>
       <text x="${labelX}" y="${labelY}" font-size="4.2" fill="#fff" stroke="#111827" stroke-width=".45" paint-order="stroke" font-weight="700">${sideLabel} 車両軌跡（参考）</text>
       <text x="${labelX}" y="${labelY+5.5}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">車両: ${profile.label} / 幅${profile.width.toFixed(1)}m・長${profile.length.toFixed(1)}m</text>
       <text x="${labelX}" y="${labelY+10}" font-size="3.4" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">青線: 前輪側 / 赤破線: 後輪側 / 赤面: 占有目安</text>
@@ -2467,6 +2484,16 @@ function turnSweepSvg(angle,profile,side='right'){
       <text x="${-half+4}" y="${half-7}" font-size="3" fill="#fff" stroke="#111827" stroke-width=".35" paint-order="stroke">10m</text>
     </g>`;
   return svg;
+}
+function updateTurnScope(){
+  if(!turnScope || !turnScopeBody) return;
+  const sim=state.turnSim;
+  const show=!!sim && map.getZoom()>=18;
+  turnScope.classList.toggle('on',show);
+  turnScope.setAttribute('aria-hidden',String(!show));
+  if(!show){turnScopeBody.innerHTML=''; return}
+  const scopeSvg=turnSweepSvg(0,sim.profile,sim.step?.turnSide,{centerOnStart:true});
+  turnScopeBody.replaceChildren(scopeSvg);
 }
 function boundsFromCenterMeters(center,size){
   const north=offsetLatLng(center,0,size/2), south=offsetLatLng(center,0,-size/2);
@@ -2788,7 +2815,7 @@ setScalePreference(localStorage.getItem(SCALE_PREF_KEY)!=='0',false);
 const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
-map.on('zoomend', updateTurnFitPopup);
+map.on('zoomend',()=>{updateTurnFitPopup(); updateTurnScope();});
 scheduleViewportRoadRefresh();
 if(activeVeh()){
   updateVehiclePrompt();
