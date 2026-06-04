@@ -2428,7 +2428,7 @@ function turnSweepSvg(angle,profile,side='right'){
     }
     if(t>.76){
       const k=(t-.76)/.24;
-      return {x:sign*exitEndX*k,y:-r,rot:sign*90};
+      return {x:exitEndX*k,y:-r,rot:sign*90};
     }
     const k=(t-.24)/.52;
     const deg=side==='left'?0-90*k:180+90*k;
