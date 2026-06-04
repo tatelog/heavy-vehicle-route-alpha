@@ -45,6 +45,7 @@
   .leaflet-popup-content-wrapper{background:var(--panel);color:var(--text);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow)}
   .leaflet-popup-tip{background:var(--panel);border:1px solid var(--line)}
   .leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.6}
+  .leaflet-popup-close-button{color:var(--text)!important;font-size:18px!important;font-weight:900!important;right:8px!important;top:6px!important}
   .pop-name{font-weight:700;font-size:14px;margin-bottom:4px}
   .pop-row{display:flex;justify-content:space-between;gap:16px;color:var(--muted)}
   .pop-row b{color:var(--text);font-family:"Oswald",sans-serif;font-weight:500}
@@ -2254,7 +2255,7 @@ function showTurnSimulation(step){
   clearTurnSimulation();
   const v=activeVeh() || VEHICLE_CLASSES.find(c=>c.id==='large');
   const profile=turnVehicleProfile(v);
-  const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size:profile.canvas, step, profile};
+  const sim={center:{lat:step.lat,lng:step.lng}, angle:step.turnAngle||0, size:profile.canvas, step, profile, fitPopupDismissed:false, suppressPopupClose:false};
   sim.startLocal=turnStartLocal(profile,step.turnSide);
   sim.startAnchor=turnRouteStartLatLng(step,profile);
   sim.center=centerFromTurnStart(sim.startAnchor,sim);
@@ -2263,6 +2264,9 @@ function showTurnSimulation(step){
     sim.startAnchor=handle.getLatLng();
     sim.center=centerFromTurnStart(sim.startAnchor,sim);
     updateTurnSimulation();
+  });
+  handle.on('popupclose',()=>{
+    if(!sim.suppressPopupClose) sim.fitPopupDismissed=true;
   });
   sim.handle=handle;
   state.turnSim=sim;
@@ -2355,14 +2359,17 @@ function updateTurnFitPopup(){
   const sim=state.turnSim;
   if(!sim || !sim.handle) return;
   if(map.getZoom()<18){
+    sim.suppressPopupClose=true;
     sim.handle.closePopup();
+    sim.suppressPopupClose=false;
     return;
   }
   const fit=turnFitEstimate(sim);
   const cls=fit.level==='ok'?'pop-ok':fit.level==='ng'?'pop-ng':'pop-warn';
   const html=`<div class="pop-name">${turnSideLabel(sim.step?.turnSide)}判定（参考）</div><div class="pop-row"><span>判定</span><b class="${cls}">${fit.label}</b></div><div class="pop-row"><span>軌跡幅</span><b>約${fit.swept.toFixed(1)} m</b></div><div class="pop-row"><span>道路幅目安</span><b>${fit.available?`約${fit.available.toFixed(1)} m`:'不明'}</b></div>`;
-  if(!sim.handle.getPopup()) sim.handle.bindPopup(html,{autoClose:false,closeOnClick:false,offset:[0,-10]});
+  if(!sim.handle.getPopup()) sim.handle.bindPopup(html,{autoClose:false,closeOnClick:false,closeButton:true,offset:[0,-10]});
   else sim.handle.setPopupContent(html);
+  if(sim.fitPopupDismissed) return;
   sim.handle.openPopup();
 }
 function turnFitEstimate(sim){
