@@ -278,6 +278,10 @@
         <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
         <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
       </div>
+      <div class="share-toggle on" id="highwayToggle" role="button" tabindex="0">
+        <div><div class="title">高速道路 ON</div><div class="desc">高速道路を含む候補も表示します</div></div>
+        <span class="switch"></span>
+      </div>
       <div class="room-row"><button class="btn" id="routeBtn">ルート表示</button><button class="btn subtle" id="shareLineBtn">共有</button></div>
       <div class="hint" id="routeHint">行き先と出発地点を指定すると、通行可能道路に合わせて候補を表示します。</div>
       <button class="link-action" id="clearRouteBtn" type="button">条件をクリア</button>
@@ -513,18 +517,20 @@ let state = {
   routeLayer:null, routeActive:false, destination:null, destinationCandidates:[], pendingDestination:null, pendingDestinationQuery:'',
   confirmedDestination:null, confirmedDestinationQuery:'', destinationPreviewMarker:null,
   routeCandidates:[], selectedRoute:-1, routeConfirmed:false, routeSteps:[], currentStep:0,
-  voice:false, scaleVisible:true, guiding:false, guideWatchId:null, lastSpokenStep:-1,
+  voice:false, scaleVisible:true, highwayAllowed:true, guiding:false, guideWatchId:null, lastSpokenStep:-1,
   viewportRoadTimer:null, roadBoundsKey:'', loadingRoads:false, turnSim:null
 };
 const ROAD_CACHE_KEY='routeRoadFeatureCache.v1';
 const VEHICLE_PREF_KEY='routeVehiclePreference.v1';
 const VOICE_PREF_KEY='routeVoicePreference.v1';
 const SCALE_PREF_KEY='routeScalePreference.v1';
+const HIGHWAY_PREF_KEY='routeHighwayPreference.v1';
 const ROAD_CACHE_MAX=650;
 let roadFeatureCache=new Map();
 const ALPHA_MODE=true;
 const installAppBtn=document.getElementById('installAppBtn');
 const installAppStatus=document.getElementById('installAppStatus');
+const highwayToggle=document.getElementById('highwayToggle');
 
 const THEME_KEY='routeTheme';
 const themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
@@ -1800,12 +1806,29 @@ function rankRouteCandidates(routes,dest){
     const coords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
     const audit=auditRouteCoords(coords);
     const traffic=routeTrafficImpact(coords);
+    const highway=routeHighwayInfo(route);
     const min=route.duration/60;
     const km=route.distance/1000;
     const riskPenalty=audit.blocked*1.8 + audit.unknownRate*8;
-    const adjustedMin=min + traffic.delayMin + riskPenalty;
-    return {idx:i,route,dest,coords,audit,traffic,min,km,adjustedMin,passable:audit.blocked===0};
+    const highwayPenalty=state.highwayAllowed ? 0 : highway.share*18 + highway.distanceKm*.18;
+    const adjustedMin=min + traffic.delayMin + riskPenalty + highwayPenalty;
+    return {idx:i,route,dest,coords,audit,traffic,highway,min,km,adjustedMin,passable:audit.blocked===0};
   }).sort((a,b)=>a.adjustedMin-b.adjustedMin);
+}
+function routeHighwayInfo(route){
+  const steps=route.legs?.flatMap(leg=>leg.steps||[])||[];
+  const pattern=/(高速|自動車道|有料道路|expressway|expwy|motorway|^e\d|^c\d| e\d| c\d)/i;
+  let distance=0;
+  const names=new Set();
+  steps.forEach(step=>{
+    const text=[step.name,step.ref,step.destinations,step.exits].filter(Boolean).join(' ');
+    if(pattern.test(text)){
+      distance+=step.distance||0;
+      String(text).split(/\s+/).filter(Boolean).slice(0,2).forEach(v=>names.add(v));
+    }
+  });
+  const total=route.distance||1;
+  return {distanceKm:distance/1000,share:Math.min(1,distance/total),label:distance?`高速 約${(distance/1000).toFixed(1)}km`:'一般道寄り',names:[...names].slice(0,2)};
 }
 function renderDestinationCandidates(query,origin){
   destinationCandidates.style.display=state.destinationCandidates.length?'flex':'none';
@@ -1911,8 +1934,9 @@ function renderRouteCandidates(){
     btn.className='route-candidate'+(i===state.selectedRoute?' on':'');
     const timeText=c.traffic.delayMin?`遅延込み 約${Math.round(c.min+c.traffic.delayMin)}分（+${Math.round(c.traffic.delayMin)}分）`:`通常 約${Math.round(c.min)}分`;
     const risk=c.audit.unknown?`未照合 ${Math.round(c.audit.unknownRate*100)}%`:'整合';
+    const highwayText=c.highway?.label || '一般道寄り';
     const tag=i===state.selectedRoute ? (state.routeConfirmed?'確定':'確認中') : i===0 ? '推奨' : '';
-    btn.innerHTML=`<div class="main"><span>候補${i+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分</span>${tag?`<span class="tag">${tag}</span>`:''}</div><div class="meta">${timeText} / <span class="risk">${risk}</span></div>`;
+    btn.innerHTML=`<div class="main"><span>候補${i+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分</span>${tag?`<span class="tag">${tag}</span>`:''}</div><div class="meta">${timeText} / ${escapeHtml(highwayText)} / <span class="risk">${risk}</span></div>`;
     btn.onclick=()=>{
       previewRouteCandidate(i,{scroll:true});
       renderRouteCandidates();
@@ -1929,7 +1953,7 @@ function previewRouteCandidate(index,options={}){
   routeConfirmName.textContent=`候補${index+1} 約${c.km.toFixed(1)}km / ${Math.round(c.min)}分`;
   const timeText=c.traffic.delayMin?`遅延込み 約${Math.round(c.min+c.traffic.delayMin)}分（+${Math.round(c.traffic.delayMin)}分）`:`通常 約${Math.round(c.min)}分`;
   const risk=c.audit.unknown?`未照合 ${Math.round(c.audit.unknownRate*100)}%`:'通行可能道路データと概ね整合';
-  routeConfirmMeta.textContent=`${timeText} / ${risk}`;
+  routeConfirmMeta.textContent=`${timeText} / ${c.highway?.label || '一般道寄り'} / ${risk}`;
   routeConfirm.classList.add('on');
   setRouteHint('地図上のルートを確認してください。問題なければ「確定して運転時へ」を押してください。',routeAuditType(c.audit));
   if(options.scroll) scrollRoutePanelTo(routeConfirm);
@@ -2218,6 +2242,22 @@ function setScalePreference(on,save=false){
   if(!state.scaleVisible && scaleControl._map) scaleControl.remove();
   if(save) localStorage.setItem(SCALE_PREF_KEY,state.scaleVisible?'1':'0');
 }
+function setHighwayPreference(on,save=false,reset=true){
+  state.highwayAllowed=!!on;
+  highwayToggle.classList.toggle('on',state.highwayAllowed);
+  highwayToggle.setAttribute('aria-pressed',String(state.highwayAllowed));
+  highwayToggle.querySelector('.title').textContent=`高速道路 ${state.highwayAllowed?'ON':'OFF'}`;
+  highwayToggle.querySelector('.desc').textContent=state.highwayAllowed?'高速道路を含む候補も表示します':'高速道路を避ける候補を優先します';
+  if(save) localStorage.setItem(HIGHWAY_PREF_KEY,state.highwayAllowed?'1':'0');
+  if(reset && state.routeCandidates.length){
+    clearRouteCandidatesOnly();
+    setRouteHint('高速道路条件を変更しました。もう一度ルート表示してください。','warn');
+  }
+}
+highwayToggle.onclick=()=>setHighwayPreference(!state.highwayAllowed,true);
+highwayToggle.addEventListener('keydown',e=>{
+  if(e.key==='Enter' || e.key===' '){e.preventDefault();highwayToggle.click();}
+});
 async function recalculateActiveRoute(){
   const origin=getRouteOrigin();
   const dest=state.destination || state.confirmedDestination;
@@ -2870,6 +2910,7 @@ initPB();
 initAlphaPreview();
 setVoicePreference(localStorage.getItem(VOICE_PREF_KEY)!=='0',false);
 setScalePreference(localStorage.getItem(SCALE_PREF_KEY)!=='0',false);
+setHighwayPreference(localStorage.getItem(HIGHWAY_PREF_KEY)!=='0',false,false);
 const restoredVehicle=restoreVehiclePreference();
 applyUrlParams();
 map.on('moveend zoomend', scheduleViewportRoadRefresh);
