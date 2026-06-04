@@ -414,8 +414,8 @@
     <div class="scope-note">赤丸が曲がり始点。50m以下相当の拡大時のみ表示します。</div>
   </div>
   <div class="map-status warn" id="gpsStatus" style="display:none"></div>
-  <button class="map-action secondary" id="followCurrent" type="button" title="運転中の現在地へ戻る">現在地へ</button>
-  <button class="map-action icon-only" id="gpsSite" type="button" title="GPS現在地へ移動して周辺道路を読み込み" aria-label="現在地を取得"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
+  <button class="map-action secondary" id="followCurrent" type="button" hidden title="運転中の現在地へ戻る">現在地へ</button>
+  <button class="map-action icon-only" id="gpsSite" type="button" title="現在地へ移動" aria-label="現在地へ移動"><span class="locate-cursor" aria-hidden="true"><span></span></span></button>
 </div>
 
 <div class="share-modal" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
@@ -1006,7 +1006,7 @@ document.getElementById('mapRefreshBtn')?.addEventListener('click',()=>loadVisib
 gpsSiteBtn.addEventListener('click',e=>{
   e.preventDefault();
   e.stopPropagation();
-  setSitePinFromGps();
+  handleLocateAction();
 });
 followCurrentBtn.addEventListener('click',e=>{
   e.preventDefault();
@@ -1240,8 +1240,12 @@ async function ensureRouteOriginForSearch(){
   }
 }
 function updateFollowCurrentButton(){
-  const visible=state.guiding || !!state.currentMarker;
-  followCurrentBtn.style.display=visible?'flex':'none';
+  followCurrentBtn.style.display='none';
+  followCurrentBtn.hidden=true;
+}
+function handleLocateAction(){
+  if(state.currentMarker || state.lastGps) returnToCurrentPosition();
+  else setSitePinFromGps();
 }
 function returnToCurrentPosition(){
   if(state.currentMarker){
