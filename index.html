@@ -930,6 +930,9 @@ function stopSharing(saveLogs){
   shareToggle.classList.remove('on'); shareToggle.querySelector('.title').textContent='位置共有 OFF';
 }
 async function handlePosition(latlng,fromGps){
+  const normalized=normalizeRouteLatLng(latlng);
+  if(!normalized) return;
+  latlng=normalized;
   const now=new Date();
   if(fromGps){
     if(state.lastGps){
@@ -1053,7 +1056,14 @@ function setSitePinFromGps(opts={}){
   }
   setGpsButtonLoading(true);
   navigator.geolocation.getCurrentPosition(async pos=>{
-    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const latlng=normalizeRouteLatLng({lat:pos.coords.latitude,lng:pos.coords.longitude});
+    if(!latlng){
+      const msg='GPSから有効な現在地を取得できませんでした。現在地ボタンを再試行してください。';
+      setGpsStatus(msg,'ng',false);
+      modeNotice.innerHTML=msg;
+      setGpsButtonLoading(false);
+      return;
+    }
     state.lastGps=latlng;
     setCurrentLocation(latlng,true);
     startLiveLocationWatch();
@@ -1083,7 +1093,8 @@ function setGpsButtonLoading(on){
 function startLiveLocationWatch(){
   if(state.locationWatchId!==null || !navigator.geolocation || !window.isSecureContext) return;
   state.locationWatchId=navigator.geolocation.watchPosition(pos=>{
-    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const latlng=normalizeRouteLatLng({lat:pos.coords.latitude,lng:pos.coords.longitude});
+    if(!latlng) return;
     handlePosition(latlng,true);
     setCurrentLocation(latlng,state.guiding);
   },err=>{
@@ -1123,37 +1134,97 @@ function gpsErrorMessage(err){
   if(code===3) return 'GPS取得失敗: 取得がタイムアウトしました。もう一度押してください。';
   return `GPS取得失敗: ${err?.message || '原因不明です。もう一度押してください。'}`;
 }
+function isValidRouteLatLng(latlng){
+  if(!latlng) return false;
+  const lat=Number(latlng.lat);
+  const lng=Number(latlng.lng);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if(Math.abs(lat)>90 || Math.abs(lng)>180) return false;
+  return Math.abs(lat)>0.000001 || Math.abs(lng)>0.000001;
+}
+function normalizeRouteLatLng(latlng){
+  if(!isValidRouteLatLng(latlng)) return null;
+  return {lat:Number(latlng.lat),lng:Number(latlng.lng)};
+}
 function setSitePin(latlng,focus,source='manual'){
-  state.pin=latlng;
+  const valid=normalizeRouteLatLng(latlng);
+  if(!valid){
+    state.pin=null;
+    state.pinSource=null;
+    if(state.pinMarker){map.removeLayer(state.pinMarker); state.pinMarker=null}
+    siteHint.textContent='出発地点を取得できていません。現在地ボタン、または地図で選択してください。';
+    siteHint.className='hint ng';
+    updateVehiclePrompt();
+    return false;
+  }
+  state.pin=valid;
   state.pinSource=source;
-  if(state.pinMarker) state.pinMarker.setLatLng(latlng);
-  else state.pinMarker=L.marker(latlng,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
-  if(focus) map.setView(latlng,16);
-  siteHint.textContent=`出発地点: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+  if(state.pinMarker) state.pinMarker.setLatLng(valid);
+  else state.pinMarker=L.marker(valid,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
+  if(focus) map.setView(valid,16);
+  siteHint.textContent=`出発地点: ${valid.lat.toFixed(6)}, ${valid.lng.toFixed(6)}`;
   siteHint.className='hint ok';
   updateVehiclePrompt();
   updateReadout();
+  return true;
 }
 function setCurrentLocation(latlng,follow=false){
-  if(state.currentMarker) state.currentMarker.setLatLng(latlng);
-  else state.currentMarker=L.marker(latlng,{icon:currentVehicleIcon(),title:'現在地'}).addTo(map);
-  if(follow) map.panTo(latlng,{animate:true,duration:.35});
+  const valid=normalizeRouteLatLng(latlng);
+  if(!valid) return false;
+  if(state.currentMarker) state.currentMarker.setLatLng(valid);
+  else state.currentMarker=L.marker(valid,{icon:currentVehicleIcon(),title:'現在地'}).addTo(map);
+  if(follow) map.panTo(valid,{animate:true,duration:.35});
   updateFollowCurrentButton();
-  updateGuidance(latlng);
+  updateGuidance(valid);
+  return true;
 }
 function latestCurrentLatLng(){
   if(state.currentMarker){
     const p=state.currentMarker.getLatLng();
-    return {lat:p.lat,lng:p.lng};
+    return normalizeRouteLatLng({lat:p.lat,lng:p.lng});
   }
-  if(state.lastGps) return {lat:state.lastGps.lat,lng:state.lastGps.lng};
+  if(state.lastGps) return normalizeRouteLatLng({lat:state.lastGps.lat,lng:state.lastGps.lng});
   return null;
 }
 function getRouteOrigin(syncPin=false){
   const current=latestCurrentLatLng();
-  const origin=state.pinSource==='manual' && state.pin ? state.pin : (current || state.pin);
+  const pin=normalizeRouteLatLng(state.pin);
+  const origin=state.pinSource==='manual' && pin ? pin : (current || pin);
   if(!origin) return null;
   return origin;
+}
+function requestCurrentPosition(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation) return reject(new Error('このブラウザではGPSを利用できません。'));
+    if(!window.isSecureContext) return reject(new Error('GPSはHTTPSまたはlocalhost系URLでのみ使えます。'));
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const latlng=normalizeRouteLatLng({lat:pos.coords.latitude,lng:pos.coords.longitude});
+      if(!latlng) return reject(new Error('GPSから有効な現在地を取得できませんでした。'));
+      resolve(latlng);
+    },reject,{enableHighAccuracy:true,maximumAge:5000,timeout:9000});
+  });
+}
+async function ensureRouteOriginForSearch(){
+  const origin=getRouteOrigin();
+  if(origin) return origin;
+  setRouteHint('出発地点を確認しています...','warn');
+  try{
+    const latlng=await requestCurrentPosition();
+    state.lastGps=latlng;
+    setCurrentLocation(latlng,true);
+    startLiveLocationWatch();
+    setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`,'ok',true);
+    if(state.pinSource!=='manual'){
+      siteHint.textContent='GPS現在地から検索します。出発地点を固定する場合は地図で選択してください。';
+      siteHint.className='hint ok';
+    }
+    return latlng;
+  }catch(err){
+    const message=err?.code ? gpsErrorMessage(err) : (err?.message || '出発地点を取得できませんでした。');
+    setGpsStatus(message,'ng',false);
+    setRouteHint(`${message} 現在地ボタン、または地図で出発地点を選択してから検索してください。`,'ng');
+    return null;
+  }
 }
 function updateFollowCurrentButton(){
   const visible=state.guiding || !!state.currentMarker;
@@ -1175,7 +1246,13 @@ function returnToCurrentPosition(){
   followCurrentBtn.disabled=true;
   followCurrentBtn.textContent='取得中';
   navigator.geolocation.getCurrentPosition(pos=>{
-    const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const latlng=normalizeRouteLatLng({lat:pos.coords.latitude,lng:pos.coords.longitude});
+    if(!latlng){
+      setGpsStatus('GPSから有効な現在地を取得できませんでした。','ng',false);
+      followCurrentBtn.disabled=false;
+      followCurrentBtn.textContent='現在地へ';
+      return;
+    }
     setCurrentLocation(latlng,true);
     setGpsStatus('現在地へ戻りました。','ok',true);
     followCurrentBtn.disabled=false;
@@ -1479,9 +1556,8 @@ async function showRouteToDestination(){
     showVehicleModal();
     return;
   }
-  const origin=getRouteOrigin();
+  const origin=await ensureRouteOriginForSearch();
   if(!origin){
-    setRouteHint('先に右下の現在地ボタン、または地図タップで出発地点を置いてください。','ng');
     return;
   }
   if(!q){
@@ -2523,7 +2599,7 @@ function applyUrlParams(){
     refresh();
   }
   const lat=+params.get('lat'), lng=+params.get('lng');
-  if(Number.isFinite(lat)&&Number.isFinite(lng)){
+  if(isValidRouteLatLng({lat,lng})){
     setSitePin({lat,lng},true,'url');
   }
   const room=params.get('room');
@@ -2531,7 +2607,7 @@ function applyUrlParams(){
 }
 map.on('click',async e=>{
   if(state.pendingMode==='sitePick'){
-    setSitePin(e.latlng,true,'manual');
+    if(!setSitePin(e.latlng,true,'manual')) return;
     state.pendingMode='idle'; updateTapMode();
     await loadRoadsAround(e.latlng);
     maybeRecalculateRoute();
@@ -2539,7 +2615,7 @@ map.on('click',async e=>{
   }
   if(state.pendingMode==='self'){
     await handlePosition(e.latlng,false);
-    setCurrentLocation(e.latlng,true);
+    if(!setCurrentLocation(e.latlng,true)) return;
     state.pendingMode='idle'; updateTapMode(); return;
   }
   if(state.pendingMode==='meet'){
