@@ -300,12 +300,11 @@
     </section>
 
     <section class="view" data-view="drive">
-    <div class="sect-label">運転時</div>
+    <div class="sect-label">直近指示</div>
     <div class="drive-card" id="driveSummary">
       <div class="primary">ルート未選択</div>
       <div class="secondary">ルート選定で行き先を指定すると、案内と現在地追従をここに表示します。</div>
     </div>
-    <div class="alpha-note">案内開始後は現在地に追従します。音声案内のON/OFFは管理画面で切り替えます。</div>
     <div class="guide-box" id="guideBox" style="display: none;">
       <div class="guide-controls">
         <button class="btn subtle" id="guideBtn" type="button">案内開始</button>
@@ -2143,7 +2142,7 @@ function updateDriveSummary(){
   const step=state.routeSteps[state.currentStep] || state.routeSteps[0];
   primary.textContent=step?.instruction || 'ルート案内中';
   const dest=state.destination?.label || destInput.value.trim() || '行き先';
-  secondary.textContent=`${dest} までの案内${state.guiding?'を実行中':'を待機中'}。必要な共有は下のボタンから登録できます。`;
+  secondary.textContent=`${dest} までの案内${state.guiding?'を実行中':'を待機中'}。`;
 }
 guideBtn.onclick=()=> state.guiding ? stopGuidance(true) : startGuidance();
 rerouteBtn.onclick=()=>recalculateActiveRoute();
@@ -2487,13 +2486,9 @@ function turnSweepSvg(angle,profile,side='right',options={}){
 }
 function updateTurnScope(){
   if(!turnScope || !turnScopeBody) return;
-  const sim=state.turnSim;
-  const show=!!sim && map.getZoom()>=18;
-  turnScope.classList.toggle('on',show);
-  turnScope.setAttribute('aria-hidden',String(!show));
-  if(!show){turnScopeBody.innerHTML=''; return}
-  const scopeSvg=turnSweepSvg(0,sim.profile,sim.step?.turnSide,{centerOnStart:true});
-  turnScopeBody.replaceChildren(scopeSvg);
+  turnScope.classList.remove('on');
+  turnScope.setAttribute('aria-hidden','true');
+  turnScopeBody.innerHTML='';
 }
 function boundsFromCenterMeters(center,size){
   const north=offsetLatLng(center,0,size/2), south=offsetLatLng(center,0,-size/2);
@@ -2659,6 +2654,7 @@ map.on('click',async e=>{
     await pb.collection('markers').create({room_id:state.room.id,kind,lat:e.latlng.lat,lng:e.latlng.lng,note,author:state.displayName}).catch(()=>{});
     state.pendingMode='idle'; updateTapMode(); return;
   }
+  if(state.guiding) return;
   showTapInfo(e.latlng);
 });
 function sitePinIcon(kind='site'){
