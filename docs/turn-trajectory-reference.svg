@@ -1,0 +1,501 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="712" height="2514" viewBox="0 0 712 2514"><rect width="100%" height="100%" fill="#e2e8f0"/><text x="24" y="34" font-size="20" font-weight="800" fill="#0f172a">車両軌跡SVG 元図見本</text><text x="24" y="56" font-size="12" fill="#475569">黒三角が車両前方です。左折は黄色車両が左、右折は黄色車両が右を向きます。</text><g transform="translate(24 74)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">中型 / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.3m 高3m 重8t / 推定長8.7m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 9.5 8.526 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -8.526 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="5.98" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.65 8.526 L 10.65 0 A 10.995 10.995 0 0 0 0 -10.995 L -8.526 -10.995" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 7.43 8.526 L 7.43 0 A 7.43 7.43 0 0 0 0 -7.43 L -8.526 -7.43" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 9.5 8.526 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -8.526 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(9.50 8.53) rotate(0.0)" opacity="0.84"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.50 2.84) rotate(0.0)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.22 -2.27) rotate(-13.8)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(7.11 -6.30) rotate(-41.5)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(3.37 -8.88) rotate(-69.2)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.42 -9.50) rotate(-90.0)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(8.53 -9.50) rotate(-90.0)" opacity="0.84"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 74)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">中型 / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.3m 高3m 重8t / 推定長8.7m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -9.5 8.526 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 8.526 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="5.98" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.65 8.526 L -10.65 0 A 10.995 10.995 0 0 1 0 -10.995 L 8.526 -10.995" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -7.43 8.526 L -7.43 0 A 7.43 7.43 0 0 1 0 -7.43 L 8.526 -7.43" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -9.5 8.526 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 8.526 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-9.50 8.53) rotate(0.0)" opacity="0.84"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.50 2.84) rotate(0.0)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.22 -2.27) rotate(13.8)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-7.11 -6.30) rotate(41.5)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-3.37 -8.88) rotate(69.2)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.42 -9.50) rotate(90.0)" opacity="0.38"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><g transform="translate(8.53 -9.50) rotate(90.0)" opacity="0.84"><rect x="-1.15" y="-4.35" width="2.30" height="8.70" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.97" y="-3.80" width="1.94" height="1.91" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.15 L -0.64 -3.30 L 0.64 -3.30 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.43 -2.44 H 1.43 M -1.43 2.44 H 1.43" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 316)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">大型 / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重25t / 推定長11.5m 半径13.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 13.5 11.27 L 13.5 0 A 13.5 13.5 0 0 0 0 -13.5 L -11.27 -13.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M 14.75 11.27 L 14.75 0 A 15.125 15.125 0 0 0 0 -15.125 L -11.27 -15.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.78 11.27 L 10.78 0 A 10.78 10.78 0 0 0 0 -10.78 L -11.27 -10.78" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 13.5 11.27 L 13.5 0 A 13.5 13.5 0 0 0 0 -13.5 L -11.27 -13.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(13.50 11.27) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.50 3.76) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.11 -3.23) rotate(-13.8)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(10.10 -8.95) rotate(-41.5)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(4.79 -12.62) rotate(-69.2)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.88 -13.50) rotate(-90.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(11.27 -13.50) rotate(-90.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 316)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">大型 / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重25t / 推定長11.5m 半径13.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -13.5 11.27 L -13.5 0 A 13.5 13.5 0 0 1 0 -13.5 L 11.27 -13.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M -14.75 11.27 L -14.75 0 A 15.125 15.125 0 0 1 0 -15.125 L 11.27 -15.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.78 11.27 L -10.78 0 A 10.78 10.78 0 0 1 0 -10.78 L 11.27 -10.78" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -13.5 11.27 L -13.5 0 A 13.5 13.5 0 0 1 0 -13.5 L 11.27 -13.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-13.50 11.27) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.50 3.76) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.11 -3.23) rotate(13.8)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-10.10 -8.95) rotate(41.5)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-4.79 -12.62) rotate(69.2)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.88 -13.50) rotate(90.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(11.27 -13.50) rotate(90.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 558)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">特殊 / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3m 高3.8m 重30t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="7.80" stroke-linecap="round" stroke-linejoin="round"/><path d="M 19 14.209999999999999 L 19 0 A 19.45 19.45 0 0 0 0 -19.45 L -14.209999999999999 -19.45" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 13.998 14.209999999999999 L 13.998 0 A 13.998 13.998 0 0 0 0 -13.998 L -14.209999999999999 -13.998" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(16.99 -4.19) rotate(-13.8)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.10 -11.60) rotate(-41.5)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(6.21 -16.36) rotate(-69.2)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(-90.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(-90.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 558)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">特殊 / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3m 高3.8m 重30t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="7.80" stroke-linecap="round" stroke-linejoin="round"/><path d="M -19 14.209999999999999 L -19 0 A 19.45 19.45 0 0 1 0 -19.45 L 14.209999999999999 -19.45" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -13.998 14.209999999999999 L -13.998 0 A 13.998 13.998 0 0 1 0 -13.998 L 14.209999999999999 -13.998" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-16.99 -4.19) rotate(13.8)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.10 -11.60) rotate(41.5)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-6.21 -16.36) rotate(69.2)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(90.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(90.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 800)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">4tユニック車 / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.2m 高3m 重8t / 推定長8.3m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 9.5 8.134 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -8.134 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="5.72" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.6 8.134 L 10.6 0 A 10.93 10.93 0 0 0 0 -10.93 L -8.134 -10.93" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 7.52 8.134 L 7.52 0 A 7.52 7.52 0 0 0 0 -7.52 L -8.134 -7.52" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 9.5 8.134 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -8.134 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(9.50 8.13) rotate(0.0)" opacity="0.84"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.50 2.71) rotate(0.0)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.22 -2.27) rotate(-13.8)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(7.11 -6.30) rotate(-41.5)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(3.37 -8.88) rotate(-69.2)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.36 -9.50) rotate(-90.0)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(8.13 -9.50) rotate(-90.0)" opacity="0.84"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 800)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">4tユニック車 / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.2m 高3m 重8t / 推定長8.3m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -9.5 8.134 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 8.134 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="5.72" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.6 8.134 L -10.6 0 A 10.93 10.93 0 0 1 0 -10.93 L 8.134 -10.93" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -7.52 8.134 L -7.52 0 A 7.52 7.52 0 0 1 0 -7.52 L 8.134 -7.52" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -9.5 8.134 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 8.134 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-9.50 8.13) rotate(0.0)" opacity="0.84"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.50 2.71) rotate(0.0)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.22 -2.27) rotate(13.8)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-7.11 -6.30) rotate(41.5)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-3.37 -8.88) rotate(69.2)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.36 -9.50) rotate(90.0)" opacity="0.38"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><g transform="translate(8.13 -9.50) rotate(90.0)" opacity="0.84"><rect x="-1.10" y="-4.15" width="2.20" height="8.30" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-0.92" y="-3.60" width="1.84" height="1.83" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -3.95 L -0.62 -3.10 L 0.62 -3.10 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.36 -2.32 H 1.36 M -1.36 2.32 H 1.36" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 1042)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">10tダンプ / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3m 重20t / 推定長9.5m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 9.5 9.31 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -9.31 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.75 9.31 L 10.75 0 A 11.125 11.125 0 0 0 0 -11.125 L -9.31 -11.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 7.25 9.31 L 7.25 0 A 7.25 7.25 0 0 0 0 -7.25 L -9.31 -7.25" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 9.5 9.31 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -9.31 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(9.50 9.31) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.50 3.10) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.22 -2.27) rotate(-13.8)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(7.11 -6.30) rotate(-41.5)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(3.37 -8.88) rotate(-69.2)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.55 -9.50) rotate(-90.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.31 -9.50) rotate(-90.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 1042)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">10tダンプ / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3m 重20t / 推定長9.5m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -9.5 9.31 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 9.31 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.75 9.31 L -10.75 0 A 11.125 11.125 0 0 1 0 -11.125 L 9.31 -11.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -7.25 9.31 L -7.25 0 A 7.25 7.25 0 0 1 0 -7.25 L 9.31 -7.25" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -9.5 9.31 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 9.31 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-9.50 9.31) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.50 3.10) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.22 -2.27) rotate(13.8)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-7.11 -6.30) rotate(41.5)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-3.37 -8.88) rotate(69.2)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.55 -9.50) rotate(90.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.31 -9.50) rotate(90.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 1284)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">生コン車(大型) / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.6m 重20t / 推定長9.5m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 9.5 9.31 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -9.31 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.75 9.31 L 10.75 0 A 11.125 11.125 0 0 0 0 -11.125 L -9.31 -11.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 7.25 9.31 L 7.25 0 A 7.25 7.25 0 0 0 0 -7.25 L -9.31 -7.25" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 9.5 9.31 L 9.5 0 A 9.5 9.5 0 0 0 0 -9.5 L -9.31 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(9.50 9.31) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.50 3.10) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.22 -2.27) rotate(-13.8)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(7.11 -6.30) rotate(-41.5)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(3.37 -8.88) rotate(-69.2)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.55 -9.50) rotate(-90.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.31 -9.50) rotate(-90.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 1284)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">生コン車(大型) / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.6m 重20t / 推定長9.5m 半径9.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -9.5 9.31 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 9.31 -9.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.75 9.31 L -10.75 0 A 11.125 11.125 0 0 1 0 -11.125 L 9.31 -11.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -7.25 9.31 L -7.25 0 A 7.25 7.25 0 0 1 0 -7.25 L 9.31 -7.25" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -9.5 9.31 L -9.5 0 A 9.5 9.5 0 0 1 0 -9.5 L 9.31 -9.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-9.50 9.31) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.50 3.10) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-9.22 -2.27) rotate(13.8)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-7.11 -6.30) rotate(41.5)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-3.37 -8.88) rotate(69.2)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.55 -9.50) rotate(90.0)" opacity="0.38"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(9.31 -9.50) rotate(90.0)" opacity="0.84"><rect x="-1.25" y="-4.75" width="2.50" height="9.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-4.20" width="2.14" height="2.09" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -4.55 L -0.70 -3.70 L 0.70 -3.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -2.66 H 1.55 M -1.55 2.66 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 1526)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">コンクリポンプ車 / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重25t / 推定長11.5m 半径13.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 13.5 11.27 L 13.5 0 A 13.5 13.5 0 0 0 0 -13.5 L -11.27 -13.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M 14.75 11.27 L 14.75 0 A 15.125 15.125 0 0 0 0 -15.125 L -11.27 -15.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 10.78 11.27 L 10.78 0 A 10.78 10.78 0 0 0 0 -10.78 L -11.27 -10.78" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 13.5 11.27 L 13.5 0 A 13.5 13.5 0 0 0 0 -13.5 L -11.27 -13.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(13.50 11.27) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.50 3.76) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.11 -3.23) rotate(-13.8)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(10.10 -8.95) rotate(-41.5)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(4.79 -12.62) rotate(-69.2)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.88 -13.50) rotate(-90.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(11.27 -13.50) rotate(-90.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 1526)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">コンクリポンプ車 / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重25t / 推定長11.5m 半径13.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -13.5 11.27 L -13.5 0 A 13.5 13.5 0 0 1 0 -13.5 L 11.27 -13.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M -14.75 11.27 L -14.75 0 A 15.125 15.125 0 0 1 0 -15.125 L 11.27 -15.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -10.78 11.27 L -10.78 0 A 10.78 10.78 0 0 1 0 -10.78 L 11.27 -10.78" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -13.5 11.27 L -13.5 0 A 13.5 13.5 0 0 1 0 -13.5 L 11.27 -13.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-13.50 11.27) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.50 3.76) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.11 -3.23) rotate(13.8)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-10.10 -8.95) rotate(41.5)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-4.79 -12.62) rotate(69.2)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(1.88 -13.50) rotate(90.0)" opacity="0.38"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(11.27 -13.50) rotate(90.0)" opacity="0.84"><rect x="-1.25" y="-5.75" width="2.50" height="11.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-5.20" width="2.14" height="2.53" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -5.55 L -0.70 -4.70 L 0.70 -4.70 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -3.22 H 1.55 M -1.55 3.22 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 1768)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">ラフター25t / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3m 高3.7m 重33t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="7.80" stroke-linecap="round" stroke-linejoin="round"/><path d="M 19 14.209999999999999 L 19 0 A 19.45 19.45 0 0 0 0 -19.45 L -14.209999999999999 -19.45" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 13.998 14.209999999999999 L 13.998 0 A 13.998 13.998 0 0 0 0 -13.998 L -14.209999999999999 -13.998" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(16.99 -4.19) rotate(-13.8)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.10 -11.60) rotate(-41.5)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(6.21 -16.36) rotate(-69.2)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(-90.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(-90.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 1768)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">ラフター25t / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3m 高3.7m 重33t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="7.80" stroke-linecap="round" stroke-linejoin="round"/><path d="M -19 14.209999999999999 L -19 0 A 19.45 19.45 0 0 1 0 -19.45 L 14.209999999999999 -19.45" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -13.998 14.209999999999999 L -13.998 0 A 13.998 13.998 0 0 1 0 -13.998 L 14.209999999999999 -13.998" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-16.99 -4.19) rotate(13.8)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.10 -11.60) rotate(41.5)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-6.21 -16.36) rotate(69.2)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(90.0)" opacity="0.38"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(90.0)" opacity="0.84"><rect x="-1.50" y="-7.25" width="3.00" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.32" y="-6.70" width="2.64" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.84 -6.20 L 0.84 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.86 -4.06 H 1.86 M -1.86 4.06 H 1.86" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 2010)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">セミトレーラー / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重36t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M 18.75 14.209999999999999 L 18.75 0 A 19.125 19.125 0 0 0 0 -19.125 L -14.209999999999999 -19.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 13.76 14.209999999999999 L 13.76 0 A 13.76 13.76 0 0 0 0 -13.76 L -14.209999999999999 -13.76" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(16.99 -4.19) rotate(-13.8)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.10 -11.60) rotate(-41.5)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(6.21 -16.36) rotate(-69.2)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(-90.0)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(-90.0)" opacity="0.84"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 2010)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">セミトレーラー / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅2.5m 高3.8m 重36t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="6.50" stroke-linecap="round" stroke-linejoin="round"/><path d="M -18.75 14.209999999999999 L -18.75 0 A 19.125 19.125 0 0 1 0 -19.125 L 14.209999999999999 -19.125" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -13.76 14.209999999999999 L -13.76 0 A 13.76 13.76 0 0 1 0 -13.76 L 14.209999999999999 -13.76" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-16.99 -4.19) rotate(13.8)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.10 -11.60) rotate(41.5)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-6.21 -16.36) rotate(69.2)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(90.0)" opacity="0.38"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(90.0)" opacity="0.84"><rect x="-1.25" y="-7.25" width="2.50" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.07" y="-6.70" width="2.14" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.70 -6.20 L 0.70 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.55 -4.06 H 1.55 M -1.55 4.06 H 1.55" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(24 2252)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">重機運搬(低床) / 左折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3.2m 高3.5m 重40t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="8.32" stroke-linecap="round" stroke-linejoin="round"/><path d="M 19.1 14.209999999999999 L 19.1 0 A 19.58 19.58 0 0 0 0 -19.58 L -14.209999999999999 -19.58" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M 14.0932 14.209999999999999 L 14.0932 0 A 14.0932 14.0932 0 0 0 0 -14.0932 L -14.209999999999999 -14.0932" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M 17.5 14.209999999999999 L 17.5 0 A 17.5 17.5 0 0 0 0 -17.5 L -14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(16.99 -4.19) rotate(-13.8)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(13.10 -11.60) rotate(-41.5)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(6.21 -16.36) rotate(-69.2)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(-90.0)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(-90.0)" opacity="0.84"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g><g transform="translate(368 2252)"><rect x="0" y="0" width="320" height="220" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="16" y="24" font-size="14" font-weight="700" fill="#0f172a">重機運搬(低床) / 右折</text>
+<text x="16" y="44" font-size="11" fill="#475569">幅3.2m 高3.5m 重40t / 推定長14.5m 半径17.5m</text>
+<g transform="translate(160 126) scale(4.2)"><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="rgba(255,77,87,.20)" stroke-width="8.32" stroke-linecap="round" stroke-linejoin="round"/><path d="M -19.1 14.209999999999999 L -19.1 0 A 19.58 19.58 0 0 1 0 -19.58 L 14.209999999999999 -19.58" fill="none" stroke="#1d4ed8" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"/><path d="M -14.0932 14.209999999999999 L -14.0932 0 A 14.0932 14.0932 0 0 1 0 -14.0932 L 14.209999999999999 -14.0932" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.2"/><path d="M -17.5 14.209999999999999 L -17.5 0 A 17.5 17.5 0 0 1 0 -17.5 L 14.209999999999999 -17.5" fill="none" stroke="#fff" stroke-width=".38" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.4 1.1"/><g transform="translate(-17.50 14.21) rotate(0.0)" opacity="0.84"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#3aa0ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-17.50 4.74) rotate(0.0)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-16.99 -4.19) rotate(13.8)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-13.10 -11.60) rotate(41.5)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(-6.21 -16.36) rotate(69.2)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(2.37 -17.50) rotate(90.0)" opacity="0.38"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#8bd3ff" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><g transform="translate(14.21 -17.50) rotate(90.0)" opacity="0.84"><rect x="-1.60" y="-7.25" width="3.20" height="14.50" rx=".45" fill="#ffd400" stroke="#0e151c" stroke-width=".22"/>
+<rect x="-1.42" y="-6.70" width="2.84" height="3.19" rx=".25" fill="rgba(255,255,255,.75)"/>
+<path d="M 0 -7.05 L -0.90 -6.20 L 0.90 -6.20 Z" fill="#0e151c" opacity=".9"/>
+<path d="M -1.98 -4.06 H 1.98 M -1.98 4.06 H 1.98" stroke="#111827" stroke-width=".22"/></g><circle cx="0" cy="0" r="1.8" fill="#ff4d57" stroke="#fff" stroke-width=".55"/></g>
+<text x="16" y="198" font-size="10" fill="#475569">青: 進入時 / 黄: 退出時 / 黒三角: 車両前方</text></g></svg>
