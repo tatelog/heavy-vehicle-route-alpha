@@ -1086,8 +1086,6 @@ async function setSiteFromInput(){
   try{
     const site=await geocodeDestination(q);
     setSitePin({lat:site.lat,lng:site.lng},true,'manual');
-    areaLabel.textContent='出発地点周辺を読み込み中';
-    await loadRoadsAround({lat:site.lat,lng:site.lng});
     maybeRecalculateRoute();
   }catch(e){
     siteHint.textContent=`出発地点の設定に失敗しました: ${e?.message || '原因不明'}`;
@@ -1139,7 +1137,6 @@ function setSitePinFromGps(opts={}){
       siteHint.textContent='GPS現在地から検索します。出発地点を固定する場合は地図で選択してください。';
       siteHint.className='hint ok';
     }
-    await loadRoadsAround(latlng);
     maybeRecalculateRoute();
     setGpsButtonLoading(false);
   },err=>{
@@ -1375,7 +1372,6 @@ function roadBoundsKey(box){
 }
 function scheduleViewportRoadRefresh(){
   clearTimeout(state.viewportRoadTimer);
-  state.viewportRoadTimer=setTimeout(()=>loadVisibleRoads(),650);
   refresh();
 }
 async function loadVisibleRoads(force=false){
@@ -2729,7 +2725,6 @@ map.on('click',async e=>{
   if(state.pendingMode==='sitePick'){
     if(!setSitePin(e.latlng,true,'manual')) return;
     state.pendingMode='idle'; updateTapMode();
-    await loadRoadsAround(e.latlng);
     maybeRecalculateRoute();
     return;
   }
@@ -2927,3 +2922,4 @@ if(activeVeh()){
 
 
 </body></html>
+
