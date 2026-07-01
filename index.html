@@ -1130,9 +1130,9 @@ function setSitePinFromGps(opts={}){
     state.lastGps=latlng;
     setCurrentLocation(latlng,true);
     startLiveLocationWatch();
-    areaLabel.textContent='現在地周辺を読み込み中';
-    setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}。周辺道路を読み込んでいます...`, 'ok', false);
-    modeNotice.innerHTML='GPS現在地を確認しました。周辺道路を読み込んでいます。';
+    areaLabel.textContent='現在地を設定しました';
+    setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`, 'ok', false);
+    modeNotice.innerHTML='GPS現在地を確認しました。行き先を入力してルート検索できます。';
     if(state.pinSource!=='manual'){
       siteHint.textContent='GPS現在地から検索します。出発地点を固定する場合は地図で選択してください。';
       siteHint.className='hint ok';
