@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使い方ガイド | 大型車両 通行ルート共有ツール</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #141b22;
+    --surface: #1b242d;
+    --line: #2b3742;
+    --text: #e9eef3;
+    --muted: #8a98a5;
+    --hiviz: #ffd400;
+    --pass: #34d27b;
+    --fail: #ff4d57;
+    --tight: #ff9f1c;
+    --blue: #3aa0ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+    line-height: 1.7;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header .logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hiviz);
+  }
+  header .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  header a.app-link {
+    margin-left: auto;
+    background: var(--hiviz);
+    color: #0d1117;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--hiviz);
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  h2:first-child { margin-top: 0; }
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 24px 0 8px;
+  }
+  p { color: var(--muted); margin-bottom: 12px; }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .step-num {
+    background: var(--hiviz);
+    color: #0d1117;
+    font-weight: 700;
+    font-size: 15px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-body h3 { margin: 0 0 6px; font-size: 15px; }
+  .step-body p { margin: 0; font-size: 14px; }
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .badge.pass { background: rgba(52,210,123,.15); color: var(--pass); border: 1px solid rgba(52,210,123,.3); }
+  .badge.fail { background: rgba(255,77,87,.15); color: var(--fail); border: 1px solid rgba(255,77,87,.3); }
+  .badge.tight { background: rgba(255,159,28,.15); color: var(--tight); border: 1px solid rgba(255,159,28,.3); }
+  .badge.blue { background: rgba(58,160,255,.15); color: var(--blue); border: 1px solid rgba(58,160,255,.3); }
+  .marker-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .marker-table th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 600;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+  .marker-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .marker-table tr:last-child td { border-bottom: none; }
+  .marker-table .icon { font-size: 18px; }
+  .notice {
+    background: rgba(255,212,0,.08);
+    border: 1px solid rgba(255,212,0,.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 12px;
+  }
+  .notice p { color: var(--text); margin: 0; font-size: 14px; }
+  .notice p + p { margin-top: 6px; }
+  .feedback-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .feedback-box p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .feedback-box a {
+    display: inline-block;
+    background: var(--hiviz);
+    color: #0d1117;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  @media (max-width: 600px) {
+    header { flex-wrap: wrap; }
+    header a.app-link { margin-left: 0; width: 100%; text-align: center; margin-top: 8px; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">大型車両 通行ルート共有ツール</div>
+    <div class="subtitle">使い方ガイド（アルファ版）</div>
+  </div>
+  <a class="app-link" href="../">アプリを開く →</a>
+</header>
+
+<main>
+
+  <h2>このツールについて</h2>
+  <p>大型車両（トラック・重機など）が通行できる道路かどうかを確認しながらルートを探せるツールです。一般のカーナビでは通行できない橋や狭い道に案内されてしまう問題を解消することを目指しています。</p>
+  <p>国土交通省のオープンデータをもとに通行可能道路を表示し、現場の情報をマーカーで共有しながらルートを確認できます。</p>
+  <div class="notice">
+    <p>⚠️ 現在はアルファ版のため、データの範囲・精度に制限があります。通行可否は必ずご自身でも確認してください。</p>
+  </div>
+
+  <h2>基本的な使い方</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>現在地を設定する</h3>
+        <p>画面右下の「現在地」ボタン（📍）をタップすると、地図に出発地点のピンが置かれます。GPS が使えない場合は、地図を長押し（PC はダブルクリック）しても出発地を指定できます。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>行き先を入力する</h3>
+        <p>画面上部の検索バーに目的地の住所や施設名を入力します。候補が表示されたら選択してください。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>ルート候補を確認する</h3>
+        <p>複数のルート候補が表示されます。それぞれの距離・所要時間と道路状況を確認して、通行するルートを選択してください。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>案内を開始する</h3>
+        <p>「案内開始」ボタンをタップするとターンバイターンのナビゲーションが始まります。交差点手前では「曲がり確認」ボタンが表示され、曲がり角のシミュレーションも確認できます。</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>地図上の色の見方</h2>
+  <p>地図上の道路は通行可否に応じて色が変わります。</p>
+  <div class="badge-row">
+    <span class="badge pass">■ 緑：通行OK</span>
+    <span class="badge fail">■ 赤：通行不可</span>
+    <span class="badge tight">■ オレンジ：注意・要確認</span>
+    <span class="badge blue">■ 青：データなし</span>
+  </div>
+  <p style="margin-top:12px;">ルート上にオレンジ（通行可能データと一致しない区間）が含まれる場合は、現地での事前確認をお勧めします。</p>
+
+  <h2>現場マーカーの共有</h2>
+  <p>地図上で長押し（PC はダブルクリック）すると、現場情報のマーカーを置けます。チームで共有されるため、他の方の投稿も確認できます。</p>
+  <table class="marker-table">
+    <thead>
+      <tr>
+        <th>マーカー</th>
+        <th>意味</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="icon">🚧</td><td>工事中・通行注意</td></tr>
+      <tr><td class="icon">⛔</td><td>通行止め・封鎖</td></tr>
+      <tr><td class="icon">🚗</td><td>渋滞・混雑</td></tr>
+      <tr><td class="icon">⚠️</td><td>道幅が狭い</td></tr>
+    </tbody>
+  </table>
+
+  <h2>ご意見・フィードバックをお聞かせください</h2>
+  <p>アルファ版の改善にご協力ください。使ってみて気になった点や改善してほしい機能など、どんな小さなことでも歓迎しています。</p>
+  <div class="feedback-box">
+    <p>お気づきの点は下記アドレスまでメールでお送りください。</p>
+    <a href="mailto:ishikawa.yutaka@tatelog.biz">フィードバックを送る</a>
+  </div>
+
+</main>
+</body>
+</html>
