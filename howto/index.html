@@ -17,6 +17,8 @@
     --fail: #ff4d57;
     --tight: #ff9f1c;
     --blue: #3aa0ff;
+    --road-orange: #ff8a00;
+    --road-gray: #9aa7b3;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -106,46 +108,25 @@
   }
   .step-body h3 { margin: 0 0 6px; font-size: 15px; }
   .step-body p { margin: 0; font-size: 14px; }
-  .badge-row {
+  .legend-row {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
     margin-top: 12px;
   }
-  .badge {
-    display: inline-flex;
+  .legend-item {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 700;
-  }
-  .badge.pass { background: rgba(52,210,123,.15); color: var(--pass); border: 1px solid rgba(52,210,123,.3); }
-  .badge.fail { background: rgba(255,77,87,.15); color: var(--fail); border: 1px solid rgba(255,77,87,.3); }
-  .badge.tight { background: rgba(255,159,28,.15); color: var(--tight); border: 1px solid rgba(255,159,28,.3); }
-  .badge.blue { background: rgba(58,160,255,.15); color: var(--blue); border: 1px solid rgba(58,160,255,.3); }
-  .marker-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12px;
+    gap: 12px;
     font-size: 14px;
-  }
-  .marker-table th {
-    background: var(--surface);
-    color: var(--muted);
-    font-weight: 600;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--line);
-  }
-  .marker-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--line);
     color: var(--muted);
   }
-  .marker-table tr:last-child td { border-bottom: none; }
-  .marker-table .icon { font-size: 18px; }
+  .legend-swatch {
+    width: 36px;
+    height: 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
   .notice {
     background: rgba(255,212,0,.08);
     border: 1px solid rgba(255,212,0,.3);
@@ -155,6 +136,16 @@
   }
   .notice p { color: var(--text); margin: 0; font-size: 14px; }
   .notice p + p { margin-top: 6px; }
+  .tip-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .tip-box b { color: var(--text); }
   .feedback-box {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -195,9 +186,9 @@
 
   <h2>このツールについて</h2>
   <p>大型車両（トラック・重機など）が通行できる道路かどうかを確認しながらルートを探せるツールです。一般のカーナビでは通行できない橋や狭い道に案内されてしまう問題を解消することを目指しています。</p>
-  <p>国土交通省のオープンデータをもとに通行可能道路を表示し、現場の情報をマーカーで共有しながらルートを確認できます。</p>
+  <p>国土交通省が公開する重要物流道路データをもとに、選んだ車両のサイズ・重量でルートの通行可否を確認できます。</p>
   <div class="notice">
-    <p>⚠️ 現在はアルファ版のため、データの範囲・精度に制限があります。通行可否は必ずご自身でも確認してください。</p>
+    <p>⚠️ 現在はアルファ版のため、対象エリア・データ精度に制限があります。通行可否は必ずご自身でも確認してください。</p>
   </div>
 
   <h2>基本的な使い方</h2>
@@ -205,59 +196,51 @@
     <div class="step">
       <div class="step-num">1</div>
       <div class="step-body">
-        <h3>現在地を設定する</h3>
-        <p>画面右下の「現在地」ボタン（📍）をタップすると、地図に出発地点のピンが置かれます。GPS が使えない場合は、地図を長押し（PC はダブルクリック）しても出発地を指定できます。</p>
+        <h3>車両を選択する</h3>
+        <p>アプリを開くと車両選択画面が表示されます。使用する車両の区分（大型・特車など）を選ぶか、全幅・全高・総重量を手動入力してください。この情報をもとにルートの通行可否を判定します。</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-body">
-        <h3>行き先を入力する</h3>
-        <p>画面上部の検索バーに目的地の住所や施設名を入力します。候補が表示されたら選択してください。</p>
+        <h3>出発地点を設定する</h3>
+        <p>画面右下の 📍 ボタンをタップするとGPSで現在地を取得します（位置情報の許可が必要）。住所・名称での検索や、地図上でのタップ指定でも設定できます。</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div class="step-body">
-        <h3>ルート候補を確認する</h3>
-        <p>複数のルート候補が表示されます。それぞれの距離・所要時間と道路状況を確認して、通行するルートを選択してください。</p>
+        <h3>行き先を入力してルートを表示する</h3>
+        <p>画面上部の入力欄に目的地の住所や施設名を入力し、「ルート表示」をタップします。複数のルート候補が表示されるので、道路状況を確認して選択してください。</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">4</div>
       <div class="step-body">
         <h3>案内を開始する</h3>
-        <p>「案内開始」ボタンをタップするとターンバイターンのナビゲーションが始まります。交差点手前では「曲がり確認」ボタンが表示され、曲がり角のシミュレーションも確認できます。</p>
+        <p>ルートを確定すると「案内開始」ボタンが表示されます。案内中は交差点手前で「曲がり確認」ボタンが現れ、押すと交差点を50m幅でクローズアップ表示します。車両の旋回軌跡も確認できます。</p>
       </div>
     </div>
   </div>
 
-  <h2>地図上の色の見方</h2>
-  <p>地図上の道路は通行可否に応じて色が変わります。</p>
-  <div class="badge-row">
-    <span class="badge pass">■ 緑：通行OK</span>
-    <span class="badge fail">■ 赤：通行不可</span>
-    <span class="badge tight">■ オレンジ：注意・要確認</span>
-    <span class="badge blue">■ 青：データなし</span>
+  <h2>地図上の道路表示の見方</h2>
+  <p>地図には国土交通省のデータをもとにした道路が色分けで表示されます。</p>
+  <div class="legend-row">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #ff8a00;"></div>
+      <span><b style="color: #ff8a00;">橙色</b>：重要物流道路（大型車通行向き）</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #9aa7b3;"></div>
+      <span><b style="color: #9aa7b3;">グレー</b>：一般道</span>
+    </div>
   </div>
-  <p style="margin-top:12px;">ルート上にオレンジ（通行可能データと一致しない区間）が含まれる場合は、現地での事前確認をお勧めします。</p>
-
-  <h2>現場マーカーの共有</h2>
-  <p>地図上で長押し（PC はダブルクリック）すると、現場情報のマーカーを置けます。チームで共有されるため、他の方の投稿も確認できます。</p>
-  <table class="marker-table">
-    <thead>
-      <tr>
-        <th>マーカー</th>
-        <th>意味</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="icon">🚧</td><td>工事中・通行注意</td></tr>
-      <tr><td class="icon">⛔</td><td>通行止め・封鎖</td></tr>
-      <tr><td class="icon">🚗</td><td>渋滞・混雑</td></tr>
-      <tr><td class="icon">⚠️</td><td>道幅が狭い</td></tr>
-    </tbody>
-  </table>
+  <div class="tip-box" style="margin-top:14px;">
+    道路をタップすると、選んだ車両に対する通行可否（幅・高さ・重量）の詳細が表示されます。
+  </div>
+  <div class="notice" style="margin-top:14px;">
+    <p>ルート上の通行可否はあくまで参考情報です。正式な通行許可は<a href="https://www.tokusya.ktr.mlit.go.jp/PR/" target="_blank" rel="noopener" style="color:var(--hiviz);">特殊車両通行確認システム</a>でご確認ください。</p>
+  </div>
 
   <h2>ご意見・フィードバックをお聞かせください</h2>
   <p>アルファ版の改善にご協力ください。使ってみて気になった点や改善してほしい機能など、どんな小さなことでも歓迎しています。</p>
