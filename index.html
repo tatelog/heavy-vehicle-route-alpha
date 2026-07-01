@@ -2357,7 +2357,7 @@ function showTurnSimulation(step){
   sim.handle=handle;
   state.turnSim=sim;
   updateTurnSimulation();
-  map.panTo(sim.startAnchor,{animate:true,duration:.25});
+  map.setView(sim.startAnchor,18,{animate:true,duration:.25});
   setRouteHint('車両軌跡を表示しました。赤丸を曲がり始点に合わせ、地図上のボタンで回転できます。','warn');
 }
 function updateTurnSimulation(){
