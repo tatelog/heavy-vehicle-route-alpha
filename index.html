@@ -1128,7 +1128,7 @@ function setSitePinFromGps(opts={}){
       return;
     }
     state.lastGps=latlng;
-    setCurrentLocation(latlng,true);
+    setCurrentLocation(latlng,true,15);
     startLiveLocationWatch();
     areaLabel.textContent='現在地を設定しました';
     setGpsStatus(`GPS取得成功: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`, 'ok', false);
@@ -1230,12 +1230,12 @@ function setSitePin(latlng,focus,source='manual'){
   updateReadout();
   return true;
 }
-function setCurrentLocation(latlng,follow=false){
+function setCurrentLocation(latlng,follow=false,zoom=null){
   const valid=normalizeRouteLatLng(latlng);
   if(!valid) return false;
   if(state.currentMarker) state.currentMarker.setLatLng(valid);
   else state.currentMarker=L.marker(valid,{icon:currentVehicleIcon(),title:'現在地'}).addTo(map);
-  if(follow) map.panTo(valid,{animate:true,duration:.35});
+  if(follow){ if(zoom!=null) map.setView(valid,zoom,{animate:true,duration:.35}); else map.panTo(valid,{animate:true,duration:.35}); }
   updateFollowCurrentButton();
   updateGuidance(valid);
   return true;
