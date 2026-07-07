@@ -689,7 +689,10 @@ map.fitBounds(roadLayer.getBounds().pad(0.12));
 
 function makeRoadLayer(data){
   return L.geoJSON(data,{style:styleFor,onEachFeature:(feat,lyr)=>{
-  lyr.on('click',()=>lyr.bindPopup(popupHTML(feat)).openPopup());
+  lyr.on('click',()=>{
+    if(state.pendingMode==='sitePick' || state.guiding || state.pinDragging) return;
+    lyr.bindPopup(popupHTML(feat)).openPopup();
+  });
   lyr.on('mouseover',()=>lyr.setStyle({weight:styleFor(feat).weight+3}));
   lyr.on('mouseout',()=>roadLayer.resetStyle(lyr));
   }}).addTo(map);
@@ -1236,11 +1239,22 @@ function setSitePin(latlng,focus,source='manual'){
   else{
     state.pinMarker=L.marker(valid,{icon:sitePinIcon(),title:'出発地点',draggable:true}).addTo(map);
     state.pinMarker.on('dragstart',()=>{
+      state.pinDragging=true;
+      state.pinBeforeDrag={...state.pin};
       siteHint.textContent='出発地ピンを移動中です。離した位置を出発地にします。';
       siteHint.className='hint warn';
     });
     state.pinMarker.on('dragend',()=>{
       const p=state.pinMarker.getLatLng();
+      state.pinDragging=false;
+      const check=sitePlacementAssessment({lat:p.lat,lng:p.lng});
+      showSitePlacementPopup({lat:p.lat,lng:p.lng},check);
+      if(!check.ok){
+        if(state.pinBeforeDrag) state.pinMarker.setLatLng(state.pinBeforeDrag);
+        siteHint.textContent=check.message;
+        siteHint.className='hint ng';
+        return;
+      }
       if(!setSitePin({lat:p.lat,lng:p.lng},false,'manual')) return;
       setRouteHint('出発地ピンを移動しました。ルートを再計算します。','warn');
       maybeRecalculateRoute();
@@ -1369,6 +1383,35 @@ function showTapInfo(latlng){
   const r=verdict(p,v);
   const verdictText=r.ok===false?'通行不可判定':r.ok===true?'通行可判定':'車両未選択';
   setGpsStatus(`タップ地点: 最寄り ${p.name}（${fmtDist(nearest.d)}） / ${verdictText}` , r.ok===false?'ng':'warn', true);
+}
+function nearestRoadForPoint(latlng){
+  let nearest=null;
+  for(const feat of ROADS.features){
+    const d=distanceToFeature(latlng,feat);
+    if(!nearest || d<nearest.d) nearest={feat,d};
+  }
+  return nearest;
+}
+function sitePlacementAssessment(latlng){
+  const v=activeVeh();
+  if(!v) return {ok:false,message:'先に車両を選択してください。'};
+  const nearest=nearestRoadForPoint(latlng);
+  if(!nearest) return {ok:false,message:'近くの道路情報を確認できません。'};
+  const p=nearest.feat.properties;
+  if(nearest.d>80) return {ok:false,message:`道路から離れています。最寄り ${p.name} まで ${fmtDist(nearest.d)} です。`,nearest};
+  const r=verdict(p,v);
+  if(r.ok===false) return {ok:false,message:`${v.name}では配置できません。${p.name} は ${r.fails.join(' / ')}。`,nearest};
+  return {ok:true,message:`配置できます。最寄り ${p.name}（${fmtDist(nearest.d)}）`,nearest,tight:r.tight};
+}
+function showSitePlacementPopup(latlng,check){
+  const cls=check.ok?'pop-ok':'pop-ng';
+  const title=check.ok?'出発地として配置可能':'ここには配置できません';
+  const near=check.nearest?.feat?.properties?.name ? `<div class="pop-row"><span>最寄り道路</span><b>${check.nearest.feat.properties.name}</b></div>` : '';
+  const dist=Number.isFinite(check.nearest?.d) ? `<div class="pop-row"><span>道路まで</span><b>${fmtDist(check.nearest.d)}</b></div>` : '';
+  L.popup({closeButton:true,autoClose:true,offset:[0,-8]})
+    .setLatLng(latlng)
+    .setContent(`<div class="pop-name">${title}</div>${near}${dist}<div class="pop-verdict ${cls}">${check.message}</div>`)
+    .openOn(map);
 }
 async function loadRoadsAround(latlng){
   const radiusDeg=0.045;
@@ -2748,9 +2791,15 @@ function applyUrlParams(){
 }
 map.on('click',async e=>{
   if(state.pendingMode==='sitePick'){
+    const check=sitePlacementAssessment(e.latlng);
+    showSitePlacementPopup(e.latlng,check);
+    if(!check.ok){
+      setRouteHint(check.message,'ng');
+      return;
+    }
     if(!setSitePin(e.latlng,true,'manual')) return;
     state.pendingMode='idle'; updateTapMode();
-    setRouteHint('出発地を手動ピンにしました。行き先を入れてルート表示できます。','ok');
+    setRouteHint(`${check.message}。行き先を入れてルート表示できます。`,'ok');
     maybeRecalculateRoute();
     return;
   }
