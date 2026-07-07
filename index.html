@@ -148,6 +148,8 @@
   .site-fields{margin-top:8px}
   .site-fields .room-row{display:none}
   .site-fields .label{display:none}
+  .site-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+  .site-actions .btn{min-height:38px}
   .link-action{display:inline-flex;background:transparent;color:var(--muted);font-size:11px;font-weight:800;padding:0;margin-top:6px;text-decoration:underline;text-decoration-color:var(--line)}
   .route-box .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
   .route-box .hint.ok{color:var(--pass)}.route-box .hint.ng{color:var(--fail)}.route-box .hint.warn{color:var(--tight)}
@@ -283,7 +285,9 @@
         <div class="label">出発地点</div>
         <div class="room-row"><input id="siteInput" placeholder="出発地点の住所・名称を入力"><button class="btn subtle" id="siteSearchBtn" type="button">出発地設定</button></div>
         <div class="hint" id="siteHint">出発地点は現在地ボタンか地図選択で設定します。</div>
-        <button class="link-action" id="sitePickBtn" type="button">地図で出発地を選択</button>
+        <div class="site-actions">
+          <button class="btn subtle" id="sitePickBtn" type="button">出発地を地図で指定</button>
+        </div>
       </div>
       <div class="share-toggle on" id="highwayToggle" role="button" tabindex="0">
         <div><div class="title">高速道路 ON</div><div class="desc">高速道路を含む候補も表示します</div></div>
@@ -1076,7 +1080,7 @@ document.querySelectorAll('[data-marker]').forEach(b=>b.onclick=()=>{state.pendi
 sitePickBtn.onclick=()=>{
   state.pendingMode='sitePick';
   updateTapMode();
-  siteHint.textContent='地図上で出発地点にしたい場所をタップしてください。この時だけ出発地点ピンを変更できます。';
+  siteHint.textContent='地図上で出発地にしたい場所をタップしてください。ルート表示はこのピンを優先します。';
   siteHint.className='hint warn';
 };
 siteSearchBtn.onclick=()=>setSiteFromInput();
@@ -1231,7 +1235,8 @@ function setSitePin(latlng,focus,source='manual'){
   if(state.pinMarker) state.pinMarker.setLatLng(valid);
   else state.pinMarker=L.marker(valid,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
   if(focus) map.setView(valid,16);
-  siteHint.textContent=`出発地点: ${valid.lat.toFixed(6)}, ${valid.lng.toFixed(6)}`;
+  const sourceLabel=source==='gps'?'GPS':source==='url'?'共有リンク':'手動ピン';
+  siteHint.textContent=`出発地: ${sourceLabel} / ${valid.lat.toFixed(6)}, ${valid.lng.toFixed(6)}`;
   siteHint.className='hint ok';
   updateVehiclePrompt();
   updateReadout();
@@ -1258,7 +1263,8 @@ function latestCurrentLatLng(){
 function getRouteOrigin(syncPin=false){
   const current=latestCurrentLatLng();
   const pin=normalizeRouteLatLng(state.pin);
-  const origin=state.pinSource==='manual' && pin ? pin : (current || pin);
+  const fixedPin=(state.pinSource==='manual' || state.pinSource==='url') && pin;
+  const origin=fixedPin ? pin : (current || pin);
   if(!origin) return null;
   return origin;
 }
@@ -2732,6 +2738,7 @@ map.on('click',async e=>{
   if(state.pendingMode==='sitePick'){
     if(!setSitePin(e.latlng,true,'manual')) return;
     state.pendingMode='idle'; updateTapMode();
+    setRouteHint('出発地を手動ピンにしました。行き先を入れてルート表示できます。','ok');
     maybeRecalculateRoute();
     return;
   }
