@@ -1233,7 +1233,19 @@ function setSitePin(latlng,focus,source='manual'){
   state.pin=valid;
   state.pinSource=source;
   if(state.pinMarker) state.pinMarker.setLatLng(valid);
-  else state.pinMarker=L.marker(valid,{icon:sitePinIcon(),title:'出発地点'}).addTo(map);
+  else{
+    state.pinMarker=L.marker(valid,{icon:sitePinIcon(),title:'出発地点',draggable:true}).addTo(map);
+    state.pinMarker.on('dragstart',()=>{
+      siteHint.textContent='出発地ピンを移動中です。離した位置を出発地にします。';
+      siteHint.className='hint warn';
+    });
+    state.pinMarker.on('dragend',()=>{
+      const p=state.pinMarker.getLatLng();
+      if(!setSitePin({lat:p.lat,lng:p.lng},false,'manual')) return;
+      setRouteHint('出発地ピンを移動しました。ルートを再計算します。','warn');
+      maybeRecalculateRoute();
+    });
+  }
   if(focus) map.setView(valid,16);
   const sourceLabel=source==='gps'?'GPS':source==='url'?'共有リンク':'手動ピン';
   siteHint.textContent=`出発地: ${sourceLabel} / ${valid.lat.toFixed(6)}, ${valid.lng.toFixed(6)}`;
@@ -2630,7 +2642,7 @@ let routeRecalcTimer=null;
 function maybeRecalculateRoute(){
   if(!getRouteOrigin(false) || !destInput.value.trim()) return;
   clearTimeout(routeRecalcTimer);
-  setRouteHint('車両条件を変更しました。ルートを再計算しています...','warn');
+  setRouteHint('条件を変更しました。ルートを再計算しています...','warn');
   routeRecalcTimer=setTimeout(()=>showRouteToDestination(),450);
 }
 function openShareModal(){
