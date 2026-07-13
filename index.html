@@ -1711,7 +1711,8 @@ async function showRouteToDestination(){
       state.destinationCandidates=choices;
       renderDestinationCandidates(q,origin);
       scrollRoutePanelTo(destinationCandidates);
-      setRouteHint('行き先候補を表示しました。候補を選ぶと地図で場所を確認できます。','warn');
+      const lowOnly=choices.every(c=>c.raw?._lowConfidence);
+      setRouteHint(lowOnly?'名称一致が弱い候補を表示しました。必ず地図上の位置を確認してください。':'行き先候補を表示しました。候補を選ぶと地図で場所を確認できます。','warn');
       return;
     }
     const dest=state.confirmedDestination;
@@ -1761,7 +1762,7 @@ async function geocodeDestinations(q){
   const origin=getRouteOrigin(false);
   const rows=[];
   for(const query of destinationQueries(q)){
-    const url='https://nominatim.openstreetmap.org/search?format=json&limit=8&countrycodes=jp&accept-language=ja&addressdetails=1&extratags=1&q='+encodeURIComponent(query);
+    const url='https://nominatim.openstreetmap.org/search?format=json&limit=10&countrycodes=jp&accept-language=ja&addressdetails=1&extratags=1&namedetails=1&dedupe=1&q='+encodeURIComponent(query);
     const res=await fetch(url,{headers:{'Accept':'application/json'}});
     if(!res.ok) continue;
     const data=await res.json();
@@ -1773,12 +1774,12 @@ async function geocodeDestinations(q){
     const scored={...item,_score:scoreDestinationCandidate(item,q,origin)};
     if(!unique.has(key) || unique.get(key)._score<scored._score) unique.set(key,scored);
   });
-  const candidates=[...unique.values()]
-    .sort((a,b)=>b._score-a._score)
-    .filter(item=>item._score>=5)
+  const sorted=[...unique.values()].sort((a,b)=>b._score-a._score);
+  const strong=sorted.filter(item=>item._score>=5);
+  const candidates=(strong.length ? strong : sorted)
     .slice(0,4)
-    .map(item=>({lat:+item.lat,lng:+item.lon,label:destinationLabel(item),raw:item}));
-  if(!candidates.length) throw new Error('行き先候補の精度が低いため採用できませんでした。住所や施設名を少し詳しく入力してください。');
+    .map(item=>({lat:+item.lat,lng:+item.lon,label:destinationLabel(item),raw:{...item,_lowConfidence:!strong.length || item._score<5}}));
+  if(!candidates.length) throw new Error('行き先候補が見つかりませんでした。住所、施設名、自治体名を少し詳しく入力してください。');
   return candidates;
 }
 function destinationQueries(q){
@@ -1786,10 +1787,14 @@ function destinationQueries(q){
   const variants=new Set([base]);
   const normalized=base.replace(/市庁舎/g,'市役所').replace(/庁舎/g,'役所');
   variants.add(normalized);
+  variants.add(`${base} 日本`);
+  variants.add(`${normalized} 日本`);
   const city=(normalized.match(/(.+?市)(?:役所|役場|庁舎|区役所|$)/)||[])[1];
   if(city){
     variants.add(`${normalized} ${city}`);
     variants.add(`${city} ${normalized}`);
+    variants.add(`${city}役所`);
+    variants.add(`${city}役所 日本`);
   }
   return [...variants].filter(Boolean);
 }
@@ -1904,7 +1909,8 @@ function renderDestinationCandidates(query,origin){
     const meta=destinationCandidateMeta(c,origin);
     const on=state.pendingDestination===c;
     btn.classList.toggle('on',on);
-    btn.innerHTML=`<div class="main"><span>候補${i+1} ${escapeHtml(c.label)}</span>${on?'<span class="tag">確認中</span>':i===0?'<span class="tag">推奨</span>':''}</div><div class="meta">${escapeHtml(meta || '候補を確認してください')}</div>`;
+    const tag=on?'確認中':c.raw?._lowConfidence?'要確認':i===0?'推奨':'';
+    btn.innerHTML=`<div class="main"><span>候補${i+1} ${escapeHtml(c.label)}</span>${tag?`<span class="tag">${tag}</span>`:''}</div><div class="meta">${escapeHtml(meta || '候補を確認してください')}</div>`;
     btn.onclick=()=>{
       previewDestinationCandidate(c,query,origin,meta,{scroll:true});
       renderDestinationCandidates(query,origin);
@@ -1916,7 +1922,8 @@ function destinationCandidateMeta(dest,origin){
   const raw=dest.raw||{};
   const dist=origin ? `出発地点から約${fmtDist(haversine(origin,dest))}` : '';
   const kind=destinationKindLabel(raw);
-  return [kind,dist].filter(Boolean).join(' / ');
+  const confidence=raw._lowConfidence?'名称一致が弱いため地図で要確認':'';
+  return [kind,dist,confidence].filter(Boolean).join(' / ');
 }
 function previewDestinationCandidate(dest,query,origin,meta='',options={}){
   state.pendingDestination=dest;
