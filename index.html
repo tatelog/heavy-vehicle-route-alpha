@@ -280,7 +280,9 @@
     <section class="view active" data-view="route">
     <div class="sect-label">行き先</div>
     <div class="route-box">
-      <div class="room-row"><input id="destInput" placeholder="行き先 例: 〇〇建設 現場 / 住所"></div>
+      <div class="room-row"><input id="destInput" placeholder="行き先の施設名・住所・緯度,経度"></div>
+      <div class="hint">施設名と住所で検索できます。見つからない場所は地図で指定してください。 <a href="https://openpoiapi.com/attribution.html" target="_blank" rel="noopener noreferrer">出典: OpenPOI API</a></div>
+      <button class="btn subtle" id="destinationPickBtn" type="button">行き先を地図で指定</button>
       <div class="site-fields">
         <div class="label">出発地点</div>
         <div class="room-row"><input id="siteInput" placeholder="出発地点の住所・名称を入力"><button class="btn subtle" id="siteSearchBtn" type="button">出発地設定</button></div>
@@ -1086,6 +1088,10 @@ sitePickBtn.onclick=()=>{
   siteHint.textContent='地図上で出発地にしたい場所をタップしてください。ルート表示はこのピンを優先します。';
   siteHint.className='hint warn';
 };
+document.getElementById('destinationPickBtn').onclick=()=>{
+  state.pendingMode='destinationPick'; updateTapMode();
+  setRouteHint('地図上で行き先・搬入口の位置をタップしてください。','warn');
+};
 siteSearchBtn.onclick=()=>setSiteFromInput();
 siteInput.addEventListener('keydown',e=>{if(e.key==='Enter') setSiteFromInput()});
 async function setSiteFromInput(){
@@ -1110,7 +1116,7 @@ async function setSiteFromInput(){
   }
 }
 function updateTapMode(){
-  const labels={idle:'地点情報',sitePick:'出発地点',self:'自分の現在地',meet:'集合地'};
+  const labels={idle:'地点情報',destinationPick:'行き先',sitePick:'出発地点',self:'自分の現在地',meet:'集合地'};
   tapMode.textContent=labels[state.pendingMode] || MARKER_META[state.pendingMode.split(':')[1]]?.label || 'マーカー';
 }
 function setSitePinFromGps(opts={}){
@@ -1708,11 +1714,12 @@ async function showRouteToDestination(){
     if(!state.confirmedDestination || state.confirmedDestinationQuery!==q){
       setRouteHint('行き先候補を検索しています...','warn');
       const choices=await geocodeDestinations(q);
+      if(destInput.value.trim()!==q) return;
       state.destinationCandidates=choices;
       renderDestinationCandidates(q,origin);
       scrollRoutePanelTo(destinationCandidates);
       const lowOnly=choices.every(c=>c.raw?._lowConfidence);
-      setRouteHint(lowOnly?'名称一致が弱い候補を表示しました。必ず地図上の位置を確認してください。':'行き先候補を表示しました。候補を選ぶと地図で場所を確認できます。','warn');
+      setRouteHint(lowOnly?'候補の位置を地図で確認してください。施設の入口や搬入口は地図指定で調整できます。':'行き先候補を表示しました。候補を選ぶと地図で場所を確認できます。','warn');
       return;
     }
     const dest=state.confirmedDestination;
@@ -1758,29 +1765,63 @@ async function geocodeDestination(q){
 }
 async function geocodeDestinations(q){
   const isCoord=q.match(/^\s*(-?[0-9.]+)\s*,\s*(-?[0-9.]+)\s*$/);
-  if(isCoord) return [{lat:+isCoord[1],lng:+isCoord[2],label:q,raw:{class:'coordinate',type:'coordinate'}}];
-  const origin=getRouteOrigin(false);
-  const rows=[];
-  for(const query of destinationQueries(q)){
-    const url='https://nominatim.openstreetmap.org/search?format=json&limit=10&countrycodes=jp&accept-language=ja&addressdetails=1&extratags=1&namedetails=1&dedupe=1&q='+encodeURIComponent(query);
-    const res=await fetch(url,{headers:{'Accept':'application/json'}});
-    if(!res.ok) continue;
-    const data=await res.json();
-    data.forEach(item=>rows.push({...item,_query:query}));
+  if(isCoord){
+    const point={lat:+isCoord[1],lng:+isCoord[2]};
+    if(!Number.isFinite(point.lat)||!Number.isFinite(point.lng)||Math.abs(point.lat)>90||Math.abs(point.lng)>180) throw new Error('座標は緯度,経度の順で正しい範囲を入力してください。');
+    return [{...point,label:q,raw:{class:'coordinate',type:'coordinate'}}];
   }
+  const address=extractAddressPart(q);
+  const results=await Promise.allSettled([geocodeOpenPoiDestinations(q),geocodeGsiDestinations(address||q)]);
+  const poi=results[0].status==='fulfilled'?results[0].value:[];
+  const gsi=results[1].status==='fulfilled'?results[1].value:[];
+  // Explicit addresses take precedence; otherwise retain OpenPOI's ranking.
+  const rows=address?[...gsi,...poi]:[...poi,...gsi];
   const unique=new Map();
   rows.forEach(item=>{
-    const key=item.osm_id || `${(+item.lat).toFixed(6)},${(+item.lon).toFixed(6)}`;
-    const scored={...item,_score:scoreDestinationCandidate(item,q,origin)};
-    if(!unique.has(key) || unique.get(key)._score<scored._score) unique.set(key,scored);
+    const key=`${normalizePlaceText(item.name||item.display_name)},${(+item.lat).toFixed(6)},${(+item.lon).toFixed(6)}`;
+    if(!unique.has(key)) unique.set(key,item);
   });
-  const sorted=[...unique.values()].sort((a,b)=>b._score-a._score);
-  const strong=sorted.filter(item=>item._score>=5);
-  const candidates=(strong.length ? strong : sorted)
-    .slice(0,4)
-    .map(item=>({lat:+item.lat,lng:+item.lon,label:destinationLabel(item),raw:{...item,_lowConfidence:!strong.length || item._score<5}}));
-  if(!candidates.length) throw new Error('行き先候補が見つかりませんでした。住所、施設名、自治体名を少し詳しく入力してください。');
+  const candidates=[...unique.values()].slice(0,8).map(item=>({lat:+item.lat,lng:+item.lon,label:destinationLabel(item),raw:{...item,_lowConfidence:true}}));
+  if(!candidates.length){
+    if(results.some(r=>r.status==='rejected')) throw new Error('検索サービスに接続できませんでした。時間をおいて再検索するか、行き先を地図で指定してください。');
+    throw new Error('候補が見つかりませんでした。住所・座標を入力するか、行き先を地図で指定してください。');
+  }
   return candidates;
+}
+async function geocodeOpenPoiDestinations(query){
+  const bounds=map.getBounds(), center=map.getCenter();
+  const params=new URLSearchParams({q:query.trim(),limit:'8',fields:'full',
+    bbox:[bounds.getWest(),bounds.getSouth(),bounds.getEast(),bounds.getNorth()].join(','),center:[center.lng,center.lat].join(',')});
+  const res=await fetch('https://api.openpoiapi.com/v1/suggest?'+params,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)});
+  if(!res.ok) throw new Error('施設検索に接続できませんでした。');
+  const data=await res.json();
+  if(!Array.isArray(data.suggestions)) throw new Error('施設検索の応答を読み取れませんでした。');
+  return data.suggestions.filter(item=>typeof item.lat==='number'&&typeof item.lng==='number'&&Number.isFinite(item.lat)&&Number.isFinite(item.lng)&&Math.abs(item.lat)<=90&&Math.abs(item.lng)<=180)
+    .map(item=>({...item,lon:item.lng,display_name:[item.name,item.address].filter(Boolean).join(' / '),_openpoi:true,_scope:data.scope}));
+}
+async function geocodeGsiDestinations(query){
+  const url='https://msearch.gsi.go.jp/address-search/AddressSearch?q='+encodeURIComponent(query);
+  const res=await fetch(url,{headers:{'Accept':'application/json'},signal:AbortSignal.timeout(8000)});
+  if(!res.ok) throw new Error('住所検索に接続できませんでした。');
+  const data=await res.json();
+  if(!Array.isArray(data)) return [];
+  return data.slice(0,10).map((feature,i)=>{
+    const coords=feature?.geometry?.coordinates || [];
+    const lng=+coords[0], lat=+coords[1];
+    const title=feature?.properties?.title || query;
+    return {
+      lat,lng,
+      lon:lng,
+      display_name:title,
+      name:title,
+      class:'address',
+      type:'gsi-address',
+      source:'gsi',
+      importance:0.45,
+      _rank:i,
+      _gsi:true
+    };
+  }).filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng));
 }
 function destinationQueries(q){
   const base=q.trim();
@@ -1789,6 +1830,11 @@ function destinationQueries(q){
   variants.add(normalized);
   variants.add(`${base} 日本`);
   variants.add(`${normalized} 日本`);
+  const addressPart=extractAddressPart(base);
+  if(addressPart){
+    variants.add(addressPart);
+    variants.add(`${addressPart} 日本`);
+  }
   const city=(normalized.match(/(.+?市)(?:役所|役場|庁舎|区役所|$)/)||[])[1];
   if(city){
     variants.add(`${normalized} ${city}`);
@@ -1798,11 +1844,19 @@ function destinationQueries(q){
   }
   return [...variants].filter(Boolean);
 }
+function extractAddressPart(text){
+  const s=String(text||'').replace(/[　、,]/g,' ').replace(/\s+/g,' ').trim();
+  const pref=s.match(/(北海道|東京都|(?:京都|大阪)府|.{2,3}県).*/);
+  if(pref) return pref[0].trim();
+  const city=s.match(/([^\s]+?[市区町村].*)/);
+  return city ? city[1].trim() : '';
+}
 function scoreDestinationCandidate(item,q,origin){
   const display=normalizePlaceText(item.display_name||'');
   const original=normalizePlaceText(q);
   const normalized=normalizePlaceText(q.replace(/市庁舎/g,'市役所').replace(/庁舎/g,'役所'));
   let score=(+item.importance||0)*10;
+  if(item._gsi) score+=62-Math.min(item._rank||0,5)*2;
   if(display.includes(original)) score+=45;
   if(display.includes(normalized)) score+=55;
   if((item.class==='amenity'||item.category==='amenity') && item.type==='townhall') score+=55;
@@ -1922,7 +1976,7 @@ function destinationCandidateMeta(dest,origin){
   const raw=dest.raw||{};
   const dist=origin ? `出発地点から約${fmtDist(haversine(origin,dest))}` : '';
   const kind=destinationKindLabel(raw);
-  const confidence=raw._lowConfidence?'名称一致が弱いため地図で要確認':'';
+  const confidence=raw._lowConfidence?'位置・入口を地図で要確認':'';
   return [kind,dist,confidence].filter(Boolean).join(' / ');
 }
 function previewDestinationCandidate(dest,query,origin,meta='',options={}){
@@ -1987,6 +2041,8 @@ function clearRouteCandidatesOnly(){
 }
 function destinationKindLabel(raw){
   if(raw?.class==='coordinate') return '座標指定';
+  if(raw?._openpoi) return '施設検索（OpenPOI）'+(raw._scope==='nationwide'?'・全国候補':'');
+  if(raw?._gsi) return '住所検索（国土地理院）';
   if(raw?.class==='amenity' && raw?.type==='townhall') return '自治体庁舎';
   if(raw?.class==='building') return '建物';
   if(raw?.class==='place') return '地名';
@@ -2797,6 +2853,17 @@ function applyUrlParams(){
   if(room) roomId.value=room;
 }
 map.on('click',async e=>{
+  if(state.pendingMode==='destinationPick'){
+    const query=`${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+    destInput.value=query;
+    destInput.dispatchEvent(new Event('input'));
+    const candidate={lat:e.latlng.lat,lng:e.latlng.lng,label:'地図で指定した行き先',raw:{class:'coordinate',type:'coordinate'}};
+    state.destinationCandidates=[candidate];
+    previewDestinationCandidate(candidate,query,getRouteOrigin(false),'地図指定・入口を確認してください',{scroll:true});
+    renderDestinationCandidates(query,getRouteOrigin(false));
+    state.pendingMode='idle'; updateTapMode();
+    return;
+  }
   if(state.pendingMode==='sitePick'){
     const check=sitePlacementAssessment(e.latlng);
     showSitePlacementPopup(e.latlng,check);
